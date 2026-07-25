@@ -1,0 +1,40 @@
+{
+  "name": "foldify-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "next": "^16.2.11",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "description": "Foldify — origami e-commerce and fold-tutorial platform.",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "engines": {
+    "node": ">=22.0.0 <25.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n frontend,backend -c cyan,magenta \"npm:dev:frontend\" \"npm:dev:backend\"",
+    "dev:frontend": "npm run dev --workspace foldify",
+    "dev:backend": "npm run dev --workspace @foldify/backend",
+    "build": "npm run build --workspace foldify",
+    "start": "concurrently -n frontend,backend -c cyan,magenta \"npm:start:frontend\" \"npm:start:backend\"",
+    "start:frontend": "npm run start --workspace foldify",
+    "start:backend": "npm run start --workspace @foldify/backend",
+    "seed": "npm run seed --workspace @foldify/backend",
+    "lint": "npm run lint --workspace foldify",
+    "typecheck": "npm run typecheck --workspace foldify && npm run typecheck --workspace @foldify/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true,
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
+  }
+}

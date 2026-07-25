@@ -1,0 +1,11 @@
+{
+  "name": "@foldify/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Types shared by the Foldify frontend and backend. Raw TypeScript, no build step.",
+  "main": "types.ts",
+  "types": "types.ts",
+  "exports": {
+    ".": "./types.ts"
+  }
+}
