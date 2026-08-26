@@ -22,7 +22,7 @@
    TOKENS — light mode: white paper, light brown cardboard.
    -------------------------------------------------------------------------- */
 :root {
-  --paper: #fbfaf7;          /* page background */
+  --paper: #d3d8dd;          /* page background */
   --paper-raised: #ffffff;   /* cards, sheets, modals */
   --paper-sunken: #efede6;   /* inputs, wells */
   --cardboard: #cbae8b;      /* navbar, footer, panels, admin chrome */

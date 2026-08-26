@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Learn' };
 export default function LearnPage() {
   return (
     <ComingSoon
-      title="Learn"
+      title="Learning"
       eyebrow="Tutorials"
       description="Step-by-step folds, from the traditional crane upward."
       notes={[
