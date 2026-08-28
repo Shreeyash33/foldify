@@ -40,16 +40,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Foldify — origami paper, kits and folds',
+    default: 'Foldify — folded origami and fold tutorials',
     template: '%s · Foldify',
   },
   description:
-    'Origami paper, kits and tools, with step-by-step fold tutorials for every model we sell.',
+    'Hand-folded origami, with step-by-step fold tutorials for every model we sell.',
   applicationName: 'Foldify',
   openGraph: {
-    title: 'Foldify — origami paper, kits and folds',
+    title: 'Foldify — folded origami and fold tutorials',
     description:
-      'Origami paper, kits and tools, with step-by-step fold tutorials for every model we sell.',
+      'Hand-folded origami, with step-by-step fold tutorials for every model we sell.',
     siteName: 'Foldify',
     type: 'website',
     locale: 'en_GB',

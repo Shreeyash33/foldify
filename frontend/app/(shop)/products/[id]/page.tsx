@@ -23,6 +23,7 @@ export async function generateMetadata({
 
   try {
     const product = await getProductShell(id);
+    if (product === null) return { title: 'Product not found' };
     return { title: product.name, description: product.description };
   } catch {
     return { title: 'Product' };

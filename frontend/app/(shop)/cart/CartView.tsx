@@ -23,7 +23,7 @@ export function CartView() {
       <Card>
         <CardBody className="flex flex-col items-start gap-3">
           <CardTitle>Nothing in the cart yet</CardTitle>
-          <CardMeta>Paper, kits and tools are all in the shop.</CardMeta>
+          <CardMeta>Every folded model is in the shop.</CardMeta>
           <Button href="/products" variant="primary">
             Browse the shop
           </Button>

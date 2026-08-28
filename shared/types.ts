@@ -70,11 +70,18 @@ export interface Product {
   /** Denormalised for list views; populated by the join query. */
   categoryName?: string;
   stock: number;
+  /**
+   * How hard this model is TO FOLD, on the same scale as `Tutorial.difficulty`
+   * — so "beginner" means one thing across the whole site whether you are
+   * buying the crane or learning it. It is a property of the origami, never of
+   * the object's quality, size or price.
+   */
   difficulty: Difficulty;
   isPublished: boolean;
   createdAt: IsoDate;
 }
 
+/** Fold difficulty. Shared by products and tutorials so one crane rates the same on both. */
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
 /**

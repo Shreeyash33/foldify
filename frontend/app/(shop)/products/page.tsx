@@ -25,7 +25,7 @@ export default function ProductsPage({
       <PageHeader
         title="Shop"
         eyebrow="Products"
-        description="Paper, kits, tools and books, filterable by category and difficulty."
+        description="Folded origami — animals, flowers, modular and vessels — by fold difficulty."
       />
 
       {/* Reads the query string, so it streams alongside the grid rather than

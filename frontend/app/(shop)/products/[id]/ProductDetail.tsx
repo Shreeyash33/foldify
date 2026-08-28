@@ -5,7 +5,7 @@ import { Card, CardBody, CardMedia, CardTitle } from '@/app/components/ui/Card';
 import { CreaseDivider } from '@/app/components/ui/CreaseDivider';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PageHeader } from '@/app/components/layout/PageHeader';
-import { ApiClientError, getProduct } from '@/app/lib/api-client';
+import { getProduct } from '@/app/lib/api-client';
 import { getProductShell } from '@/app/lib/catalogue';
 import { formatDate, formatPrice } from '@/app/lib/utils';
 import { AddToCart } from './AddToCart';
@@ -76,6 +76,8 @@ async function ReviewList({ slug }: { slug: string }) {
     return <p>Reviews could not be loaded.</p>;
   }
 
+  if (detail === null) return null;
+
   if (detail.reviews.length === 0) {
     return <p>No reviews yet. Fold it first and tell everyone how it went.</p>;
   }
@@ -116,10 +118,18 @@ export async function ProductShell({ params }: { params: Promise<{ id: string }>
   let product;
   try {
     product = await getProductShell(slug);
-  } catch (error) {
-    if (error instanceof ApiClientError && error.status === 404) notFound();
-    throw error;
+  } catch {
+    return (
+      <Card>
+        <CardBody className="flex flex-col items-start gap-3">
+          <Badge tone="danger">Problem</Badge>
+          <p>This model could not be loaded right now. Please try again shortly.</p>
+        </CardBody>
+      </Card>
+    );
   }
+
+  if (product === null) notFound();
 
   return (
     <>
