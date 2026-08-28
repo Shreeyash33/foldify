@@ -1,6 +1,16 @@
 import { Router } from 'express';
-import type { ApiResponse, AuthResponse } from '@foldify/shared';
+import bcrypt from 'bcryptjs';
+import type { ApiResponse, AuthResponse, LoginRequest, RegisterRequest } from '@foldify/shared';
+import { config } from '../config.ts';
+import {
+  emailExists,
+  getUserByEmailWithSecret,
+  insertUser,
+} from '../db/queries/users.queries.ts';
 import { AppError } from '../lib/errors.ts';
+import { createSession, clearSessionCookie, destroySession, setSessionCookie } from '../lib/session.ts';
+import { isEmail, minLength, required, validateBody } from '../lib/validate.ts';
+import { asyncHandler } from '../middleware/errorHandler.ts';
 import { attachUser, requireAuth } from '../middleware/requireAuth.ts';
 
 const router: Router = Router();
@@ -27,53 +37,74 @@ router.get('/me', attachUser, (req, res) => {
   res.json(body);
 });
 
-/* ------------------------------------------------------------------ STUBS */
-/*
- * Each stub below is registered so the route exists and answers 501 with a
- * clear message, instead of a confusing 404. Delete the `throw` and implement.
- */
-
 /**
  * POST /api/auth/register
- * Purpose: create a customer account and sign them straight in.
- * Steps:
- *   1. validateBody(req.body, { name: [required, minLength(2)],
- *                               email: [required, isEmail],
- *                               password: [required, minLength(8)] })
- *   2. emailExists(email) -> throw AppError.conflict('That email is already registered.')
- *   3. bcrypt.hash(password, 10)                       // bcryptjs, NOT bcrypt
- *   4. insertUser({ email, name, passwordHash })
- *   5. createSession(user.id) + setSessionCookie(res, sessionId)
- *   6. res.status(201).json({ ok: true, data: { user } })
+ * Creates a customer account and signs them straight in, so the client never
+ * has to follow a successful registration with a login round trip.
+ * `insertUser` normalises the email, so nothing here trims or lowercases it.
  */
-router.post('/register', () => {
-  throw AppError.notImplemented('POST /api/auth/register is not built yet.');
-});
+router.post(
+  '/register',
+  asyncHandler(async (req, res) => {
+    const body = validateBody<RegisterRequest>(req.body, {
+      name: [required, minLength(2)],
+      email: [required, isEmail],
+      password: [required, minLength(8)],
+    });
+
+    if (emailExists(body.email)) {
+      throw AppError.conflict('That email is already registered.');
+    }
+
+    const passwordHash = await bcrypt.hash(body.password, 10);
+    const user = insertUser({ email: body.email, name: body.name, passwordHash });
+
+    setSessionCookie(res, createSession(user.id));
+
+    const response: ApiResponse<AuthResponse> = { ok: true, data: { user } };
+    res.status(201).json(response);
+  }),
+);
 
 /**
  * POST /api/auth/login
- * Purpose: verify credentials, start a session.
- * Steps:
- *   1. validateBody(req.body, { email: [required, isEmail], password: [required] })
- *   2. getUserByEmailWithSecret(email)
- *   3. bcrypt.compare(password, user.passwordHash)
- *      -> on either failure throw the SAME error ('Email or password is incorrect.')
- *         Distinguishing them tells an attacker which emails are registered.
- *   4. createSession + setSessionCookie
- *   5. res.json({ ok: true, data: { user } })
+ * Verifies credentials and starts a session.
  */
-router.post('/login', () => {
-  throw AppError.notImplemented('POST /api/auth/login is not built yet.');
-});
+router.post(
+  '/login',
+  asyncHandler(async (req, res) => {
+    const body = validateBody<LoginRequest>(req.body, {
+      email: [required, isEmail],
+      password: [required],
+    });
+
+    const found = getUserByEmailWithSecret(body.email);
+    // One error for both an unknown email and a wrong password: telling them
+    // apart turns this endpoint into a list of who has an account.
+    const invalid = AppError.unauthorized('Email or password is incorrect.');
+    if (found === null) throw invalid;
+    if (!(await bcrypt.compare(body.password, found.passwordHash))) throw invalid;
+
+    setSessionCookie(res, createSession(found.id));
+
+    const { passwordHash: _passwordHash, ...user } = found;
+    const response: ApiResponse<AuthResponse> = { ok: true, data: { user } };
+    res.json(response);
+  }),
+);
 
 /**
  * POST /api/auth/logout
- * Purpose: destroy the session row and clear the cookie.
- * Deleting the row matters — clearing the cookie alone leaves a session that
- * still works if anyone kept a copy of the id.
+ * Deletes the session row, then clears the cookie. Clearing the cookie alone
+ * would leave a session that still works for anyone who kept a copy of the id.
  */
-router.post('/logout', requireAuth, () => {
-  throw AppError.notImplemented('POST /api/auth/logout is not built yet.');
+router.post('/logout', requireAuth, (req, res) => {
+  const sessionId = req.cookies?.[config.sessionCookieName] as string | undefined;
+  if (sessionId !== undefined) destroySession(sessionId);
+  clearSessionCookie(res);
+
+  const response: ApiResponse<{ ok: true }> = { ok: true, data: { ok: true } };
+  res.json(response);
 });
 
 export default router;

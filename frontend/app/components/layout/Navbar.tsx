@@ -144,6 +144,43 @@ export function Navbar() {
   );
 }
 
+/**
+ * Prerendered stand-in for the header.
+ *
+ * `usePathname` has no answer during a static prerender, so under
+ * `cacheComponents` the real navbar has to stream in behind a boundary. This
+ * matches its height and its links so nothing moves when it arrives — only the
+ * active-page underline, the cart count and the auth button are missing, and
+ * all three are client state that could not be prerendered anyway.
+ */
+export function NavbarFallback() {
+  return (
+    <PaperSurface
+      as="header"
+      material="cardboard"
+      elevation={2}
+      className="sticky top-0 z-40 w-full rounded-none border-x-0 border-t-0"
+    >
+      <Container width="wide" className="flex min-h-16 items-center justify-between gap-3">
+        <span className="flex shrink-0 items-center gap-2 font-display text-xl text-ink">
+          <FoldMark />
+          Foldify
+        </span>
+
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+          {LINKS.map((link) => (
+            <NavLink key={link.href} href={link.href} isActive={false}>
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <span className="flex size-11 shrink-0" />
+      </Container>
+    </PaperSurface>
+  );
+}
+
 function NavLink({
   href,
   isActive,

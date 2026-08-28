@@ -1,20 +1,25 @@
 import type { Metadata } from 'next';
-import { ComingSoon } from '@/app/components/layout/ComingSoon';
+import { Suspense } from 'react';
+import { Container } from '@/app/components/layout/Container';
+import { PageHeader } from '@/app/components/layout/PageHeader';
+import { AuthForm, AuthFormFallback } from '../AuthForm';
 
 export const metadata: Metadata = { title: 'Sign in' };
 
 export default function LoginPage() {
   return (
-    <ComingSoon
-      title="Sign in"
-      eyebrow="Account"
-      description="Email and password, into a cookie session."
-      notes={[
-        'Use <Input> for both fields and <Button isLoading> while the request is in flight.',
-        'Call login() from useAuth() — never fetch directly.',
-        'Catch ApiClientError and show error.fields on the matching <Input error> prop.',
-        'Redirect to the page the user came from, or /profile.',
-      ]}
-    />
+    <Container width="narrow" className="pb-16">
+      <PageHeader
+        title="Sign in"
+        eyebrow="Account"
+        description="Email and password, into a cookie session."
+      />
+
+      {/* AuthForm reads `?next=` via useSearchParams, which needs a Suspense
+          boundary for the shell around it to stay prerenderable. */}
+      <Suspense fallback={<AuthFormFallback />}>
+        <AuthForm mode="login" />
+      </Suspense>
+    </Container>
   );
 }

@@ -1,19 +1,21 @@
 import type { Metadata } from 'next';
-import { ComingSoon } from '@/app/components/layout/ComingSoon';
+import { Container } from '@/app/components/layout/Container';
+import { PageHeader } from '@/app/components/layout/PageHeader';
+import { ProfileView } from './ProfileView';
 
 export const metadata: Metadata = { title: 'Profile' };
 
+/** Auth-gated: nothing on this page may be cached or shared between viewers. */
 export default function ProfilePage() {
   return (
-    <ComingSoon
-      title="Profile"
-      eyebrow="Account"
-      description="Your details and your past orders."
-      notes={[
-        'user and logout come from useAuth(). Honour isLoading — do not flash a signed-out state.',
-        'GET /api/orders returns the signed-in user’s own orders and already works.',
-        'Order status maps neatly onto <Badge tone>.',
-      ]}
-    />
+    <Container width="default" className="flex flex-col gap-6 pb-16">
+      <PageHeader
+        title="Profile"
+        eyebrow="Account"
+        description="Your details and your past orders."
+      />
+
+      <ProfileView />
+    </Container>
   );
 }

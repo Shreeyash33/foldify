@@ -77,6 +77,16 @@ export interface Product {
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
+/**
+ * The detail-page response. Kept separate from `Product` so list endpoints are
+ * not obliged to compute review aggregates for every row they return.
+ */
+export interface ProductDetail extends Product {
+  reviews: Review[];
+  averageRating: number;
+  reviewCount: number;
+}
+
 export interface ProductFilters {
   categorySlug?: string;
   difficulty?: Difficulty;
@@ -259,6 +269,30 @@ export interface ContactRequest {
   name: string;
   email: string;
   subject: string;
+  body: string;
+}
+
+/**
+ * What the browser may send when placing an order: product ids and quantities,
+ * and where it goes. Deliberately no prices and no total — those are read from
+ * the products table server-side, because a total posted by the browser is a
+ * total the customer chose.
+ */
+export interface CreateOrderRequest {
+  items: { productId: number; quantity: number }[];
+  shippingName: string;
+  shippingPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+}
+
+export interface CreateOrderResponse {
+  order: Order;
+  payment: PaymentInitiation;
+}
+
+export interface CreateReviewRequest {
+  rating: Review['rating'];
   body: string;
 }
 
