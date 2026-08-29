@@ -127,33 +127,33 @@ export default function ShowcasePage() {
       <Section
         id="typography"
         title="Type scale"
-        importPath="font-display · font-body · font-mono"
+        importPath="font-display  font-body  font-mono"
         description="Fraunces for display, Karla for body, JetBrains Mono for anything technical — step numbers, labels, prices and data. The mono face is a real choice, not a default: origami instructions are diagrams."
       >
         <PaperSurface material="paper" elevation={1} className="flex flex-col gap-4 p-5">
-          <TypeRow label="font-display · 3xl">
+          <TypeRow label="font-display  3xl">
             <p className="font-display text-3xl text-ink">The traditional crane</p>
           </TypeRow>
-          <TypeRow label="font-display · xl">
+          <TypeRow label="font-display  xl">
             <p className="font-display text-xl text-ink">Fold the lower edges to the centre</p>
           </TypeRow>
-          <TypeRow label="font-body · base">
+          <TypeRow label="font-body  base">
             <p className="font-body text-base text-ink">
               Start coloured side up. Fold in half along both diagonals and unfold, then turn the
               paper over and repeat horizontally and vertically.
             </p>
           </TypeRow>
-          <TypeRow label="font-body · sm · ink-muted">
+          <TypeRow label="font-body  sm  ink-muted">
             <p className="font-body text-sm text-ink-muted">
               Textured Japanese tant with a faint tooth. Holds wet-folded curves without cracking.
             </p>
           </TypeRow>
-          <TypeRow label="font-mono · xs · uppercase">
+          <TypeRow label="font-mono  xs  uppercase">
             <p className="font-mono text-xs tracking-[0.18em] text-ink-muted uppercase">
-              Step 04 · mountain fold
+              Step 04  mountain fold
             </p>
           </TypeRow>
-          <TypeRow label="font-mono · price">
+          <TypeRow label="font-mono  price">
             <p className="font-mono text-base text-ink">{formatPrice(92000)}</p>
           </TypeRow>
         </PaperSurface>
@@ -265,7 +265,7 @@ export default function ShowcasePage() {
           <Card>
             <CardHeader>
               <CardTitle>Tant 150mm — Muted</CardTitle>
-              <CardMeta>48 sheets · origami paper</CardMeta>
+              <CardMeta>48 sheets  origami paper</CardMeta>
             </CardHeader>
             <CardBody>
               <p className="font-body text-sm text-ink-muted">
@@ -540,7 +540,7 @@ toast.info('Heads up.');`}
                 className="flex h-full items-center justify-center p-4"
               >
                 <span className="font-mono text-sm text-ink-muted">
-                  canvas · {Math.round(panelSize)}%
+                  canvas  {Math.round(panelSize)}%
                 </span>
               </PaperSurface>
             }
