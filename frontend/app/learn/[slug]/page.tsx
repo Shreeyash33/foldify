@@ -1,9 +1,18 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { ComingSoon } from '@/app/components/layout/ComingSoon';
+import { Skeleton } from '@/app/components/ui/Skeleton';
 
 export const metadata: Metadata = { title: 'Tutorial' };
 
-export default async function TutorialPage({ params }: { params: Promise<{ slug: string }> }) {
+/**
+ * Still a scaffold — the tutorial itself is not built yet.
+ *
+ * `params` is read inside the boundary rather than in the page body because
+ * `cacheComponents` treats an awaited param on a route with no static params as
+ * uncached dynamic access, which blocks the whole route from prerendering.
+ */
+async function TutorialStub({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   return (
@@ -18,5 +27,13 @@ export default async function TutorialPage({ params }: { params: Promise<{ slug:
         'A static step list that works is worth more than an animation that does not.',
       ]}
     />
+  );
+}
+
+export default function TutorialPage({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={<Skeleton shape="block" />}>
+      <TutorialStub params={params} />
+    </Suspense>
   );
 }

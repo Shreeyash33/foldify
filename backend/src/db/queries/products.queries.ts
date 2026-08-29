@@ -200,3 +200,8 @@ export function listProductsWithRatings(limit = 12): (Product & { averageRating:
     reviewCount: row.review_count,
   }));
 }
+
+/** Analytics write. `userId` is null for anonymous visitors — the column is nullable. */
+export function recordProductView(productId: number, userId: number | null): void {
+  db.prepare(`INSERT INTO product_views (product_id, user_id) VALUES (?, ?)`).run(productId, userId);
+}

@@ -43,7 +43,7 @@ export function Footer() {
           <div className="col-span-2 flex flex-col gap-2 sm:col-span-1">
             <span className="font-display text-lg text-ink">Foldify</span>
             <p className="font-body text-sm text-ink-muted">
-              Paper, kits and tools, with the folds that go with them.
+              Folded origami, with the tutorials that teach the same folds.
             </p>
           </div>
 

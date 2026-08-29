@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { User } from '@foldify/shared';
+import { useIsHydrated } from '@/app/lib/hooks';
 import * as api from '@/app/lib/api-client';
 
 interface AuthContextValue {
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isHydrated = useIsHydrated();
 
   /**
    * Restore the session on mount. Everything goes through api-client — no
@@ -85,8 +87,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, logout, refresh }),
-    [user, isLoading, login, register, logout, refresh],
+    () => ({
+      user,
+      /*
+       * Stays true until hydration, on top of the session check itself.
+       *
+       * This provider sits outside the Suspense boundaries the pages use, so it
+       * mounts and resolves the session BEFORE a suspended subtree hydrates.
+       * A consumer in that subtree would then render its signed-out branch
+       * against server HTML that still says "loading" — a hydration mismatch.
+       * Reporting "not known yet" until the client has caught up keeps the
+       * first client render identical to the server's.
+       */
+      isLoading: !isHydrated || isLoading,
+      login,
+      register,
+      logout,
+      refresh,
+    }),
+    [user, isHydrated, isLoading, login, register, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

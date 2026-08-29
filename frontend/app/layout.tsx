@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { Fraunces, JetBrains_Mono, Karla } from 'next/font/google';
 import './globals.css';
 import { THEME_INIT_SCRIPT } from '@/app/contexts/ThemeContext';
+import { Suspense } from 'react';
 import { Providers } from '@/app/providers';
-import { Navbar } from '@/app/components/layout/Navbar';
+import { Navbar, NavbarFallback } from '@/app/components/layout/Navbar';
 import { Footer } from '@/app/components/layout/Footer';
 
 /**
@@ -39,16 +40,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Foldify — origami paper, kits and folds',
+    default: 'Foldify — folded origami and fold tutorials',
     template: '%s · Foldify',
   },
   description:
-    'Origami paper, kits and tools, with step-by-step fold tutorials for every model we sell.',
+    'Hand-folded origami, with step-by-step fold tutorials for every model we sell.',
   applicationName: 'Foldify',
   openGraph: {
-    title: 'Foldify — origami paper, kits and folds',
+    title: 'Foldify — folded origami and fold tutorials',
     description:
-      'Origami paper, kits and tools, with step-by-step fold tutorials for every model we sell.',
+      'Hand-folded origami, with step-by-step fold tutorials for every model we sell.',
     siteName: 'Foldify',
     type: 'website',
     locale: 'en_GB',
@@ -92,7 +93,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="flex min-h-full flex-col">
         <Providers>
-          <Navbar />
+          {/* The navbar reads the pathname, the cart and the session, none of
+              which exist at prerender time. Isolating it here is what lets the
+              rest of every page keep a static shell under cacheComponents. */}
+          <Suspense fallback={<NavbarFallback />}>
+            <Navbar />
+          </Suspense>
+
           <main className="flex-1">{children}</main>
           <Footer />
         </Providers>

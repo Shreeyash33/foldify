@@ -2,6 +2,10 @@
 
 An origami shop and fold-tutorial site. Customers buy crafts, or they follow a tutorial for the fold.
 
+**"Craft" means a finished piece of folded origami** — a crane, a kusudama, a masu box. The shop sells the folded models themselves, not the materials for folding them: there is no paper, no bone folders, no kits. Every product is something somebody folded, and where a tutorial exists for the same model, the two describe one fold at one difficulty.
+
+**`difficulty` always means fold difficulty.** It is how hard the origami is to fold, on one scale — `beginner`, `intermediate`, `advanced` — shared by `products` and `tutorials` so the crane rates the same in both. It never describes an object's quality, size or price. If a row ever appears where "intermediate" would not answer *"how hard is this to fold?"*, that row is wrong, not the field.
+
 BSc CSIT semester project with three developers.
 
 ---
