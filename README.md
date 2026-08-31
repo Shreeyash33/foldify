@@ -168,7 +168,9 @@ The component library is closed for direct edits. See `CONTRIBUTING.md` before b
 
 ## 9. Known gaps in this commit
 
-- Only the following endpoints are implemented: `GET /api/status`, `GET /api/auth/me`, `GET /api/products`, `GET /api/tutorials`, `GET /api/orders`, and `POST /api/contact`. All other routes are registered but return 501, with notes describing how they should be implemented.
+- **Implemented endpoints:** `GET /api/status`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/products`, `GET /api/products/:slug`, `GET /api/products/:slug/reviews`, `POST /api/products/:slug/reviews`, `GET /api/tutorials`, `GET /api/orders`, `POST /api/orders`, `GET /api/orders/:id`, `POST /api/orders/:id/verify`, `POST /api/contact`.
+- **Stubs returning 501:** `GET /api/tutorials/:slug`, `POST /api/tutorials`, `PATCH /api/tutorials/:id`, `POST /api/tutorials/:id/steps`, `GET /api/contact` (admin inbox), `PATCH /api/contact/:id`, all admin CRUD endpoints (`POST/PATCH/DELETE /api/products`, `PATCH /api/orders/:id/status`, `GET /api/users`).
+- The admin section has no client-side access control check yet; non-admin users can see the admin pages (server-side enforcement is correct).
 - Texture image files have not been added yet; see `frontend/public/textures/README.md`. Surfaces render acceptably without them in the meantime.
 - The Craft Maker and the fold animation player have not been started. The `CraftFile` type is a placeholder pending a separate animation spike.
 - `npm audit` reports advisories in `brace-expansion`, reached only through ESLint's dev-time dependency tree. Resolving this requires upgrading to ESLint 10, which is a breaking change with no runtime benefit, so it has been left as-is for now.

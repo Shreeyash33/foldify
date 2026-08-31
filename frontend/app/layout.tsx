@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Fraunces, JetBrains_Mono, Karla } from 'next/font/google';
 import './globals.css';
 import { THEME_INIT_SCRIPT } from '@/app/contexts/ThemeContext';
+import { FONT_SIZE_INIT_SCRIPT } from '@/app/contexts/FontSizeContext';
 import { Suspense } from 'react';
 import { Providers } from '@/app/providers';
 import { Navbar, NavbarFallback } from '@/app/components/layout/Navbar';
@@ -90,6 +91,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             and a theme flash on every load is the most visible possible flaw
             in a design-led project. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: FONT_SIZE_INIT_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
         <Providers>

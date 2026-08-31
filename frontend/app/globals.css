@@ -325,6 +325,45 @@
   }
 }
 
+/* ==========================================================================
+   FONT SIZE — accessibility scaling.
+
+   Five levels that scale text proportionally without equalising sizes.
+   Headings stay larger than body text at every level — the multiplier is
+   applied as a root font-size change, so all rem-based sizes scale naturally.
+   Only body text (via root font-size) and headings (via their own rules)
+   are touched; icons, spacing, borders and radii stay fixed.
+   ========================================================================== */
+.fs-sm {
+  font-size: 14px;
+}
+.fs-lg {
+  font-size: 18px;
+}
+.fs-xl {
+  font-size: 20px;
+}
+.fs-2xl {
+  font-size: 22px;
+}
+
+/* Headings scale with the root but retain their relative size. */
+.fs-sm h1 { font-size: 1.65rem; }
+.fs-sm h2 { font-size: 1.35rem; }
+.fs-sm h3 { font-size: 1.1rem; }
+
+.fs-lg h1 { font-size: 2.35rem; }
+.fs-lg h2 { font-size: 1.9rem; }
+.fs-lg h3 { font-size: 1.4rem; }
+
+.fs-xl h1 { font-size: 2.6rem; }
+.fs-xl h2 { font-size: 2.1rem; }
+.fs-xl h3 { font-size: 1.55rem; }
+
+.fs-2xl h1 { font-size: 2.85rem; }
+.fs-2xl h2 { font-size: 2.3rem; }
+.fs-2xl h3 { font-size: 1.7rem; }
+
 /* One global switch for motion. When the user asks for less, the personality
    goes quiet — every transition in the system is routed through here. */
 @media (prefers-reduced-motion: reduce) {

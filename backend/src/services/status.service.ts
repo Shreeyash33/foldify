@@ -21,10 +21,10 @@ const startedAt = Date.now();
  */
 const MODULES: Record<string, ModuleHealth> = {
   status: 'ok',
-  auth: 'degraded', // GET /me works; register, login and logout are stubs
-  products: 'degraded', // GET / works; detail, write and reviews are stubs
-  tutorials: 'degraded', // GET / works; detail and write are stubs
-  orders: 'degraded', // GET / works; create, verify and status are stubs
+  auth: 'ok', // register, login, logout and session restore all work
+  products: 'degraded', // GET /, GET /:slug, reviews and analytics work; write ops are stubs
+  tutorials: 'degraded', // GET / works; detail endpoint and write ops are stubs
+  orders: 'degraded', // GET /, POST /, GET /:id, POST /:id/verify work; admin status update is stub
   contact: 'degraded', // POST / works; the admin inbox is a stub
   payments: 'not-implemented', // simulated gateway only — no real provider yet
 };

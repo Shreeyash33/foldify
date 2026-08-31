@@ -4,7 +4,7 @@ import { AppError } from '../lib/errors.ts';
 import { isEmail, maxLength, minLength, required, validateBody } from '../lib/validate.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
-import { db } from '../db/index.ts';
+import { insertContactMessage } from '../db/queries/contact.queries.ts';
 
 const router: Router = Router();
 
@@ -22,15 +22,7 @@ router.post('/', (req, res) => {
     body: [required, minLength(10), maxLength(2000)],
   });
 
-  db.prepare(
-    `INSERT INTO contact_messages (name, email, subject, body)
-     VALUES (@name, @email, @subject, @body)`,
-  ).run({
-    name: body.name.trim(),
-    email: body.email.trim().toLowerCase(),
-    subject: body.subject.trim(),
-    body: body.body.trim(),
-  });
+  insertContactMessage(body);
 
   const response: ApiResponse<{ received: true }> = { ok: true, data: { received: true } };
   res.status(201).json(response);
