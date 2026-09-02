@@ -85,6 +85,16 @@ export interface Product {
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
 /**
+ * A tutorial that teaches the model a product is folded from, resolved through
+ * the `tutorial_product_links` join table. Rendered as the "fold it yourself"
+ * link on the product detail page.
+ */
+export interface LinkedTutorial {
+  slug: string;
+  title: string;
+}
+
+/**
  * The detail-page response. Kept separate from `Product` so list endpoints are
  * not obliged to compute review aggregates for every row they return.
  */
@@ -92,6 +102,8 @@ export interface ProductDetail extends Product {
   reviews: Review[];
   averageRating: number;
   reviewCount: number;
+  /** The tutorials that teach this product's fold, oldest pairing first. */
+  linkedTutorials: LinkedTutorial[];
 }
 
 export interface ProductFilters {
@@ -121,6 +133,18 @@ export interface Tutorial {
   createdAt: IsoDate;
   /** Present on the detail response, absent on list responses. */
   steps?: TutorialStep[];
+  /** The shop products that are this fold, pre-folded — detail response only. */
+  linkedProducts?: LinkedProduct[];
+}
+
+/**
+ * A finished product a tutorial's fold is sold as, resolved through the
+ * `tutorial_product_links` join table. Rendered as the "buy the finished
+ * model" link on the tutorial page.
+ */
+export interface LinkedProduct {
+  slug: string;
+  name: string;
 }
 
 export type FoldType = 'valley' | 'mountain' | 'reverse' | 'squash' | 'petal' | 'other';
@@ -197,6 +221,104 @@ export interface ContactMessage {
   body: string;
   isHandled: boolean;
   createdAt: IsoDate;
+}
+
+/* ------------------------------------------------------------------ */
+/* Admin                                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A customer record as the admin users page renders it. Exactly `User` with
+ * an added plain-text join of the shipping name(s) on that account's orders —
+ * a lightweight way to recognise a customer without a dedicated profile table.
+ * `passwordHash` is never included (getUserById strips it at the query layer).
+ */
+export interface AdminUser extends User {
+  orderCount: number;
+  totalSpentMinor: number;
+}
+
+/** Aggregate numbers for the admin Overview page. Counts only, no charts. */
+export interface AdminOverview {
+  users: number;
+  products: number;
+  publishedProducts: number;
+  tutorials: number;
+  publishedTutorials: number;
+  orders: number;
+  ordersPending: number;
+  contactUnhandled: number;
+  categories: number;
+  reviews: number;
+}
+
+/**
+ * An order as the admin orders page renders it: every order across all
+ * customers, with the customer's email joined in, newest first.
+ */
+export interface AdminOrder extends Order {
+  customerEmail: string;
+  customerName: string;
+}
+
+/** What the admin sends to promote or demote a user's role. */
+export interface UpdateUserRoleRequest {
+  role: Role;
+}
+
+export interface UpdateProductRequest {
+  slug?: string;
+  name?: string;
+  description?: string;
+  /** Entered in rupees on the form, converted to paisa on the way in. */
+  priceMinor?: number;
+  imageUrl?: string | null;
+  categoryId?: number;
+  stock?: number;
+  difficulty?: Difficulty;
+  isPublished?: boolean;
+}
+
+export interface CreateProductRequest extends Omit<UpdateProductRequest, 'isPublished'> {
+  slug: string;
+  name: string;
+  description: string;
+  /** Entered in rupees on the form, converted to paisa on the way in. */
+  priceMinor: number;
+  categoryId: number;
+  stock: number;
+  difficulty: Difficulty;
+}
+
+export interface CreateCategoryRequest {
+  slug: string;
+  name: string;
+  description?: string | null;
+}
+
+export interface CreateTutorialRequest {
+  slug: string;
+  title: string;
+  summary: string;
+  difficulty: Difficulty;
+  estimatedMinutes: number;
+  coverImageUrl?: string | null;
+}
+
+export interface UpdateTutorialRequest {
+  slug?: string;
+  title?: string;
+  summary?: string;
+  difficulty?: Difficulty;
+  estimatedMinutes?: number;
+  coverImageUrl?: string | null;
+  isPublished?: boolean;
+}
+
+export interface AppendTutorialStepRequest {
+  instruction: string;
+  foldType: FoldType;
+  imageUrl?: string | null;
 }
 
 /* ------------------------------------------------------------------ */

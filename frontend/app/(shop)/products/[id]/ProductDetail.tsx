@@ -1,14 +1,16 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardMedia, CardTitle } from '@/app/components/ui/Card';
 import { CreaseDivider } from '@/app/components/ui/CreaseDivider';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PageHeader } from '@/app/components/layout/PageHeader';
 import { getProduct } from '@/app/lib/api-client';
 import { getProductShell } from '@/app/lib/catalogue';
-import { formatDate, formatPrice } from '@/app/lib/utils';
+import { formatPrice } from '@/app/lib/utils';
 import { AddToCart } from './AddToCart';
+import { ReviewsSection } from './ReviewsSection';
 
 /**
  * Partial prerendering, split by how fast the data goes stale.
@@ -68,49 +70,6 @@ async function LivePricing({ slug }: { slug: string }) {
   );
 }
 
-async function ReviewList({ slug }: { slug: string }) {
-  let detail;
-  try {
-    detail = await getProductShell(slug);
-  } catch {
-    return <p>Reviews could not be loaded.</p>;
-  }
-
-  if (detail === null) return null;
-
-  if (detail.reviews.length === 0) {
-    return <p>No reviews yet. Fold it first and tell everyone how it went.</p>;
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge tone="accent">{detail.averageRating.toFixed(1)} average</Badge>
-        <Badge tone="neutral">
-          {detail.reviewCount} review{detail.reviewCount === 1 ? '' : 's'}
-        </Badge>
-      </div>
-
-      {detail.reviews.map((review) => (
-        <Card key={review.id}>
-          <CardBody className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle>{review.authorName ?? 'A folder'}</CardTitle>
-              <Badge tone="neutral" size="sm">
-                {review.rating} / 5
-              </Badge>
-              <Badge tone="neutral" size="sm">
-                {formatDate(review.createdAt)}
-              </Badge>
-            </div>
-            <p>{review.body}</p>
-          </CardBody>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 export async function ProductShell({ params }: { params: Promise<{ id: string }> }) {
   // The route segment is the slug, not the numeric id.
   const { id: slug } = await params;
@@ -131,6 +90,11 @@ export async function ProductShell({ params }: { params: Promise<{ id: string }>
 
   if (product === null) notFound();
 
+  // Guarded with a default: the cached shell can predate the links field, so a
+  // stale entry serves `undefined` here even though the type says otherwise.
+  const linkedTutorials = product.linkedTutorials ?? [];
+  const firstTutorial = linkedTutorials[0];
+
   return (
     <>
       <PageHeader
@@ -145,6 +109,29 @@ export async function ProductShell({ params }: { params: Promise<{ id: string }>
         </Card>
 
         <div className="flex flex-col gap-4">
+          {firstTutorial !== undefined && (
+            <Card>
+              <CardBody className="flex flex-col gap-2">
+                <Badge tone="accent">Try it yourself</Badge>
+                <p>
+                  This fold is taught step by step in the tutorial{' '}
+                  <span className="font-medium">
+                    {linkedTutorials.map((tutorial) => tutorial.title).join(', ')}
+                  </span>
+                  .
+                </p>
+                <Button
+                  href={`/learn/${firstTutorial.slug}`}
+                  variant="secondary"
+                  size="sm"
+                  className="self-start"
+                >
+                  Fold it yourself
+                </Button>
+              </CardBody>
+            </Card>
+          )}
+
           <Badge tone="cardboard">{product.difficulty}</Badge>
 
           <Suspense fallback={<LivePricingSkeleton />}>
@@ -157,9 +144,7 @@ export async function ProductShell({ params }: { params: Promise<{ id: string }>
 
       <section className="flex flex-col gap-4">
         <CardTitle>Reviews</CardTitle>
-        <Suspense fallback={<Skeleton shape="text" lines={3} />}>
-          <ReviewList slug={slug} />
-        </Suspense>
+        <ReviewsSection slug={slug} />
       </section>
     </>
   );

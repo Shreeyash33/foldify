@@ -1,4 +1,4 @@
-import type { Order, OrderItem, OrderStatus } from '@foldify/shared';
+import type { AdminOrder, Order, OrderItem, OrderStatus } from '@foldify/shared';
 import { db } from '../index.ts';
 
 /** The raw shape SQLite hands back — snake_case. */
@@ -81,6 +81,32 @@ export function getOrderById(id: number): Order | null {
   const items = db.prepare(SELECT_ITEMS).all(id) as OrderItemRow[];
   return { ...mapOrder(row), items: items.map(mapOrderItem) };
 }
+
+/**
+ * Every order across all customers, newest first, with the customer's email
+ * and name joined in. Summary rows — the admin orders page loads items per
+ * order on demand, since a running count of high-NPR orders can be large.
+ */
+export function listAllOrders(): AdminOrder[] {
+  const rows = db
+    .prepare(
+      `SELECT o.id, o.user_id, o.status, o.total_minor, o.currency,
+              o.shipping_name, o.shipping_phone, o.shipping_address, o.shipping_city,
+              o.payment_ref, o.created_at,
+              u.email AS customer_email, u.name AS customer_name
+       FROM orders o
+       JOIN users u ON u.id = o.user_id
+       ORDER BY o.created_at DESC, o.id DESC`,
+    )
+    .all() as (OrderRow & { customer_email: string; customer_name: string })[];
+
+  return rows.map((row) => {
+    const { customer_email, customer_name, ...order } = row;
+    return { ...mapOrder(order as OrderRow), customerEmail: customer_email, customerName: customer_name };
+  });
+}
+
+
 
 export interface NewOrderItem {
   productId: number;

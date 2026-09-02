@@ -35,16 +35,38 @@ export const isEmail: Rule = (value, field) => {
 export const isInteger: Rule = (value, field) =>
   typeof value === 'number' && Number.isInteger(value) ? null : `${field} must be a whole number.`;
 
+/** A whole number >= 0 — stock, prices in minor units. */
+export const isNonNegativeInteger: Rule = (value, field) =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0
+    ? null
+    : `${field} must be a whole number of 0 or more.`;
+
+/** A whole number >= 1 — estimated minutes, step numbers. */
+export const isPositiveInteger: Rule = (value, field) =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 1
+    ? null
+    : `${field} must be a whole number of 1 or more.`;
+
+/** Exactly the slug shape: lowercase letters, digits and single hyphens between. */
+export const isSlug: Rule = (value, field) => {
+  if (typeof value !== 'string') return `${field} must be text.`;
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.trim())
+    ? null
+    : `${field} must be a lowercase slug like "crane-traditional".`;
+};
+
 export function minLength(n: number): Rule {
   return (value, field) => {
-    if (typeof value !== 'string') return `${field} must be text.`;
+    // A non-string cannot violate a length floor; the field identity is the
+    // caller's job via the rule before this one (`required`/`isString`).
+    if (typeof value !== 'string') return null;
     return value.trim().length >= n ? null : `${field} must be at least ${n} characters.`;
   };
 }
 
 export function maxLength(n: number): Rule {
   return (value, field) => {
-    if (typeof value !== 'string') return `${field} must be text.`;
+    if (typeof value !== 'string') return null;
     return value.trim().length <= n ? null : `${field} must be at most ${n} characters.`;
   };
 }
@@ -54,6 +76,14 @@ export function oneOf<T extends string>(allowed: readonly T[]): Rule {
     typeof value === 'string' && (allowed as readonly string[]).includes(value)
       ? null
       : `${field} must be one of: ${allowed.join(', ')}.`;
+}
+
+/**
+ * Wraps a rule so an absent field passes instead of failing. Used for partial
+ * updates (PATCH), where a field is validated only when it is present.
+ */
+export function optional(rule: Rule): Rule {
+  return (value, field) => (value === undefined || value === null ? null : rule(value, field));
 }
 
 export type Schema<T> = { [K in keyof T]: Rule[] };

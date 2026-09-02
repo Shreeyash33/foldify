@@ -1,4 +1,4 @@
-import type { Product, ProductFilters, Paginated } from '@foldify/shared';
+import type { Category, LinkedTutorial, Product, ProductFilters, Paginated } from '@foldify/shared';
 import { db } from '../index.ts';
 
 /**
@@ -11,6 +11,14 @@ import { db } from '../index.ts';
  *   3. Return the shared types from @foldify/shared, mapped from snake_case
  *      columns to camelCase fields right here, so no caller ever sees a raw row.
  */
+
+/** The raw shape of the categories table. */
+interface CategoryData {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+}
 
 /** The raw shape SQLite hands back — snake_case, integers for booleans. */
 interface ProductRow {
@@ -130,6 +138,25 @@ export function getProductById(id: number): Product | null {
   return row === undefined ? null : mapProduct(row);
 }
 
+/**
+ * The tutorials that teach this product's fold, via the tutorial_product_links
+ * join table. Only published tutorials — a link to an unpublished tutorial
+ * would point at a 404 page.
+ */
+export function listLinkedTutorials(productId: number): LinkedTutorial[] {
+  const rows = db
+    .prepare(
+      `SELECT t.slug, t.title
+       FROM tutorial_product_links l
+       JOIN tutorials t ON t.id = l.tutorial_id
+       WHERE l.product_id = ? AND t.is_published = 1
+       ORDER BY t.created_at ASC`,
+    )
+    .all(productId) as { slug: string; title: string }[];
+
+  return rows.map((row) => ({ slug: row.slug, title: row.title }));
+}
+
 export interface NewProduct {
   slug: string;
   name: string;
@@ -204,4 +231,76 @@ export function listProductsWithRatings(limit = 12): (Product & { averageRating:
 /** Analytics write. `userId` is null for anonymous visitors — the column is nullable. */
 export function recordProductView(productId: number, userId: number | null): void {
   db.prepare(`INSERT INTO product_views (product_id, user_id) VALUES (?, ?)`).run(productId, userId);
+}
+
+/* ---------------------------------------------------------------- admin */
+
+/**
+ * Every product, published or not, newest first, for the admin items page.
+ * The public list filters to published; an admin must see drafts and
+ * soft-deleted rows so they can be edited or republished.
+ */
+export function listAllProducts(): Product[] {
+  const rows = db
+    .prepare(`${SELECT_WITH_CATEGORY} ORDER BY p.created_at DESC, p.id DESC`)
+    .all() as ProductRow[];
+  return rows.map(mapProduct);
+}
+
+/**
+ * Partial update. Only the supplied fields are set; `undefined` is left alone.
+ * Returns the updated row, or null when the product does not exist.
+ */
+export function updateProduct(id: number, input: Partial<NewProduct> & { isPublished?: boolean }): Product | null {
+  const fields: string[] = [];
+  const params: Record<string, unknown> = { id };
+
+  if (input.slug !== undefined) { fields.push('slug = @slug'); params.slug = input.slug; }
+  if (input.name !== undefined) { fields.push('name = @name'); params.name = input.name; }
+  if (input.description !== undefined) { fields.push('description = @description'); params.description = input.description; }
+  if (input.priceMinor !== undefined) { fields.push('price_minor = @priceMinor'); params.priceMinor = input.priceMinor; }
+  if (input.imageUrl !== undefined) { fields.push('image_url = @imageUrl'); params.imageUrl = input.imageUrl; }
+  if (input.categoryId !== undefined) { fields.push('category_id = @categoryId'); params.categoryId = input.categoryId; }
+  if (input.stock !== undefined) { fields.push('stock = @stock'); params.stock = input.stock; }
+  if (input.difficulty !== undefined) { fields.push('difficulty = @difficulty'); params.difficulty = input.difficulty; }
+  if (input.isPublished !== undefined) { fields.push('is_published = @isPublished'); params.isPublished = input.isPublished ? 1 : 0; }
+
+  if (fields.length === 0) return getProductById(id);
+  db.prepare(`UPDATE products SET ${fields.join(', ')} WHERE id = @id`).run(params);
+  return getProductById(id);
+}
+
+/**
+ * Soft delete: unpublish rather than remove the row, because order_items
+ * holds a foreign key to products. A deleted product still appears in the
+ * admin list (filtered to the bottom) so it can be brought back.
+ */
+export function softDeleteProduct(id: number): void {
+  db.prepare('UPDATE products SET is_published = 0 WHERE id = ?').run(id);
+}
+
+/** A category by slug, or null. Used to reject duplicate slugs on create. */
+export function getCategoryBySlug(slug: string): CategoryData | null {
+  return (db.prepare('SELECT id, slug, name, description FROM categories WHERE slug = ?').get(slug) as
+    | CategoryData
+    | undefined) ?? null;
+}
+
+/**
+ * Insert a new category and return the persisted row. The caller checks for a
+ * duplicate slug first; a UNIQUE constraint backstop keeps this honest.
+ */
+export function insertCategory(input: { slug: string; name: string; description: string | null }): CategoryData {
+  db.prepare('INSERT INTO categories (slug, name, description) VALUES (@slug, @name, @description)').run(
+    { slug: input.slug, name: input.name, description: input.description },
+  );
+  return getCategoryBySlug(input.slug) as CategoryData;
+}
+
+/** All categories, ordered by name, for the item form's category dropdown. */
+export function listCategories(): Category[] {
+  const rows = db
+    .prepare('SELECT id, slug, name, description FROM categories ORDER BY name ASC')
+    .all() as CategoryData[];
+  return rows.map((row) => ({ id: row.id, slug: row.slug, name: row.name, description: row.description }));
 }

@@ -15,10 +15,7 @@ const COLUMNS = [
   },
   {
     heading: 'Learn',
-    links: [
-      { href: '/learn', label: 'Tutorials' },
-      { href: '/learn/traditional-crane', label: 'The crane' },
-    ],
+    links: [{ href: '/learn', label: 'Tutorials' }],
   },
   {
     heading: 'Account',

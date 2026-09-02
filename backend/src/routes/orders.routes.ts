@@ -1,19 +1,31 @@
 import { Router } from 'express';
 import type { Request } from 'express';
-import type { ApiResponse, CreateOrderRequest, CreateOrderResponse, Order } from '@foldify/shared';
+import type { ApiResponse, AdminOrder, CreateOrderRequest, CreateOrderResponse, Order, OrderStatus } from '@foldify/shared';
 import {
   getOrderById,
   insertOrder,
+  listAllOrders,
   listOrdersForUser,
   setOrderStatus,
   type NewOrderItem,
 } from '../db/queries/orders.queries.ts';
 import { getProductById } from '../db/queries/products.queries.ts';
 import { AppError } from '../lib/errors.ts';
-import { isString, maxLength, required, validateBody } from '../lib/validate.ts';
+import { isString, maxLength, oneOf, required, validateBody } from '../lib/validate.ts';
 import { asyncHandler } from '../middleware/errorHandler.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
+import { requireAdmin } from '../middleware/requireAdmin.ts';
 import * as paymentService from '../services/payment.service.ts';
+
+const ORDER_STATUSES = [
+  'pending',
+  'paid',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+  'refunded',
+] as const;
 
 const router: Router = Router();
 
@@ -137,6 +149,16 @@ router.post(
   }),
 );
 
+/**
+ * GET /api/orders/all — admin only. Every order across all customers with the
+ * customer's email and name joined in, newest first. Registered before `/:id`
+ * so "all" is never parsed as an order id.
+ */
+router.get('/all', requireAuth, requireAdmin, (_req, res) => {
+  const body: ApiResponse<AdminOrder[]> = { ok: true, data: listAllOrders() };
+  res.json(body);
+});
+
 /** GET /api/orders/:id — one order with its items. */
 router.get('/:id', (req, res) => {
   const body: ApiResponse<Order> = { ok: true, data: loadVisibleOrder(req) };
@@ -173,7 +195,29 @@ router.post(
 );
 
 /**
- * PATCH /api/orders/:id/status    — admin only. Status must be one of the CHECK values.
+ * PATCH /api/orders/:id/status — admin only.
+ * Moves an order along its fulfilment lifecycle. The value must be one of the
+ * CHECK-constrained statuses; the router lacks an enforce-status-transition
+ * business rule by design, so any legal status is acceptable here.
  */
+router.patch(
+  '/:id/status',
+  requireAuth,
+  requireAdmin,
+  (req, res): void => {
+    const order = loadVisibleOrder(req);
+    const body = validateBody<{ status: OrderStatus }>(req.body, {
+      status: [required, oneOf(ORDER_STATUSES)],
+    });
+
+    setOrderStatus(order.id, body.status);
+
+    const updated = getOrderById(order.id);
+    if (updated === null) throw AppError.notFound('Order not found.');
+
+    const response: ApiResponse<Order> = { ok: true, data: updated };
+    res.json(response);
+  },
+);
 
 export default router;

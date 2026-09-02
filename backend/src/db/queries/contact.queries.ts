@@ -1,3 +1,4 @@
+import type { ContactMessage } from '@foldify/shared';
 import { db } from '../index.ts';
 
 /**
@@ -12,16 +13,6 @@ interface ContactMessageRow {
   body: string;
   is_handled: number;
   created_at: string;
-}
-
-interface ContactMessage {
-  id: number;
-  name: string;
-  email: string;
-  subject: string;
-  body: string;
-  isHandled: boolean;
-  createdAt: string;
 }
 
 function mapContactMessage(row: ContactMessageRow): ContactMessage {
@@ -62,4 +53,38 @@ export function insertContactMessage(input: NewContactMessage): ContactMessage {
     .get(result.lastInsertRowid) as ContactMessageRow;
 
   return mapContactMessage(row);
+}
+
+/** All messages for the admin inbox: unhandled first, then newest. */
+export function listContactMessages(): ContactMessage[] {
+  const rows = db
+    .prepare(
+      `SELECT id, name, email, subject, body, is_handled, created_at
+       FROM contact_messages
+       ORDER BY is_handled ASC, created_at DESC, id DESC`,
+    )
+    .all() as ContactMessageRow[];
+
+  return rows.map(mapContactMessage);
+}
+
+export function getContactMessage(id: number): ContactMessage | null {
+  const row = db
+    .prepare('SELECT * FROM contact_messages WHERE id = ?')
+    .get(id) as ContactMessageRow | undefined;
+  return row === undefined ? null : mapContactMessage(row);
+}
+
+/** Mark a message handled or reopened. Returns null if the id does not exist. */
+export function setContactHandled(id: number, handled: boolean): ContactMessage | null {
+  db.prepare('UPDATE contact_messages SET is_handled = ? WHERE id = ?').run(handled ? 1 : 0, id);
+  return getContactMessage(id);
+}
+
+export function countUnhandledMessages(): number {
+  return (
+    db
+      .prepare('SELECT COUNT(*) AS count FROM contact_messages WHERE is_handled = 0')
+      .get() as { count: number }
+  ).count;
 }

@@ -1,4 +1,4 @@
-import type { Role, User, UserWithSecret } from '@foldify/shared';
+import type { AdminUser, Role, User, UserWithSecret } from '@foldify/shared';
 import { db } from '../index.ts';
 
 /** SQL only — see products.queries.ts for the rules. */
@@ -97,4 +97,34 @@ export function upsertUserByEmail(input: NewUser): User {
 
 export function countUsers(): number {
   return (db.prepare('SELECT COUNT(*) AS count FROM users').get() as { count: number }).count;
+}
+
+/**
+ * Every user for the admin users page, with a live total of their orders and
+ * spend. `password_hash` is deliberately never selected.
+ */
+export function listUsersWithStats(): AdminUser[] {
+  const rows = db
+    .prepare(
+      `SELECT u.id, u.email, u.name, u.role, u.avatar_url, u.created_at,
+              COUNT(o.id) AS order_count,
+              COALESCE(SUM(o.total_minor), 0) AS total_spent_minor
+       FROM users u
+       LEFT JOIN orders o ON o.user_id = u.id
+       GROUP BY u.id
+       ORDER BY u.created_at DESC, u.id DESC`,
+    )
+    .all() as (UserRow & { order_count: number; total_spent_minor: number })[];
+
+  return rows.map((row) => ({
+    ...mapUser(row),
+    orderCount: row.order_count,
+    totalSpentMinor: row.total_spent_minor,
+  }));
+}
+
+/** Sets the role, returning the updated row, or null when the user is missing. */
+export function updateUserRole(id: number, role: Role): User | null {
+  db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id);
+  return getUserById(id);
 }

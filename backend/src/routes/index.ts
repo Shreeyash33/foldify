@@ -5,6 +5,8 @@ import productRoutes from './products.routes.ts';
 import tutorialRoutes from './tutorials.routes.ts';
 import orderRoutes from './orders.routes.ts';
 import contactRoutes from './contact.routes.ts';
+import userRoutes from './users.routes.ts';
+import adminRoutes from './admin.routes.ts';
 
 /**
  * The whole API surface, readable in one screen. Every sub-router mounts here
@@ -18,5 +20,7 @@ router.use('/products', productRoutes);
 router.use('/tutorials', tutorialRoutes);
 router.use('/orders', orderRoutes);
 router.use('/contact', contactRoutes);
+router.use('/users', userRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

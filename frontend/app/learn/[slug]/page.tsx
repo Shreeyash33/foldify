@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { Badge } from '@/app/components/ui/Badge';
+import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody } from '@/app/components/ui/Card';
 import { Container } from '@/app/components/layout/Container';
 import { Skeleton } from '@/app/components/ui/Skeleton';
@@ -54,6 +55,8 @@ async function TutorialContent({ params }: { params: Promise<{ slug: string }> }
     tutorials = [];
   }
 
+  const linked = tutorial.linkedProducts ?? [];
+
   return (
     <div className="flex flex-col gap-6">
       {/* Title sits above the canvas, as specified. */}
@@ -62,6 +65,27 @@ async function TutorialContent({ params }: { params: Promise<{ slug: string }> }
         eyebrow="Learn"
         description={tutorial.summary}
       />
+
+      {linked.length > 0 && (
+        <Card>
+          <CardBody className="flex flex-col items-start gap-2">
+            <Badge tone="accent">Prefer the finished fold?</Badge>
+            <p>This model is sold pre-folded in the shop:</p>
+            <div className="flex flex-wrap gap-2">
+              {linked.map((product) => (
+                <Button
+                  key={product.slug}
+                  href={`/products/${product.slug}`}
+                  variant="secondary"
+                  size="sm"
+                >
+                  Buy the {product.name}
+                </Button>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       <FoldPlayer tutorial={tutorial} tutorials={tutorials} />
     </div>

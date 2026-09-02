@@ -120,29 +120,30 @@ export async function ProductGrid({ searchParams }: { searchParams: Promise<Prod
         ))}
       </div>
 
-      {page.totalPages > 1 ? (
-        <nav aria-label="Pagination" className="flex items-center justify-between gap-3">
-          {page.page > 1 ? (
-            <Button href={buildHref(params, page.page - 1)} variant="secondary" size="sm">
-              Previous
-            </Button>
-          ) : (
-            <span />
-          )}
+      {/* Always drawn, so the shop never looks like its pagination has
+          disappeared — the Previous/Next sides collapse to empty spans on the
+          first and last page. */}
+      <nav aria-label="Pagination" className="flex items-center justify-between gap-3">
+        {page.page > 1 ? (
+          <Button href={buildHref(params, page.page - 1)} variant="secondary" size="sm">
+            Previous
+          </Button>
+        ) : (
+          <span />
+        )}
 
-          <Badge tone="neutral">
-            Page {page.page} of {page.totalPages}
-          </Badge>
+        <Badge tone="neutral">
+          Page {page.page} of {page.totalPages}
+        </Badge>
 
-          {page.page < page.totalPages ? (
-            <Button href={buildHref(params, page.page + 1)} variant="secondary" size="sm">
-              Next
-            </Button>
-          ) : (
-            <span />
-          )}
-        </nav>
-      ) : null}
+        {page.page < page.totalPages ? (
+          <Button href={buildHref(params, page.page + 1)} variant="secondary" size="sm">
+            Next
+          </Button>
+        ) : (
+          <span />
+        )}
+      </nav>
     </div>
   );
 }

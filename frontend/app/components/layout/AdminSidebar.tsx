@@ -7,18 +7,17 @@ import { Badge } from '@/app/components/ui/Badge';
 import { PaperSurface } from '@/app/components/ui/PaperSurface';
 
 /**
- * STUB. Admin chrome is cardboard, like the navbar and footer.
- *
- * Structure and styling are done; the links point at pages that are still
- * placeholders. Whoever builds the admin section should extend LINKS and drop
- * this into an `app/(admin)/layout.tsx` beside the page content — probably
- * inside a ResizablePanel once the Craft Maker needs one.
+ * Admin chrome is cardboard, like the navbar and footer. Lives in
+ * app/admin/layout.tsx beside the page content. The Craft Maker entry is a
+ * placeholder — it will probably gain a ResizablePanel once that lands.
  */
 
 const LINKS = [
   { href: '/admin', label: 'Overview' },
   { href: '/admin/items', label: 'Items' },
+  { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/users', label: 'Users' },
+  { href: '/admin/inbox', label: 'Inbox' },
   { href: '/admin/craft-maker', label: 'Craft Maker' },
 ] as const;
 

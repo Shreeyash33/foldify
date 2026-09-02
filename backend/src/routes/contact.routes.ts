@@ -1,10 +1,15 @@
 import { Router } from 'express';
-import type { ApiResponse, ContactRequest } from '@foldify/shared';
+import type { ApiResponse, ContactMessage, ContactRequest } from '@foldify/shared';
 import { AppError } from '../lib/errors.ts';
 import { isEmail, maxLength, minLength, required, validateBody } from '../lib/validate.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
-import { insertContactMessage } from '../db/queries/contact.queries.ts';
+import {
+  getContactMessage,
+  insertContactMessage,
+  listContactMessages,
+  setContactHandled,
+} from '../db/queries/contact.queries.ts';
 
 const router: Router = Router();
 
@@ -28,17 +33,42 @@ router.post('/', (req, res) => {
   res.status(201).json(response);
 });
 
-/* ------------------------------------------------------------------ STUBS */
+/* ------------------------------------------------------------------ ADMIN */
 
 /**
- * GET /api/contact — admin only. List messages, unhandled first, for the admin inbox.
+ * GET /api/contact — admin only. The whole inbox in one call: unhandled
+ * messages first, then the rest newest-first. Small enough by design that
+ * pagination would be ceremony.
  */
-router.get('/', requireAuth, requireAdmin, () => {
-  throw AppError.notImplemented('GET /api/contact is not built yet.');
+router.get('/', requireAuth, requireAdmin, (_req, res) => {
+  const body: ApiResponse<ContactMessage[]> = { ok: true, data: listContactMessages() };
+  res.json(body);
 });
 
 /**
- * PATCH /api/contact/:id — admin only. Mark a message handled (is_handled = 1).
+ * PATCH /api/contact/:id — admin only. Mark a message handled or reopen it.
  */
+router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
+  const id = Number.parseInt(req.params.id ?? '', 10);
+  const message = Number.isNaN(id) ? null : getContactMessage(id);
+  if (message === null) throw AppError.notFound('No such message.');
+
+  const body = validateBody<{ isHandled: boolean }>(req.body, {
+    isHandled: [isHandledFlag],
+  });
+
+  const updated = setContactHandled(message.id, body.isHandled);
+  if (updated === null) throw AppError.notFound('No such message.');
+
+  const response: ApiResponse<ContactMessage> = { ok: true, data: updated };
+  res.json(response);
+});
+
+/** The inbox toggle is a boolean; a 0/1 integer from a form is accepted too. */
+function isHandledFlag(value: unknown, field: string): string | null {
+  return value === true || value === false || value === 0 || value === 1
+    ? null
+    : `${field} must be true or false.`;
+}
 
 export default router;

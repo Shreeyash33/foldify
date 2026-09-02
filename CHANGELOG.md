@@ -2,6 +2,30 @@
 
 All notable changes to Foldify. Newest first.
 
+## [0.2.0] — 2026-09-02
+
+### Added
+
+**Admin section** (the whole `/admin` area)
+- Backend endpoints behind `requireAuth` + `requireAdmin`: product CRUD + soft delete, category creation, tutorial CRUD + step appending, order status updates, users list with role changes, contact inbox with handled toggle, overview metrics.
+- Frontend under `/admin`: gate (`AdminGate`), sidebar (`Overview / Items / Orders / Users / Inbox / Craft Maker`), and pages for product items (modal create/edit, rupees→paisa, inline confirm-delete, "+ New category" inline form), order status, user roles, and the contact inbox.
+
+**Product ⇄ tutorial cross-linking**
+- `tutorial_product_links` join table; `GET /api/products/:slug` returns `linkedTutorials`, `GET /api/tutorials/:slug` returns `linkedProducts`.
+- Product detail page shows a "Fold it yourself" link to the matching tutorial; tutorial pages show a "Buy the finished fold" link to the matching product.
+
+**Contact page** — `/contact` is now a real form (name, email, subject, message) wired to `POST /api/contact`, with validation errors keyed by field and a signed-in name/email prefill.
+
+**Write-a-review UI** — product pages gain a review form (rating 1–5 + message, sign-in prompt when logged out). Reviews now load fresh per visit so a just-posted review appears immediately; duplicate reviews surface the API's 409 as a visible error.
+
+**Shop polish**
+- Pagination bar is always drawn, so it can no longer disappear when a filter or the catalogue size leaves a single page.
+- Footer no longer links into the tutorial content pages.
+
+### Changed
+- Seed now also declares which products map to which tutorials, and re-seeding rebuilds the link table exactly.
+- Shared contract adds `LinkedTutorial`, `LinkedProduct`, `ProductDetail.linkedTutorials`, and `Tutorial.linkedProducts`.
+
 ## [0.1.0] — 2026-07-25
 
 Initial scaffold. The skeleton and the design system, not the features.

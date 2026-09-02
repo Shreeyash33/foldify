@@ -103,6 +103,21 @@ CREATE TABLE IF NOT EXISTS tutorial_steps (
 
 CREATE INDEX IF NOT EXISTS idx_tutorial_steps_tutorial_id ON tutorial_steps (tutorial_id);
 
+-- Links a tutorial to the shop products that model is sold as, pre-folded.
+-- Used for the "fold it yourself" ↔ "buy the finished model" cross-navigation
+-- between the /learn and /products pages. Soft-deleted (unpublished) content
+-- keeps its links harmlessly: the link queries filter on is_published = 1.
+CREATE TABLE IF NOT EXISTS tutorial_product_links (
+  tutorial_id INTEGER NOT NULL,
+  product_id  INTEGER NOT NULL,
+  PRIMARY KEY (tutorial_id, product_id),
+  FOREIGN KEY (tutorial_id) REFERENCES tutorials (id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id)  REFERENCES products (id)  ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_tutorial_product_links_product_id
+  ON tutorial_product_links (product_id);
+
 -- --------------------------------------------------------------- orders
 
 CREATE TABLE IF NOT EXISTS orders (

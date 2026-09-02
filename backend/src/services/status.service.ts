@@ -22,10 +22,10 @@ const startedAt = Date.now();
 const MODULES: Record<string, ModuleHealth> = {
   status: 'ok',
   auth: 'ok', // register, login, logout and session restore all work
-  products: 'degraded', // GET /, GET /:slug, reviews and analytics work; write ops are stubs
-  tutorials: 'degraded', // GET / and GET /:slug work; admin write ops are stubs
-  orders: 'degraded', // GET /, POST /, GET /:id, POST /:id/verify work; admin status update is stub
-  contact: 'degraded', // POST / works; the admin inbox is a stub
+  products: 'ok', // full catalogue read API + admin write CRUD (create, update, soft delete)
+  tutorials: 'ok', // list, detail, steps + admin CRUD (create, update, append steps, unpublish)
+  orders: 'ok', // customer list/create/detail/verify + admin status updates
+  contact: 'ok', // public submit + admin inbox (list, mark handled)
   payments: 'not-implemented', // simulated gateway only — no real provider yet
 };
 

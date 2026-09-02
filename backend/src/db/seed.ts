@@ -97,6 +97,31 @@ function seed(): void {
   applySchema();
 
   const run = db.transaction(() => {
+    // Prune rows that are no longer part of the seed, so a changed catalogue
+    // REPLACES instead of accumulating over time. Products are pruned before
+    // categories because categories RESTRICT on delete. A product referenced
+    // by an order cannot be deleted, so it is soft-deleted (unpublished)
+    // instead — the row must survive for the order's line items.
+    const seedProductSlugs = PRODUCTS.map((product) => product.slug);
+    const pSlugs = seedProductSlugs.map(() => '?').join(',');
+    db.prepare(
+      `DELETE FROM products
+       WHERE slug NOT IN (${pSlugs})
+         AND id NOT IN (SELECT DISTINCT product_id FROM order_items)`,
+    ).run(...seedProductSlugs);
+    db.prepare(`UPDATE products SET is_published = 0 WHERE slug NOT IN (${pSlugs})`).run(
+      ...seedProductSlugs,
+    );
+
+    const seedCategorySlugs = CATEGORIES.map((category) => category.slug);
+    const cSlugs = seedCategorySlugs.map(() => '?').join(',');
+    db.prepare(`DELETE FROM categories WHERE slug NOT IN (${cSlugs})`).run(...seedCategorySlugs);
+
+    // Tutorials prune the same way; steps cascade away with their tutorial.
+    const seedTutorialSlugs = TUTORIALS.map((tutorial) => tutorial.slug);
+    const tSlugs = seedTutorialSlugs.map(() => '?').join(',');
+    db.prepare(`DELETE FROM tutorials WHERE slug NOT IN (${tSlugs})`).run(...seedTutorialSlugs);
+
     // Admin user
     const passwordHash = bcrypt.hashSync(config.seedAdminPassword, 10);
     upsertUserByEmail({
@@ -136,6 +161,11 @@ function seed(): void {
       });
     }
 
+    const productIdBySlug = new Map<string, number>();
+    for (const row of db.prepare('SELECT id, slug FROM products').all() as { id: number; slug: string }[]) {
+      productIdBySlug.set(row.slug, row.id);
+    }
+
     // Tutorials and their steps
     const upsertTutorial = db.prepare(
       `INSERT INTO tutorials (slug, title, summary, difficulty, estimated_minutes)
@@ -154,6 +184,8 @@ function seed(): void {
          fold_type = excluded.fold_type`,
     );
 
+    const tutorialIdBySlug = new Map<string, number>();
+
     for (const tutorial of TUTORIALS) {
       upsertTutorial.run({
         slug: tutorial.slug,
@@ -166,6 +198,7 @@ function seed(): void {
       const { id: tutorialId } = db
         .prepare('SELECT id FROM tutorials WHERE slug = ?')
         .get(tutorial.slug) as { id: number };
+      tutorialIdBySlug.set(tutorial.slug, tutorialId);
 
       tutorial.steps.forEach((step, index) => {
         upsertStep.run({
@@ -175,6 +208,30 @@ function seed(): void {
           foldType: step.foldType,
         });
       });
+    }
+
+    // Product ↔ tutorial pairings: the folded models sold in the shop, and the
+    // tutorials teaching that same fold, joined so the two pages can point at
+    // each other. Rebuilt wholesale every run, so the seed stays the single
+    // source of truth for which fold pairs appear on the site.
+    const PRODUCT_TUTORIAL_PAIRS: ReadonlyArray<readonly [productSlug: string, tutorialSlug: string]> = [
+      ['crane-traditional-white', 'traditional-crane'],
+      ['sonobe-cube-six-unit', 'modular-sonobe-cube'],
+    ];
+
+    db.prepare('DELETE FROM tutorial_product_links').run();
+    const linkTutorialToProduct = db.prepare(
+      `INSERT INTO tutorial_product_links (tutorial_id, product_id)
+       VALUES (@tutorialId, @productId)
+       ON CONFLICT (tutorial_id, product_id) DO NOTHING`,
+    );
+    for (const [productSlug, tutorialSlug] of PRODUCT_TUTORIAL_PAIRS) {
+      const productId = productIdBySlug.get(productSlug);
+      const tutorialId = tutorialIdBySlug.get(tutorialSlug);
+      if (productId === undefined || tutorialId === undefined) {
+        throw new Error(`Unknown product/tutorial link pair: ${productSlug} ↔ ${tutorialSlug}`);
+      }
+      linkTutorialToProduct.run({ tutorialId, productId });
     }
   });
 
@@ -186,6 +243,7 @@ function seed(): void {
     products: (db.prepare('SELECT COUNT(*) AS c FROM products').get() as { c: number }).c,
     tutorials: (db.prepare('SELECT COUNT(*) AS c FROM tutorials').get() as { c: number }).c,
     tutorialSteps: (db.prepare('SELECT COUNT(*) AS c FROM tutorial_steps').get() as { c: number }).c,
+    links: (db.prepare('SELECT COUNT(*) AS c FROM tutorial_product_links').get() as { c: number }).c,
   };
 
   console.log('');
@@ -195,6 +253,7 @@ function seed(): void {
   console.log(`     products        ${counts.products}`);
   console.log(`     tutorials       ${counts.tutorials}`);
   console.log(`     tutorial_steps  ${counts.tutorialSteps}`);
+  console.log(`     product↔tutorial links ${counts.links}`);
   console.log(`     admin login     ${config.seedAdminEmail}`);
   console.log('');
   console.log('  Re-running this is safe — every insert is an upsert.');
