@@ -45,3 +45,6 @@ desktop.ini
 # misc
 .vercel
 coverage/
+
+# local planning notes — not for the repo
+nextstep.txt

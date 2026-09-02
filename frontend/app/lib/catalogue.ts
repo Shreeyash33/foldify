@@ -63,3 +63,20 @@ export async function getTutorialDetail(slug: string): Promise<Tutorial> {
 
   return api.getTutorial(slug, { revalidate: CATALOGUE_TTL_SECONDS, tags: ['tutorials'] });
 }
+
+/**
+ * Tutorial detail for the static shell. A slug that does not exist is an
+ * answer (→ null), not a failure — the same deal as getProductShell.
+ */
+export async function getTutorialShell(slug: string): Promise<Tutorial | null> {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('tutorials', `tutorial:${slug}`);
+
+  try {
+    return await api.getTutorial(slug, { revalidate: CATALOGUE_TTL_SECONDS, tags: ['tutorials'] });
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 404) return null;
+    throw error;
+  }
+}

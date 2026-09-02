@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import type { ApiResponse } from '@foldify/shared';
 import { AppError } from '../lib/errors.ts';
-import { listPublishedTutorials } from '../db/queries/tutorials.queries.ts';
+import {
+  getTutorialBySlug,
+  listPublishedTutorials,
+  listStepsForTutorial,
+  recordTutorialView,
+} from '../db/queries/tutorials.queries.ts';
+import { attachUser } from '../middleware/requireAuth.ts';
 
 const router: Router = Router();
 
@@ -14,15 +20,30 @@ router.get('/', (_req, res) => {
   res.json(body);
 });
 
-/* ------------------------------------------------------------------ STUBS */
-
 /**
  * GET /api/tutorials/:slug
- * Purpose: one tutorial plus its ordered steps (ORDER BY step_number), for the
- * fold player. Two queries, or one join grouped in JS. Record a tutorial_views row.
+ * One tutorial plus its ordered steps, for the tutorial page. Records a
+ * tutorial_views row. `attachUser` rather than `requireAuth`: anonymous
+ * visitors must still read tutorials, their view is simply recorded without a
+ * user id — the same pattern as the product detail route.
  */
-router.get('/:slug', () => {
-  throw AppError.notImplemented('GET /api/tutorials/:slug is not built yet.');
+router.get('/:slug', attachUser, (req, res) => {
+  const slug = req.params.slug;
+  const tutorial = slug === undefined ? null : getTutorialBySlug(slug);
+  if (tutorial === null || !tutorial.isPublished) throw AppError.notFound('No such tutorial.');
+
+  try {
+    recordTutorialView(tutorial.id, req.user?.id ?? null);
+  } catch (err) {
+    // Analytics must never break the page — a failed view insert is logged and dropped.
+    console.error('[foldify] tutorial view insert failed:', err);
+  }
+
+  const body: ApiResponse<typeof tutorial> = {
+    ok: true,
+    data: { ...tutorial, steps: listStepsForTutorial(tutorial.id) },
+  };
+  res.json(body);
 });
 
 /**

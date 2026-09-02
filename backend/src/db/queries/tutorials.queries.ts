@@ -1,4 +1,4 @@
-import type { Tutorial } from '@foldify/shared';
+import type { FoldType, Tutorial, TutorialStep } from '@foldify/shared';
 import { db } from '../index.ts';
 
 /**
@@ -65,4 +65,42 @@ export function getTutorialBySlug(slug: string): Tutorial | null {
 /** Record a view for analytics. */
 export function recordTutorialView(tutorialId: number, userId: number | null): void {
   db.prepare(`INSERT INTO tutorial_views (tutorial_id, user_id) VALUES (?, ?)`).run(tutorialId, userId);
+}
+
+/* ---------------------------------------------------------------- steps */
+
+interface TutorialStepRow {
+  id: number;
+  tutorial_id: number;
+  step_number: number;
+  instruction: string;
+  fold_type: FoldType;
+  image_url: string | null;
+  craft_file_id: string | null;
+}
+
+function mapStep(row: TutorialStepRow): TutorialStep {
+  return {
+    id: row.id,
+    tutorialId: row.tutorial_id,
+    stepNumber: row.step_number,
+    instruction: row.instruction,
+    foldType: row.fold_type,
+    imageUrl: row.image_url,
+    craftFileId: row.craft_file_id,
+  };
+}
+
+const SELECT_STEPS = `
+  SELECT id, tutorial_id, step_number, instruction, fold_type, image_url, craft_file_id
+  FROM tutorial_steps
+`;
+
+/** Ordered steps for one tutorial, ascending by step_number. Returns null if the tutorial has none. */
+export function listStepsForTutorial(tutorialId: number): TutorialStep[] {
+  const rows = db
+    .prepare(`${SELECT_STEPS} WHERE tutorial_id = ? ORDER BY step_number ASC`)
+    .all(tutorialId) as TutorialStepRow[];
+
+  return rows.map(mapStep);
 }
