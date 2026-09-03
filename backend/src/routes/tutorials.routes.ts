@@ -22,6 +22,7 @@ import {
   softDeleteTutorial,
   updateTutorial,
 } from '../db/queries/tutorials.queries.ts';
+import { getCraftFileForTutorial } from '../db/queries/craft.queries.ts';
 import {
   isPositiveInteger,
   isSlug,
@@ -86,7 +87,12 @@ router.get('/:slug', attachUser, (req, res) => {
 
   const body: ApiResponse<typeof tutorial> = {
     ok: true,
-    data: { ...tutorial, steps: listStepsForTutorial(tutorial.id), linkedProducts: listLinkedProducts(tutorial.id) },
+    data: {
+      ...tutorial,
+      steps: listStepsForTutorial(tutorial.id),
+      linkedProducts: listLinkedProducts(tutorial.id),
+      craftFile: getCraftFileForTutorial(tutorial.id),
+    },
   };
   res.json(body);
 });

@@ -9,6 +9,8 @@ import type {
   Category,
   ContactMessage,
   ContactRequest,
+  CraftFile,
+  CraftFileVersion,
   CreateCategoryRequest,
   CreateOrderRequest,
   CreateOrderResponse,
@@ -25,6 +27,7 @@ import type {
   RegisterRequest,
   Review,
   Role,
+  SaveCraftFileRequest,
   StatusResponse,
   Tutorial,
   TutorialStep,
@@ -431,4 +434,47 @@ export async function listAdminOrders(): Promise<AdminOrder[]> {
 export async function updateOrderStatus(id: number, status: OrderStatus): Promise<Order> {
   if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Status changes need the API.' });
   return request<Order>(`/orders/${id}/status`, { method: 'PATCH', body: { status } });
+}
+
+/* ============================================================ craft files */
+
+/**
+ * Craft Maker authoring endpoints — admin only, and never cached: the editor
+ * reads a fold back straight after saving it. The fold a reader sees is not
+ * fetched here at all, it rides along on getTutorial().
+ */
+
+export async function listCraftFiles(): Promise<CraftFile[]> {
+  if (USE_MOCK) return [];
+  return request<CraftFile[]>('/craft-files');
+}
+
+export async function getCraftFile(id: string): Promise<CraftFile> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'The Craft Maker needs the API.' });
+  return request<CraftFile>(`/craft-files/${id}`);
+}
+
+export async function createCraftFile(input: SaveCraftFileRequest): Promise<CraftFile> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Create needs the API.' });
+  return request<CraftFile>('/craft-files', { method: 'POST', body: input });
+}
+
+export async function updateCraftFile(id: string, input: SaveCraftFileRequest): Promise<CraftFile> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Update needs the API.' });
+  return request<CraftFile>(`/craft-files/${id}`, { method: 'PATCH', body: input });
+}
+
+export async function deleteCraftFile(id: string): Promise<void> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Delete needs the API.' });
+  await request<{ deleted: true }>(`/craft-files/${id}`, { method: 'DELETE' });
+}
+
+export async function listCraftFileVersions(id: string): Promise<CraftFileVersion[]> {
+  if (USE_MOCK) return [];
+  return request<CraftFileVersion[]>(`/craft-files/${id}/versions`);
+}
+
+export async function restoreCraftFileVersion(id: string, revision: number): Promise<CraftFile> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Restore needs the API.' });
+  return request<CraftFile>(`/craft-files/${id}/versions/${revision}/restore`, { method: 'POST' });
 }

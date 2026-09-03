@@ -142,6 +142,8 @@ export interface Tutorial {
   steps?: TutorialStep[];
   /** The shop products that are this fold, pre-folded — detail response only. */
   linkedProducts?: LinkedProduct[];
+  /** The Craft Maker fold the player animates. Detail response only; null when unauthored. */
+  craftFile?: CraftFile | null;
 }
 
 /**
@@ -163,7 +165,7 @@ export interface TutorialStep {
   instruction: string;
   foldType: FoldType;
   imageUrl: string | null;
-  /** Provisional link to a CraftFile — see the note on `CraftFile` below. */
+  /** The CraftFile whose fold sequence this step belongs to; null when unauthored. */
   craftFileId: string | null;
 }
 
@@ -348,18 +350,128 @@ export interface CartItem {
 /* ------------------------------------------------------------------ */
 
 /**
- * PROVISIONAL — pending an animation spike.
+ * The fold format, designed against the animation spike (see CHANGELOG 0.6.0).
  *
- * Do not build against this shape yet. The fold format will be designed once
- * we know what the animation player actually needs to render; anything more
- * specific written today will be wrong. Kept here only so references compile.
+ * A CraftFile is a rectangular sheet plus an ORDERED list of straight folds.
+ * Nothing about the folded state is stored: the player replays the steps from
+ * the flat sheet, so the file stays small and there is exactly one description
+ * of the model. Coordinates are sheet millimetres, origin top-left.
  */
+
+export interface CraftPoint {
+  x: number;
+  y: number;
+}
+
+export type CraftSheetPreset =
+  | 'a4-portrait'
+  | 'a4-landscape'
+  | 'a5-portrait'
+  | 'letter-portrait'
+  | 'square'
+  | 'custom';
+
+export interface CraftSheet {
+  preset: CraftSheetPreset;
+  /** Millimetres. Only the ratio matters on screen; the viewBox is derived. */
+  width: number;
+  height: number;
+}
+
+/**
+ * An author-placed point on the sheet outline, used as a snap target by the
+ * Craft Maker. The player ignores these — a step carries its own coordinates.
+ */
+export interface CraftVertex {
+  id: string;
+  x: number;
+  y: number;
+}
+
+/** Which half-plane of the directed line `from` -> `to` is the flap that moves. */
+export type CraftFoldSide = 'left' | 'right';
+
+export type CraftStepKind = 'fold' | 'crease';
+
+/** How far down the stack a fold reaches: everything, or the top N layers. */
+export type CraftLayerScope = 'all' | number;
+
+export interface CraftFoldStep {
+  id: string;
+  /**
+   * The fold line, resolved to coordinates at authoring time rather than to
+   * vertex ids: replay then depends on nothing but the step list, and editing
+   * a snap point later cannot silently rewrite a fold that is already drawn.
+   */
+  from: CraftPoint;
+  to: CraftPoint;
+  side: CraftFoldSide;
+  /**
+   * The authoring gesture: the point that was folded, and where it was folded
+   * to. The crease above is the perpendicular bisector of the two, and `side`
+   * is the half `origin` sits in — both are derived from this pair rather than
+   * drawn freehand, which is what stops a recorded fold from being a guess.
+   *
+   * Optional: the player never reads them, and a file authored before the
+   * gesture was recorded still replays from `from`/`to`/`side` alone.
+   */
+  origin?: CraftPoint;
+  target?: CraftPoint;
+  /** `valley` settles the flap on top of the stack, `mountain` underneath. */
+  foldType: FoldType;
+  /**
+   * `crease` marks the line into the paper and leaves it flat - origami's
+   * "fold and unfold". Optional and defaulting to `fold` so existing files
+   * replay unchanged.
+   */
+  kind?: CraftStepKind;
+  /**
+   * How far down the stack the fold reaches: `all` folds the whole model,
+   * a number folds only that many layers from the top. Folding one wing of a
+   * plane must not drag the wing behind it along. Optional, defaulting to
+   * `all`, so existing files replay unchanged.
+   */
+  layerScope?: CraftLayerScope;
+  instruction: string;
+  durationMs: number;
+}
+
+export interface CraftFileData {
+  sheet: CraftSheet;
+  vertices: CraftVertex[];
+  steps: CraftFoldStep[];
+}
+
+/** Where a fold project sits in its lifecycle: still being authored, or live. */
+export type CraftStatus = 'draft' | 'deployed';
+
 export interface CraftFile {
   id: string;
   name: string;
   version: 1;
-  /** Opaque until the format is designed. */
-  data: unknown;
+  /** The tutorial this fold belongs to, or null while it is a draft. */
+  tutorialId: number | null;
+  status: CraftStatus;
+  data: CraftFileData;
+  createdAt: IsoDate;
+  updatedAt: IsoDate;
+}
+
+export interface SaveCraftFileRequest {
+  name: string;
+  tutorialId?: number | null;
+  status?: CraftStatus;
+  data: CraftFileData;
+}
+
+/** A saved snapshot of a craft project, written on every save. */
+export interface CraftFileVersion {
+  id: number;
+  craftFileId: string;
+  /** 1-based, increments per save of that project. */
+  revision: number;
+  name: string;
+  data: CraftFileData;
   createdAt: IsoDate;
 }
 

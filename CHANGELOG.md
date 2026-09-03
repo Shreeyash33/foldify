@@ -2,6 +2,38 @@
 
 All notable changes to Foldify. Newest first.
 
+## [0.4.0] — 2026-09-03
+
+### Added
+
+**Craft Maker and the fold animation player** — the spike is done and the feature is built.
+
+*The fold format.* `CraftFile` in `shared/types.ts` is no longer a placeholder. A file is a rectangular sheet plus an **ordered list of straight folds**; nothing about the folded state is stored, because the player replays the steps from the flat sheet. Coordinates are sheet millimetres. A step carries its fold line as resolved coordinates rather than vertex ids, so replay depends on the step list alone and editing a snap point cannot silently rewrite a fold already drawn.
+
+*The layering model* (`frontend/app/lib/craft/fold-model.ts`) — this was the hard part of the spike. Paper after N folds is an ordered stack of convex polygons, bottom first. A fold cuts every layer along the fold line; the pieces on the moving side are reflected across it and re-stacked as a group **in reverse order**, since the sheet nearest the top of a flap ends up nearest the bottom once the flap is turned over. A valley fold drops the group on top of the stack, a mountain fold slides it underneath.
+
+The model leans on one property: a rectangle is convex, and both half-plane clipping and reflection preserve convexity, so **every layer stays convex for the life of a sequence**. That is why the whole engine is a Sutherland-Hodgman clip plus a cosine and needs no polygon-boolean library and no physics. Area is conserved exactly across folds.
+
+*The tradeoff, stated plainly.* Not modelled: paper thickness, layers trapped inside a pocket, and true reverse/squash/petal folds, which move part of a flap *through* the stack rather than over it. Steps typed `reverse`, `squash` or `petal` still animate, as the straight fold their line describes. Layers are capped at 96 because a pathological sequence doubles the count per step; real tutorials sit in the low tens.
+
+*The animation.* `FoldStage` (`frontend/app/components/craft/FoldStage.tsx`) is one SVG shared by the authoring preview and the public player, so a fold cannot look one way to the author and another to the reader. GSAP tweens a single scalar — the fold's progress — and each frame rebuilds the layer paths from it. MorphSVG is a Club GreenSock plugin and is not on npm, so the morph is done by hand; that is cheaper than it sounds, because the split of each layer into flap and remainder does not depend on progress, so the path elements mount once per transition and only their `d` changes. React never re-renders during a tween. Seen from overhead a flap rotating out of plane only narrows by `cos(theta)`, so it closes to a crease at the halfway point and opens out mirrored on the far side. `prefers-reduced-motion` snaps instead.
+
+*Two-tone paper.* The sheet is coloured on one face and white on the other, as origami paper is, because once the sheet stops being flat that is the only cue for which face you are looking at. The layer's reflection count decides it, so an even count is the side that started upwards - the coloured one, matching the "start coloured side up" the instructions open with. Fills are opaque: translucent layers blend the faces into each other, which is what made the first attempt (two near-identical off-whites) unreadable. The fold-line indicator and the Craft Maker's snap handles are drawn in `--color-beni` so they read against either face.
+
+*Why the demo fold sequence is corners-and-offset-edges.* Two-tone paint is not enough on its own. **A fold that halves the shape exactly covers the stationary half completely**, so the flap's back face becomes the only thing on screen and the model reads as one flat colour no matter how the faces are painted. The first seeded sequence did exactly that and rendered 100% white from fold 1 onward. The folds are now corners and offset edges, and the sequence is checked by rasterising each step and counting which face the viewer actually sees — the worst step still shows 22% of the minority face. Verifying area and layer counts, as the first pass did, does not catch this: the geometry was correct and invisible.
+
+*Craft Maker* (`/admin/craft-maker`) replaces the placeholder: a sheet-preset canvas (A4 default, plus custom width/height), an add-vertex tool that drops a foldable point anywhere on an existing edge, a **gesture-based fold tool** — click the point of the paper that moves, then click where it lands — an ordered step recorder with reorder/delete/flip-side, and playback of the whole sequence. The crease is the perpendicular bisector of the two picks and the moving half is the half the first pick sits in; fold type and which half travels are then chosen explicitly, and nothing reaches the step list until Record.
+
+*Why the fold tool asks for a gesture rather than a crease.* The first version took two clicks that drew the crease itself, which left the author computing a perpendicular bisector in their head before every fold — "where is the line that puts this corner on that one" is precisely the arithmetic the machine should be doing. And the two things a crease alone does not say, which half moves and what kind of fold it is, were filled in as `side: 'left'` and `foldType: 'valley'`, which were right about half the time — so a recorded sequence read as though the tool were guessing, because it was. Point-and-destination closes both gaps: the crease and the moving half are *derived* from the picks instead of assumed, and the two genuinely authorial choices are asked for out loud. The gesture is kept on the step as `origin`/`target`, both optional — the player reads only `from`/`to`/`side`, so a file authored before this change replays unchanged.
+
+*Public player* — `frontend/app/learn/[slug]/FoldPlayer.tsx` animates the real fold instead of showing a placeholder slot, with step forward/back, auto-play and restart. Tutorials with no authored fold keep working as a written step list. The canvas size control now resizes the paper: the stage fills its box absolutely rather than as a flex item (as a flex child it sized itself from its own aspect ratio and sat still while the box grew), and the control's ceiling is measured from the column it actually has, so `+` stops when the paper stops growing instead of counting up past a limit `min(size, 100%)` had already imposed.
+
+*Storage* — new `craft_files` table (one fold per tutorial, `data` as a JSON blob), `GET/POST/PATCH/DELETE /api/craft-files` behind `requireAuth` + `requireAdmin`, and `GET /api/tutorials/:slug` now returns `craftFile`. Attaching a file stamps `tutorial_steps.craft_file_id`, which was previously a dead column. The seed ships an authored fold for the traditional crane.
+
+### Changed
+- `shared/types.ts` — **team-owned file, and this change is the point of the PR, not a side effect.** The provisional `CraftFile` is replaced by the real format (`CraftPoint`, `CraftSheet`, `CraftSheetPreset`, `CraftVertex`, `CraftFoldSide`, `CraftFoldStep`, `CraftFileData`, `CraftFile`, `SaveCraftFileRequest`), and `Tutorial` gains `craftFile`.
+- `gsap` added as a frontend dependency.
+
 ## [0.3.0] — 2026-09-03
 
 ### Added

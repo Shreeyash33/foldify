@@ -3,13 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/app/lib/utils';
-import { Badge } from '@/app/components/ui/Badge';
 import { PaperSurface } from '@/app/components/ui/PaperSurface';
 
 /**
  * Admin chrome is cardboard, like the navbar and footer. Lives in
- * app/admin/layout.tsx beside the page content. The Craft Maker entry is a
- * placeholder — it will probably gain a ResizablePanel once that lands.
+ * app/admin/layout.tsx beside the page content.
  */
 
 const LINKS = [
@@ -56,11 +54,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
               )}
             >
               {link.label}
-              {link.href === '/admin/craft-maker' ? (
-                <Badge tone="neutral" size="sm">
-                  soon
-                </Badge>
-              ) : null}
             </Link>
           );
         })}

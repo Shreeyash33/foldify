@@ -98,6 +98,7 @@ When `NEXT_PUBLIC_USE_MOCK=true`, `lib/api-client.ts` returns the fixtures defin
 | Backend | Express 4 with `tsx` | |
 | Database | SQLite via `better-sqlite3`; raw SQL, no ORM | An ORM would hide the SQL, and understanding the SQL is part of the assignment |
 | Auth | Cookie-based sessions stored in a `sessions` table, using `bcryptjs` | `bcryptjs` is a pure JS implementation and requires no native build step |
+| Animation | GSAP, driving a hand-written SVG path morph | MorphSVG is a paid Club GreenSock plugin and is not on npm; the fold engine tweens one scalar and rebuilds the paths, which needs no plugin |
 | Types | `shared/types.ts`, imported by both frontend and backend | Keeps a single contract between the two and avoids drift |
 
 Tailwind v4 is in use. Tokens are defined under `@theme` inside `app/globals.css`, dark mode is toggled manually via a `.dark` class using `@custom-variant`, and there is no `tailwind.config.ts` file.
@@ -139,8 +140,10 @@ The backend is Express. Routes should not be created under `frontend/app/api/` �
 │   │   ├── components/
 │   │   │   ├── ui/          the closed component library — not to be edited directly
 │   │   │   ├── layout/      Navbar, Footer, Container, PageHeader, AdminSidebar
+│   │   │   ├── craft/       FoldStage - the GSAP fold renderer, shared by maker and player
 │   │   │   └── showcase/    showcase-page scaffolding only
 │   │   ├── lib/             api-client, mock-data, utils, hooks, cart-store
+│   │   │   └── craft/       fold geometry, the layering model, the CraftFile helpers
 │   │   ├── (auth)/          login, register
 │   │   ├── (shop)/          products, cart, checkout
 │   │   ├── learn/           tutorials
@@ -168,11 +171,12 @@ The component library is closed for direct edits. See `CONTRIBUTING.md` before b
 
 ## 9. Known gaps in this commit
 
-- **Implemented endpoints:** `GET /api/status`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/products`, `GET /api/products/:slug` (includes `linkedTutorials` — the "fold it yourself" cross-links), `GET /api/products/:slug/reviews`, `POST /api/products/:slug/reviews`, `GET /api/tutorials`, `GET /api/tutorials/:slug` (includes `linkedProducts` — the "buy the finished fold" cross-links), `GET /api/orders`, `POST /api/orders`, `GET /api/orders/:id`, `POST /api/orders/:id/verify`, `POST /api/contact`.
-- **Admin endpoints (all behind `requireAuth` + `requireAdmin`):** `GET /api/admin/overview`, `GET /api/users`, `PATCH /api/users/:id/role`, `POST/PATCH/DELETE /api/products`, `GET /api/products/all`, `GET/POST /api/products/categories`, `GET /api/tutorials/all`, `POST/PATCH/DELETE /api/tutorials`, `POST /api/tutorials/:id/steps`, `GET /api/orders/all`, `PATCH /api/orders/:id/status`, `GET /api/contact`, `PATCH /api/contact/:id`.
+- **Implemented endpoints:** `GET /api/status`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/products`, `GET /api/products/:slug` (includes `linkedTutorials` — the "fold it yourself" cross-links), `GET /api/products/:slug/reviews`, `POST /api/products/:slug/reviews`, `GET /api/tutorials`, `GET /api/tutorials/:slug` (includes `linkedProducts` — the "buy the finished fold" cross-links — and `craftFile`, the authored fold the player animates), `GET /api/orders`, `POST /api/orders`, `GET /api/orders/:id`, `POST /api/orders/:id/verify`, `POST /api/contact`.
+- **Admin endpoints (all behind `requireAuth` + `requireAdmin`):** `GET /api/admin/overview`, `GET /api/users`, `PATCH /api/users/:id/role`, `POST/PATCH/DELETE /api/products`, `GET /api/products/all`, `GET/POST /api/products/categories`, `GET /api/tutorials/all`, `POST/PATCH/DELETE /api/tutorials`, `POST /api/tutorials/:id/steps`, `GET /api/orders/all`, `PATCH /api/orders/:id/status`, `GET /api/contact`, `PATCH /api/contact/:id`, `GET/POST /api/craft-files`, `GET/PATCH/DELETE /api/craft-files/:id`.
 - The admin pages under `/admin` are client-rendered and gated by a client-side role check; the real enforcement is `requireAdmin` on the server.
 - The contact form is live (`/contact` → `POST /api/contact`), and customers can post reviews on the product detail page. Both surfaces are wired to the API and cannot do mock-mode submits (they need the backend running).
 - Only the simulated payment gateway is wired (`/pay/.../verify`). A real eSewa or Khalti provider needs live merchant accounts and API keys — this is the one feature nobody can finish without credentials.
 - Texture image files have not been added yet; see `frontend/public/textures/README.md`. Surfaces render acceptably without them in the meantime.
-- The Craft Maker and the fold animation player have not been started. The `CraftFile` type is a placeholder pending a separate animation spike.
+- **Craft Maker and the fold player are built** (`/admin/craft-maker`, `/learn/[slug]`), and `CraftFile` in `shared/types.ts` is now the real format. What they deliberately do NOT do: paper thickness, layers trapped inside a pocket, curved folds, and true reverse/squash/petal folds, which move part of a flap *through* the layer stack rather than over it. A step typed `reverse`, `squash` or `petal` still animates, as the straight fold its line describes. Layers are capped at 96. The model is a stack of convex polygons cut by a half-plane and reflected — see the 0.4.0 CHANGELOG entry for the reasoning and `frontend/app/lib/craft/fold-model.ts` for the code.
+- Only the traditional crane has an authored fold in the seed. Every other tutorial renders as a written step list until somebody folds it in the Craft Maker.
 - `npm audit` reports advisories in `brace-expansion`, reached only through ESLint's dev-time dependency tree. Resolving this requires upgrading to ESLint 10, which is a breaking change with no runtime benefit, so it has been left as-is for now.
