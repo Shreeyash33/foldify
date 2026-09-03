@@ -42,6 +42,11 @@ export function ProductCard({ product }: { product: Product }) {
 
         <CardFooter>
           <Badge tone="neutral">{formatPrice(product.priceMinor, product.currency)}</Badge>
+          {product.compareAtPriceMinor !== null && product.compareAtPriceMinor > product.priceMinor ? (
+            <span className="font-mono text-xs text-ink-muted line-through">
+              {formatPrice(product.compareAtPriceMinor, product.currency)}
+            </span>
+          ) : null}
         </CardFooter>
       </Link>
     </Card>

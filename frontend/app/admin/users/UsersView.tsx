@@ -1,55 +1,31 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody } from '@/app/components/ui/Card';
-import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PageHeader } from '@/app/components/layout/PageHeader';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
+import { EmptyState } from '@/app/components/feedback/EmptyState';
+import { ListSkeleton } from '@/app/components/feedback/ListSkeleton';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useToast } from '@/app/contexts/ToastContext';
 import { listAdminUsers, updateUserRole } from '@/app/lib/api-client';
+import { useFetchData } from '@/app/lib/hooks';
+import { formatMoney } from '@/app/lib/utils';
 import type { AdminUser } from '@foldify/shared';
 
-/** Paisa → a short total like "Rs. 1,85,000". */
+/** Paisa → a short total like "Rs. 1,85,000 spent". */
 function formatSpent(minor: number): string {
   if (minor <= 0) return 'Nothing yet';
-  return `Rs. ${(minor / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })} spent`;
+  return formatMoney(minor, { prefix: 'Rs. ', suffix: ' spent' });
 }
 
 export function UsersView() {
   const toast = useToast();
   const { user: me } = useAuth();
-  const [users, setUsers] = useState<AdminUser[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data: users, error, reload } = useFetchData(listAdminUsers, 'Could not load the customers.');
   const [busyId, setBusyId] = useState<number | null>(null);
-
-  const applyData = useCallback((data: AdminUser[]) => {
-    setError(null);
-    setUsers(data);
-  }, []);
-
-  const applyError = useCallback((cause: unknown) => {
-    setError(cause instanceof Error ? cause.message : 'Could not load the customers.');
-  }, []);
-
-  useEffect(() => {
-    let isStale = false;
-    listAdminUsers()
-      .then((data) => {
-        if (!isStale) applyData(data);
-      })
-      .catch((cause: unknown) => {
-        if (!isStale) applyError(cause);
-      });
-    return () => {
-      isStale = true;
-    };
-  }, [applyData, applyError]);
-
-  const reload = useCallback(() => {
-    listAdminUsers().then(applyData).catch(applyError);
-  }, [applyData, applyError]);
 
   const handleRoleChange = async (user: AdminUser) => {
     const nextRole = user.role === 'admin' ? 'customer' : 'admin';
@@ -86,32 +62,11 @@ export function UsersView() {
       />
 
       {error !== null ? (
-        <Card>
-          <CardBody className="flex flex-col items-start gap-3">
-            <Badge tone="danger">Problem</Badge>
-            <p>{error}</p>
-            <Button onClick={() => void reload()} variant="secondary" size="sm">
-              Try again
-            </Button>
-          </CardBody>
-        </Card>
+        <ErrorCard message={error} onRetry={reload} />
       ) : users === null ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Card key={index}>
-              <CardBody className="flex flex-col gap-3">
-                <Skeleton shape="title" />
-                <Skeleton shape="text" lines={2} />
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton count={4} lines={2} />
       ) : users.length === 0 ? (
-        <Card>
-          <CardBody>
-            <p>No accounts yet.</p>
-          </CardBody>
-        </Card>
+        <EmptyState message="No accounts yet." />
       ) : (
         <div className="flex flex-col gap-3">
           {users.map((user) => (

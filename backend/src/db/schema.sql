@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT    NOT NULL DEFAULT '',
   -- Money is stored in minor units (paisa) as an integer. Never a float.
   price_minor INTEGER NOT NULL CHECK (price_minor >= 0),
+  -- The struck-through "original" price when this model is on sale. The paid
+  -- price is always price_minor (already the sale price); this is display only.
+  compare_at_price_minor INTEGER CHECK (compare_at_price_minor IS NULL OR compare_at_price_minor > 0),
   currency    TEXT    NOT NULL DEFAULT 'NPR' CHECK (currency IN ('NPR')),
   image_url   TEXT,
   category_id INTEGER NOT NULL,

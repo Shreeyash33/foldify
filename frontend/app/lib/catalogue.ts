@@ -56,14 +56,6 @@ export async function getTutorialList(): Promise<Tutorial[]> {
   return api.listTutorials({ revalidate: CATALOGUE_TTL_SECONDS, tags: ['tutorials'] });
 }
 
-export async function getTutorialDetail(slug: string): Promise<Tutorial> {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('tutorials', `tutorial:${slug}`);
-
-  return api.getTutorial(slug, { revalidate: CATALOGUE_TTL_SECONDS, tags: ['tutorials'] });
-}
-
 /**
  * Tutorial detail for the static shell. A slug that does not exist is an
  * answer (→ null), not a failure — the same deal as getProductShell.

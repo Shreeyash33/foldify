@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardHeader, CardMeta, CardTitle } from '@/app/components/ui/Card';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PageHeader } from '@/app/components/layout/PageHeader';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
 import { getAdminOverview } from '@/app/lib/api-client';
-import type { AdminOverview } from '@foldify/shared';
+import { useFetchData } from '@/app/lib/hooks';
 
 /** Count card: a single loud number over a small mono label. */
 function CountCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
@@ -24,35 +23,10 @@ function CountCard({ label, value, accent }: { label: string; value: string; acc
 }
 
 export function OverviewView() {
-  const [overview, setOverview] = useState<AdminOverview | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const applyData = useCallback((data: AdminOverview) => {
-    setError(null);
-    setOverview(data);
-  }, []);
-
-  const applyError = useCallback((cause: unknown) => {
-    setError(cause instanceof Error ? cause.message : 'Could not load the overview.');
-  }, []);
-
-  useEffect(() => {
-    let isStale = false;
-    getAdminOverview()
-      .then((data) => {
-        if (!isStale) applyData(data);
-      })
-      .catch((cause: unknown) => {
-        if (!isStale) applyError(cause);
-      });
-    return () => {
-      isStale = true;
-    };
-  }, [applyData, applyError]);
-
-  const reload = useCallback(() => {
-    getAdminOverview().then(applyData).catch(applyError);
-  }, [applyData, applyError]);
+  const { data: overview, error, reload } = useFetchData(
+    getAdminOverview,
+    'Could not load the overview.',
+  );
 
   return (
     <div className="flex flex-col gap-6 pb-16">
@@ -76,15 +50,7 @@ export function OverviewView() {
       />
 
       {error !== null ? (
-        <Card>
-          <CardBody className="flex flex-col items-start gap-3">
-            <Badge tone="danger">Problem</Badge>
-            <p>{error}</p>
-            <Button onClick={() => void reload()} variant="secondary" size="sm">
-              Try again
-            </Button>
-          </CardBody>
-        </Card>
+        <ErrorCard message={error} onRetry={reload} />
       ) : overview === null ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }, (_, index) => (

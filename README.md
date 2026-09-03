@@ -51,7 +51,7 @@ npm run seed          # creates backend/data/foldify.db and populates it
 npm run dev           # starts frontend on :3000 and backend on :4000
 ```
 
-Then open <http://localhost:3000>. This loads the component showcase, not a homepage — it lists every component in the design system along with the JSX needed to use it.
+Then open <http://localhost:3000>. This is the marketing homepage — a hero banner, a curated strip of featured products, and links to the shop and the tutorials. The design-system showcase lives at <http://localhost:3000/showcasepage>.
 
 Other available scripts:
 
@@ -133,7 +133,7 @@ The backend is Express. Routes should not be created under `frontend/app/api/` �
 ├── frontend/                Next.js
 │   ├── app/
 │   │   ├── layout.tsx       fonts, pre-paint theme script, providers, chrome
-│   │   ├── page.tsx         the component showcase
+│   │   ├── page.tsx         the marketing homepage (hero + featured strip)
 │   │   ├── providers.tsx    all four contexts
 │   │   ├── contexts/        Theme, Auth, Cart, Toast
 │   │   ├── components/
@@ -171,7 +171,6 @@ The component library is closed for direct edits. See `CONTRIBUTING.md` before b
 - **Implemented endpoints:** `GET /api/status`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/products`, `GET /api/products/:slug` (includes `linkedTutorials` — the "fold it yourself" cross-links), `GET /api/products/:slug/reviews`, `POST /api/products/:slug/reviews`, `GET /api/tutorials`, `GET /api/tutorials/:slug` (includes `linkedProducts` — the "buy the finished fold" cross-links), `GET /api/orders`, `POST /api/orders`, `GET /api/orders/:id`, `POST /api/orders/:id/verify`, `POST /api/contact`.
 - **Admin endpoints (all behind `requireAuth` + `requireAdmin`):** `GET /api/admin/overview`, `GET /api/users`, `PATCH /api/users/:id/role`, `POST/PATCH/DELETE /api/products`, `GET /api/products/all`, `GET/POST /api/products/categories`, `GET /api/tutorials/all`, `POST/PATCH/DELETE /api/tutorials`, `POST /api/tutorials/:id/steps`, `GET /api/orders/all`, `PATCH /api/orders/:id/status`, `GET /api/contact`, `PATCH /api/contact/:id`.
 - The admin pages under `/admin` are client-rendered and gated by a client-side role check; the real enforcement is `requireAdmin` on the server.
-- The homepage (`/`) still renders the design-system showcase; the marketing hero page is not built yet.
 - The contact form is live (`/contact` → `POST /api/contact`), and customers can post reviews on the product detail page. Both surfaces are wired to the API and cannot do mock-mode submits (they need the backend running).
 - Only the simulated payment gateway is wired (`/pay/.../verify`). A real eSewa or Khalti provider needs live merchant accounts and API keys — this is the one feature nobody can finish without credentials.
 - Texture image files have not been added yet; see `frontend/public/textures/README.md`. Surfaces render acceptably without them in the meantime.

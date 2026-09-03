@@ -58,6 +58,11 @@ async function LivePricing({ slug }: { slug: string }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone="neutral">{formatPrice(product.priceMinor, product.currency)}</Badge>
+        {product.compareAtPriceMinor !== null && product.compareAtPriceMinor > product.priceMinor ? (
+          <span className="font-mono text-xs text-ink-muted line-through">
+            {formatPrice(product.compareAtPriceMinor, product.currency)}
+          </span>
+        ) : null}
         {product.stock > 0 ? (
           <Badge tone="cardboard">{product.stock} in stock</Badge>
         ) : (

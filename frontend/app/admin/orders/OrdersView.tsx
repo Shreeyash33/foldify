@@ -1,14 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardFooter, CardMeta, CardTitle } from '@/app/components/ui/Card';
 import { Select } from '@/app/components/ui/Select';
-import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PageHeader } from '@/app/components/layout/PageHeader';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
+import { EmptyState } from '@/app/components/feedback/EmptyState';
+import { ListSkeleton } from '@/app/components/feedback/ListSkeleton';
 import { useToast } from '@/app/contexts/ToastContext';
 import { listAdminOrders, updateOrderStatus } from '@/app/lib/api-client';
+import { useFetchData } from '@/app/lib/hooks';
+import { formatMoney } from '@/app/lib/utils';
 import type { AdminOrder, OrderStatus } from '@foldify/shared';
 
 const STATUSES: OrderStatus[] = [
@@ -31,10 +35,6 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   refunded: 'Refunded',
 };
 
-function formatPrice(minor: number): string {
-  return `Rs. ${(minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 const STATUS_OPTIONS = STATUSES.map((status) => ({
   value: status,
   label: STATUS_LABEL[status],
@@ -44,37 +44,9 @@ export function OrdersView() {
   const toast = useToast();
   // The admin list does not include items; keeping per-order change status is
   // enough for a first version.
-  const [orders, setOrders] = useState<AdminOrder[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data: orders, error, reload } = useFetchData(listAdminOrders, 'Could not load the orders.');
   const [drafts, setDrafts] = useState<Record<number, OrderStatus>>({});
   const [busyId, setBusyId] = useState<number | null>(null);
-
-  const applyData = useCallback((data: AdminOrder[]) => {
-    setError(null);
-    setOrders(data);
-  }, []);
-
-  const applyError = useCallback((cause: unknown) => {
-    setError(cause instanceof Error ? cause.message : 'Could not load the orders.');
-  }, []);
-
-  useEffect(() => {
-    let isStale = false;
-    listAdminOrders()
-      .then((data) => {
-        if (!isStale) applyData(data);
-      })
-      .catch((cause: unknown) => {
-        if (!isStale) applyError(cause);
-      });
-    return () => {
-      isStale = true;
-    };
-  }, [applyData, applyError]);
-
-  const reload = useCallback(() => {
-    listAdminOrders().then(applyData).catch(applyError);
-  }, [applyData, applyError]);
 
   const setDraft = (id: number, status: OrderStatus) => {
     setDrafts((current) => ({ ...current, [id]: status }));
@@ -110,32 +82,11 @@ export function OrdersView() {
       />
 
       {error !== null ? (
-        <Card>
-          <CardBody className="flex flex-col items-start gap-3">
-            <Badge tone="danger">Problem</Badge>
-            <p>{error}</p>
-            <Button onClick={() => void reload()} variant="secondary" size="sm">
-              Try again
-            </Button>
-          </CardBody>
-        </Card>
+        <ErrorCard message={error} onRetry={reload} />
       ) : orders === null ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Card key={index}>
-              <CardBody className="flex flex-col gap-3">
-                <Skeleton shape="title" />
-                <Skeleton shape="text" lines={3} />
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton count={4} lines={3} />
       ) : orders.length === 0 ? (
-        <Card>
-          <CardBody>
-            <p>No orders yet.</p>
-          </CardBody>
-        </Card>
+        <EmptyState message="No orders yet." />
       ) : (
         <div className="flex flex-col gap-3">
           {orders.map((order) => (
@@ -152,7 +103,7 @@ export function OrdersView() {
                     {order.customerName} &lt;{order.customerEmail}&gt; · {order.createdAt}
                   </CardMeta>
                 </div>
-                <p className="font-display text-lg text-ink">{formatPrice(order.totalMinor)}</p>
+                <p className="font-display text-lg text-ink">{formatMoney(order.totalMinor, { prefix: 'Rs. ' })}</p>
               </div>
 
               <CardBody className="flex flex-col gap-1.5">

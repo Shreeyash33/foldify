@@ -1,47 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardFooter, CardMeta } from '@/app/components/ui/Card';
-import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PageHeader } from '@/app/components/layout/PageHeader';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
+import { EmptyState } from '@/app/components/feedback/EmptyState';
+import { ListSkeleton } from '@/app/components/feedback/ListSkeleton';
 import { useToast } from '@/app/contexts/ToastContext';
 import { listContactMessages, setContactHandled } from '@/app/lib/api-client';
+import { useFetchData } from '@/app/lib/hooks';
 import type { ContactMessage } from '@foldify/shared';
 
 export function InboxView() {
   const toast = useToast();
-  const [messages, setMessages] = useState<ContactMessage[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data: messages, error, reload } = useFetchData(
+    listContactMessages,
+    'Could not load the inbox.',
+  );
   const [busyId, setBusyId] = useState<number | null>(null);
-
-  const applyData = useCallback((data: ContactMessage[]) => {
-    setError(null);
-    setMessages(data);
-  }, []);
-
-  const applyError = useCallback((cause: unknown) => {
-    setError(cause instanceof Error ? cause.message : 'Could not load the inbox.');
-  }, []);
-
-  useEffect(() => {
-    let isStale = false;
-    listContactMessages()
-      .then((data) => {
-        if (!isStale) applyData(data);
-      })
-      .catch((cause: unknown) => {
-        if (!isStale) applyError(cause);
-      });
-    return () => {
-      isStale = true;
-    };
-  }, [applyData, applyError]);
-
-  const reload = useCallback(() => {
-    listContactMessages().then(applyData).catch(applyError);
-  }, [applyData, applyError]);
 
   const handleToggle = async (message: ContactMessage) => {
     setBusyId(message.id);
@@ -65,32 +43,11 @@ export function InboxView() {
       />
 
       {error !== null ? (
-        <Card>
-          <CardBody className="flex flex-col items-start gap-3">
-            <Badge tone="danger">Problem</Badge>
-            <p>{error}</p>
-            <Button onClick={() => void reload()} variant="secondary" size="sm">
-              Try again
-            </Button>
-          </CardBody>
-        </Card>
+        <ErrorCard message={error} onRetry={reload} />
       ) : messages === null ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 3 }, (_, index) => (
-            <Card key={index}>
-              <CardBody className="flex flex-col gap-3">
-                <Skeleton shape="title" />
-                <Skeleton shape="text" lines={3} />
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton count={3} lines={3} />
       ) : messages.length === 0 ? (
-        <Card>
-          <CardBody>
-            <p>The inbox is empty. Nice.</p>
-          </CardBody>
-        </Card>
+        <EmptyState message="The inbox is empty. Nice." />
       ) : (
         <div className="flex flex-col gap-3">
           {messages.map((message) => (

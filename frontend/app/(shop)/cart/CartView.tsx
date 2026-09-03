@@ -12,11 +12,21 @@ import {
   CardTitle,
 } from '@/app/components/ui/Card';
 import { Input } from '@/app/components/ui/Input';
+import { ListSkeleton } from '@/app/components/feedback/ListSkeleton';
 import { useCart } from '@/app/contexts/CartContext';
+import { useIsHydrated } from '@/app/lib/hooks';
 import { formatPrice } from '@/app/lib/utils';
 
 export function CartView() {
   const { items, updateQty, remove, clear, subtotalMinor, isEmpty } = useCart();
+  const isHydrated = useIsHydrated();
+
+  // The cart lives in localStorage and is unknown until hydration. Until then
+  // show a skeleton so a populated cart never flashes the "nothing in the
+  // cart" empty state on first paint.
+  if (!isHydrated) {
+    return <ListSkeleton count={2} lines={4} className="flex flex-col gap-4" />;
+  }
 
   if (isEmpty) {
     return (

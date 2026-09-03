@@ -10,6 +10,7 @@ import { Skeleton } from '@/app/components/ui/Skeleton';
 import { Textarea } from '@/app/components/ui/Textarea';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useToast } from '@/app/contexts/ToastContext';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
 import { ApiClientError, createReview, getProduct } from '@/app/lib/api-client';
 import { formatDate } from '@/app/lib/utils';
 
@@ -68,15 +69,7 @@ export function ReviewsSection({ slug }: { slug: string }) {
     return (
       <div className="flex flex-col gap-3">
         {error !== null ? (
-          <Card>
-            <CardBody className="flex flex-col items-start gap-3">
-              <Badge tone="danger">Problem</Badge>
-              <p>{error}</p>
-              <Button type="button" variant="secondary" size="sm" onClick={reload}>
-                Try again
-              </Button>
-            </CardBody>
-          </Card>
+          <ErrorCard message={error} onRetry={() => void reload()} />
         ) : (
           <Skeleton shape="text" lines={3} />
         )}

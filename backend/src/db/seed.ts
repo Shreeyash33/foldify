@@ -29,6 +29,8 @@ interface SeedProduct {
   name: string;
   description: string;
   priceMinor: number;
+  /** The struck-through "original" price when this model is on sale; omit for no discount. */
+  compareAtPriceMinor?: number;
   categorySlug: string;
   stock: number;
   /**
@@ -41,17 +43,17 @@ interface SeedProduct {
 
 const PRODUCTS: SeedProduct[] = [
   { slug: 'crane-traditional-white', name: 'Traditional Crane', description: 'The classic tsuru, folded from crisp white kami and mounted on a small walnut block. The same model the crane tutorial teaches, if you would rather have one than fold one.', priceMinor: 45000, categorySlug: 'animals', stock: 60, difficulty: 'beginner' },
-  { slug: 'crane-flock-mobile', name: 'Crane Flock Mobile — Nine Cranes', description: 'Nine cranes in graded indigo, hung at staggered heights from a brass rod. Turns on its own in a draught.', priceMinor: 165000, categorySlug: 'animals', stock: 24, difficulty: 'intermediate' },
-  { slug: 'koi-pair-red-white', name: 'Koi Pair', description: 'Two koi in red and white, wet-folded from tant so the bodies keep a curve instead of sitting flat.', priceMinor: 128000, categorySlug: 'animals', stock: 30, difficulty: 'intermediate' },
+  { slug: 'crane-flock-mobile', name: 'Crane Flock Mobile — Nine Cranes', description: 'Nine cranes in graded indigo, hung at staggered heights from a brass rod. Turns on its own in a draught.', priceMinor: 165000, compareAtPriceMinor: 190000, categorySlug: 'animals', stock: 24, difficulty: 'intermediate' },
+  { slug: 'koi-pair-red-white', name: 'Koi Pair', description: 'Two koi in red and white, wet-folded from tant so the bodies keep a curve instead of sitting flat.', priceMinor: 128000, compareAtPriceMinor: 150000, categorySlug: 'animals', stock: 30, difficulty: 'intermediate' },
   { slug: 'dragon-western-black', name: 'Western Dragon', description: 'Folded from a single square of black double-tissue — no cuts, no glue, every spine and claw accounted for. Roughly four hundred steps.', priceMinor: 340000, categorySlug: 'animals', stock: 8, difficulty: 'advanced' },
-  { slug: 'lotus-blossom-pink', name: 'Lotus Blossom', description: 'Eight layers of soft pink washi opened petal by petal. Sits flat in the palm.', priceMinor: 52000, categorySlug: 'flowers', stock: 55, difficulty: 'beginner' },
+  { slug: 'lotus-blossom-pink', name: 'Lotus Blossom', description: 'Eight layers of soft pink washi opened petal by petal. Sits flat in the palm.', priceMinor: 52000, compareAtPriceMinor: 60000, categorySlug: 'flowers', stock: 55, difficulty: 'beginner' },
   { slug: 'tulip-trio-stems', name: 'Tulip Trio', description: 'Three tulips on folded stems, in yellow, coral and white. Blown into shape through the base, the traditional way.', priceMinor: 68000, categorySlug: 'flowers', stock: 42, difficulty: 'beginner' },
   { slug: 'rose-kawasaki-crimson', name: 'Kawasaki Rose', description: 'The twist-fold rose in crimson chiyogami. The spiral at its centre is one continuous move — the reason this one is not for a first attempt.', priceMinor: 215000, categorySlug: 'flowers', stock: 14, difficulty: 'advanced' },
   { slug: 'sonobe-cube-six-unit', name: 'Sonobe Cube', description: 'Six identical units slotted into one another, no glue anywhere. The modular tutorial folds this exact cube.', priceMinor: 88000, categorySlug: 'modular', stock: 36, difficulty: 'intermediate' },
-  { slug: 'kusudama-flower-ball', name: 'Kusudama Flower Ball', description: 'Thirty flower units in five colours, threaded and tasselled. Hangs from a loop at the top.', priceMinor: 185000, categorySlug: 'modular', stock: 20, difficulty: 'intermediate' },
+  { slug: 'kusudama-flower-ball', name: 'Kusudama Flower Ball', description: 'Thirty flower units in five colours, threaded and tasselled. Hangs from a loop at the top.', priceMinor: 185000, compareAtPriceMinor: 210000, categorySlug: 'modular', stock: 20, difficulty: 'intermediate' },
   { slug: 'star-cluster-icosahedron', name: 'Icosahedral Star Cluster', description: 'Thirty units, twenty points, one shape that holds itself together by tension alone. Drop it and it survives; pull one unit and it does not.', priceMinor: 295000, categorySlug: 'modular', stock: 9, difficulty: 'advanced' },
   { slug: 'masu-box-nested-set', name: 'Nested Masu Boxes — Set of Three', description: 'Three lidded masu boxes that sit inside one another. Folded from patterned chiyogami, squared to the millimetre.', priceMinor: 74000, categorySlug: 'vessels', stock: 48, difficulty: 'beginner' },
-  { slug: 'star-bowl-eight-point', name: 'Eight-Point Star Bowl', description: 'A shallow bowl that folds up into eight points, in deep green tant. Holds keys by the door, or nothing at all.', priceMinor: 112000, categorySlug: 'vessels', stock: 26, difficulty: 'intermediate' },
+  { slug: 'star-bowl-eight-point', name: 'Eight-Point Star Bowl', description: 'A shallow bowl that folds up into eight points, in deep green tant. Holds keys by the door, or nothing at all.', priceMinor: 112000, compareAtPriceMinor: 130000, categorySlug: 'vessels', stock: 26, difficulty: 'intermediate' },
 ];
 
 interface SeedStep {
@@ -154,6 +156,7 @@ function seed(): void {
         name: product.name,
         description: product.description,
         priceMinor: product.priceMinor,
+        compareAtPriceMinor: product.compareAtPriceMinor ?? null,
         imageUrl: null,
         categoryId,
         stock: product.stock,

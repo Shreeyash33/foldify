@@ -305,11 +305,6 @@ export async function listOrders(): Promise<Order[]> {
   return request<Order[]>('/orders');
 }
 
-export async function getOrder(id: number): Promise<Order> {
-  if (USE_MOCK) throw new ApiClientError(404, { code: 'NOT_FOUND', message: 'No such order.' });
-  return request<Order>(`/orders/${id}`);
-}
-
 export async function verifyOrderPayment(id: number): Promise<Order> {
   if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Payment needs the API.' });
   return request<Order>(`/orders/${id}/verify`, { method: 'POST' });

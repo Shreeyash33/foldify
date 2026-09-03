@@ -19,12 +19,32 @@ export function cn(...parts: (string | false | null | undefined)[]): string {
  * Only this function turns it into something a person reads.
  */
 export function formatPrice(minorUnits: number, currency: 'NPR' = 'NPR'): string {
+  return formatMoney(minorUnits, { prefix: currency === 'NPR' ? 'Rs ' : `${currency} ` });
+}
+
+export interface FormatMoneyOptions {
+  /** 0, 1 or 2 decimal places. Defaults to 2 (paisa → rupees). */
+  fractionDigits?: 0 | 1 | 2;
+  /** Text before the number, e.g. "Rs. ". Default "". */
+  prefix?: string;
+  /** Text after the number, e.g. " spent". Default "". */
+  suffix?: string;
+}
+
+/**
+ * The single money formatter. Every price in the app — shop, cart, admin —
+ * goes through here so paisa renders identically everywhere: `en-NP` grouping
+ * (lakh/crore) with a caller-controlled prefix, decimals and suffix. Admin no
+ * longer keeps its own local copies with a different locale.
+ */
+export function formatMoney(minorUnits: number, options: FormatMoneyOptions = {}): string {
+  const { fractionDigits = 2, prefix = '', suffix = '' } = options;
   const major = minorUnits / 100;
   const formatted = major.toLocaleString('en-NP', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   });
-  return currency === 'NPR' ? `Rs ${formatted}` : `${currency} ${formatted}`;
+  return `${prefix}${formatted}${suffix}`;
 }
 
 /** Short, unambiguous date. Fixed locale so server and client agree. */
@@ -37,30 +57,6 @@ export function formatDate(iso: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   }).format(date);
-}
-
-/** `2 hours ago`, `3 days ago`. Falls back to a date beyond a month. */
-export function formatRelative(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return '—';
-
-  const seconds = Math.round((Date.now() - then) / 1000);
-  const units: [Intl.RelativeTimeFormatUnit, number][] = [
-    ['second', 60],
-    ['minute', 60],
-    ['hour', 24],
-    ['day', 30],
-  ];
-
-  let value = seconds;
-  for (const [unit, size] of units) {
-    if (Math.abs(value) < size) {
-      return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(-value, unit);
-    }
-    value = Math.round(value / size);
-  }
-
-  return formatDate(iso);
 }
 
 /** Minutes as `25 min` or `1 hr 5 min`. Used for tutorial length. */

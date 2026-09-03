@@ -64,6 +64,13 @@ export interface Product {
   description: string;
   /** Minor units (paisa). Integers only — never store money as a float. */
   priceMinor: number;
+  /**
+   * The "compare at" / reference price in minor units, when this model is on
+   * sale. The customer pays `priceMinor` (which is therefore already the sale
+   * price); `compareAtPriceMinor` is the higher original shown struck through.
+   * Null when the model is not discounted.
+   */
+  compareAtPriceMinor: number | null;
   currency: 'NPR';
   imageUrl: string | null;
   categoryId: number;
@@ -272,6 +279,8 @@ export interface UpdateProductRequest {
   description?: string;
   /** Entered in rupees on the form, converted to paisa on the way in. */
   priceMinor?: number;
+  /** Compare-at price in minor units; null/omitted clears the discount. */
+  compareAtPriceMinor?: number | null;
   imageUrl?: string | null;
   categoryId?: number;
   stock?: number;

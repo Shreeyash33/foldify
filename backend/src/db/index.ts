@@ -33,6 +33,15 @@ export function applySchema(): void {
   const schemaPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'schema.sql');
   const sql = fs.readFileSync(schemaPath, 'utf8');
   db.exec(sql);
+
+  // Migration for databases created before discounts existed: `CREATE TABLE IF
+  // NOT EXISTS` never touches an existing table, so the new column must be
+  // added explicitly — but only when it is missing, keeping this safe on both
+  // fresh (schema.sql already has it) and pre-existing databases.
+  const productColumns = db.prepare(`PRAGMA table_info(products)`).all() as { name: string }[];
+  if (!productColumns.some((column) => column.name === 'compare_at_price_minor')) {
+    db.exec(`ALTER TABLE products ADD COLUMN compare_at_price_minor INTEGER`);
+  }
 }
 
 export interface DbHealth {

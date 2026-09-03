@@ -238,11 +238,22 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
     name: [required, minLength(2), maxLength(120)],
     description: [required, maxLength(2000)],
     priceMinor: [required, isNonNegativeInteger],
+    compareAtPriceMinor: [optional(isNonNegativeInteger)],
     imageUrl: [optional(isString), maxLength(500)],
     categoryId: [required, isInteger],
     stock: [required, isNonNegativeInteger],
     difficulty: [required, oneOf(DIFFICULTIES)],
   });
+
+  if (
+    body.compareAtPriceMinor !== undefined &&
+    body.compareAtPriceMinor !== null &&
+    body.compareAtPriceMinor <= body.priceMinor
+  ) {
+    throw AppError.badRequest('The compare-at price must be higher than the sale price.', {
+      compareAtPriceMinor: 'Must be higher than the price.',
+    });
+  }
 
   const existing = getProductBySlug(body.slug);
   if (existing !== null) throw AppError.conflict(`A product with the slug "${body.slug}" already exists.`);
@@ -252,6 +263,7 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
     name: body.name.trim(),
     description: body.description.trim(),
     priceMinor: body.priceMinor,
+    compareAtPriceMinor: body.compareAtPriceMinor ?? null,
     imageUrl: body.imageUrl === undefined ? null : body.imageUrl ?? null,
     categoryId: body.categoryId,
     stock: body.stock,
@@ -281,6 +293,7 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
     name: [optional(minLength(2)), maxLength(120)],
     description: [optional(isString), maxLength(2000)],
     priceMinor: [optional(isNonNegativeInteger)],
+    compareAtPriceMinor: [optional(isNonNegativeInteger)],
     imageUrl: [optional(isString), maxLength(500)],
     categoryId: [optional(isInteger)],
     stock: [optional(isNonNegativeInteger)],
@@ -293,6 +306,17 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
     if (conflict !== null && conflict.id !== product.id) {
       throw AppError.conflict(`A product with the slug "${body.slug}" already exists.`);
     }
+  }
+
+  // A compare-at is only meaningful above the sale price. Because PATCH is
+  // partial, compare against the price the update would leave in place.
+  const effectivePrice = body.priceMinor ?? product.priceMinor;
+  const wouldBeCompareAt =
+    body.compareAtPriceMinor === undefined ? product.compareAtPriceMinor : body.compareAtPriceMinor;
+  if (wouldBeCompareAt !== null && wouldBeCompareAt !== undefined && wouldBeCompareAt <= effectivePrice) {
+    throw AppError.badRequest('The compare-at price must be higher than the sale price.', {
+      compareAtPriceMinor: 'Must be higher than the price.',
+    });
   }
 
   const updated = updateProduct(product.id, body);

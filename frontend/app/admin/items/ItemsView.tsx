@@ -7,10 +7,12 @@ import { Card, CardBody } from '@/app/components/ui/Card';
 import { Input } from '@/app/components/ui/Input';
 import { Modal } from '@/app/components/ui/Modal';
 import { Select } from '@/app/components/ui/Select';
-import { Skeleton } from '@/app/components/ui/Skeleton';
 import { Switch } from '@/app/components/ui/Switch';
 import { Textarea } from '@/app/components/ui/Textarea';
 import { PageHeader } from '@/app/components/layout/PageHeader';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
+import { EmptyState } from '@/app/components/feedback/EmptyState';
+import { ListSkeleton } from '@/app/components/feedback/ListSkeleton';
 import { useToast } from '@/app/contexts/ToastContext';
 import {
   ApiClientError,
@@ -21,6 +23,7 @@ import {
   listCategories,
   updateProduct,
 } from '@/app/lib/api-client';
+import { formatMoney } from '@/app/lib/utils';
 import type {
   Category,
   CreateCategoryRequest,
@@ -31,18 +34,14 @@ import type {
 } from '@foldify/shared';
 
 const DIFFICULTIES: Array<Difficulty> = ['beginner', 'intermediate', 'advanced'];
-
-/** Paisa → "Rs. 2,750" the way shopkeepers say it. */
-function formatPrice(minor: number): string {
-  return `Rs. ${(minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
-
 interface ProductFormState {
   slug: string;
   name: string;
   description: string;
   /** Entered in rupees; ×100 on the way in. */
   priceRupees: string;
+  /** Entered in rupees; ×100 on the way in. Blank = not on sale. */
+  compareAtRupees: string;
   categoryId: string;
   stock: string;
   difficulty: Difficulty;
@@ -55,6 +54,7 @@ const EMPTY_FORM: ProductFormState = {
   name: '',
   description: '',
   priceRupees: '',
+  compareAtRupees: '',
   categoryId: '',
   stock: '0',
   difficulty: 'beginner',
@@ -77,6 +77,10 @@ function formToCreate(state: ProductFormState, categories: Category[]): CreatePr
     name: state.name.trim(),
     description: state.description.trim(),
     priceMinor: Math.round((Number(state.priceRupees) || 0) * 100),
+    compareAtPriceMinor:
+      state.compareAtRupees.trim() === ''
+        ? null
+        : Math.round((Number(state.compareAtRupees) || 0) * 100),
     categoryId: resolveCategoryId(state, categories),
     stock: Number(state.stock) || 0,
     difficulty: state.difficulty,
@@ -90,6 +94,10 @@ function formToUpdate(state: ProductFormState, categories: Category[]): UpdatePr
     name: state.name.trim(),
     description: state.description.trim(),
     priceMinor: Math.round((Number(state.priceRupees) || 0) * 100),
+    compareAtPriceMinor:
+      state.compareAtRupees.trim() === ''
+        ? null
+        : Math.round((Number(state.compareAtRupees) || 0) * 100),
     categoryId: resolveCategoryId(state, categories),
     stock: Number(state.stock) || 0,
     difficulty: state.difficulty,
@@ -105,6 +113,7 @@ function productToForm(product: Product, categories: Category[]): ProductFormSta
     name: product.name,
     description: product.description,
     priceRupees: String(product.priceMinor / 100),
+    compareAtRupees: product.compareAtPriceMinor === null ? '' : String(product.compareAtPriceMinor / 100),
     categoryId: matching?.slug ?? product.categoryName ?? '',
     stock: String(product.stock),
     difficulty: product.difficulty,
@@ -241,6 +250,9 @@ function ProductForm({
         if (raw.priceMinor !== undefined) {
           fields.priceRupees = raw.priceMinor;
         }
+        if (raw.compareAtPriceMinor !== undefined) {
+          fields.compareAtRupees = raw.compareAtPriceMinor;
+        }
         if (Object.keys(fields).length === 0) fields.name = cause.message;
         setErrors(fields);
       } else if (cause instanceof Error) {
@@ -277,7 +289,7 @@ function ProductForm({
         error={errors.description}
         required
       />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Input
           label="Price (Rs.)"
           type="number"
@@ -288,6 +300,16 @@ function ProductForm({
           error={errors.priceRupees}
           hint="Rupees — converted to paisa on save."
           required
+        />
+        <Input
+          label="Compare-at (Rs.)"
+          type="number"
+          min="0"
+          step="1"
+          value={state.compareAtRupees}
+          onChange={(event) => setField('compareAtRupees')(event.target.value)}
+          error={errors.compareAtRupees}
+          hint="Optional. The struck-through original for a sale; leave blank for no discount."
         />
         <Input
           label="Stock"
@@ -472,32 +494,11 @@ export function ItemsView() {
       />
 
       {error !== null ? (
-        <Card>
-          <CardBody className="flex flex-col items-start gap-3">
-            <Badge tone="danger">Problem</Badge>
-            <p>{error}</p>
-            <Button onClick={() => void reload()} variant="secondary" size="sm">
-              Try again
-            </Button>
-          </CardBody>
-        </Card>
+        <ErrorCard message={error} onRetry={() => void reload()} />
       ) : products === null ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }, (_, index) => (
-            <Card key={index}>
-              <CardBody className="flex flex-col gap-3">
-                <Skeleton shape="title" />
-                <Skeleton shape="text" lines={2} />
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton count={5} lines={2} />
       ) : products.length === 0 ? (
-        <Card>
-          <CardBody>
-            <p>No items yet. Add your first with “New item”.</p>
-          </CardBody>
-        </Card>
+        <EmptyState message="No items yet. Add your first with “New item”." />
       ) : (
         <div className="flex flex-col gap-3">
           {products.map((product) => (
@@ -526,7 +527,7 @@ export function ItemsView() {
 
                 <div className="flex shrink-0 flex-wrap items-center gap-4 sm:gap-2">
                   <p className="font-body text-sm text-ink">
-                    {formatPrice(product.priceMinor)}
+                    {formatMoney(product.priceMinor, { prefix: 'Rs. ' })}
                     <span className="text-ink-muted"> · {product.stock} in stock</span>
                   </p>
                   <div className="flex gap-2">

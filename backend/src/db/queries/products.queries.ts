@@ -27,6 +27,7 @@ interface ProductRow {
   name: string;
   description: string;
   price_minor: number;
+  compare_at_price_minor: number | null;
   currency: 'NPR';
   image_url: string | null;
   category_id: number;
@@ -44,6 +45,7 @@ function mapProduct(row: ProductRow): Product {
     name: row.name,
     description: row.description,
     priceMinor: row.price_minor,
+    compareAtPriceMinor: row.compare_at_price_minor,
     currency: row.currency,
     imageUrl: row.image_url,
     categoryId: row.category_id,
@@ -56,8 +58,8 @@ function mapProduct(row: ProductRow): Product {
 }
 
 const SELECT_WITH_CATEGORY = `
-  SELECT p.id, p.slug, p.name, p.description, p.price_minor, p.currency,
-         p.image_url, p.category_id, c.name AS category_name,
+  SELECT p.id, p.slug, p.name, p.description, p.price_minor, p.compare_at_price_minor,
+         p.currency, p.image_url, p.category_id, c.name AS category_name,
          p.stock, p.difficulty, p.is_published, p.created_at
   FROM products p
   JOIN categories c ON c.id = p.category_id
@@ -162,6 +164,7 @@ export interface NewProduct {
   name: string;
   description: string;
   priceMinor: number;
+  compareAtPriceMinor?: number | null;
   imageUrl: string | null;
   categoryId: number;
   stock: number;
@@ -173,9 +176,9 @@ export function insertProduct(input: NewProduct): Product {
   const result = db
     .prepare(
       `INSERT INTO products
-         (slug, name, description, price_minor, image_url, category_id, stock, difficulty)
+         (slug, name, description, price_minor, compare_at_price_minor, image_url, category_id, stock, difficulty)
        VALUES
-         (@slug, @name, @description, @priceMinor, @imageUrl, @categoryId, @stock, @difficulty)`,
+         (@slug, @name, @description, @priceMinor, @compareAtPriceMinor, @imageUrl, @categoryId, @stock, @difficulty)`,
     )
     .run(input);
 
@@ -188,17 +191,18 @@ export function insertProduct(input: NewProduct): Product {
 export function upsertProductBySlug(input: NewProduct): void {
   db.prepare(
     `INSERT INTO products
-       (slug, name, description, price_minor, image_url, category_id, stock, difficulty)
+       (slug, name, description, price_minor, compare_at_price_minor, image_url, category_id, stock, difficulty)
      VALUES
-       (@slug, @name, @description, @priceMinor, @imageUrl, @categoryId, @stock, @difficulty)
+       (@slug, @name, @description, @priceMinor, @compareAtPriceMinor, @imageUrl, @categoryId, @stock, @difficulty)
      ON CONFLICT (slug) DO UPDATE SET
-       name         = excluded.name,
-       description  = excluded.description,
-       price_minor  = excluded.price_minor,
-       image_url    = excluded.image_url,
-       category_id  = excluded.category_id,
-       stock        = excluded.stock,
-       difficulty   = excluded.difficulty`,
+       name                  = excluded.name,
+       description           = excluded.description,
+       price_minor           = excluded.price_minor,
+       compare_at_price_minor = excluded.compare_at_price_minor,
+       image_url             = excluded.image_url,
+       category_id           = excluded.category_id,
+       stock                 = excluded.stock,
+       difficulty            = excluded.difficulty`,
   ).run(input);
 }
 
@@ -206,8 +210,8 @@ export function upsertProductBySlug(input: NewProduct): void {
 export function listProductsWithRatings(limit = 12): (Product & { averageRating: number; reviewCount: number })[] {
   const rows = db
     .prepare(
-      `SELECT p.id, p.slug, p.name, p.description, p.price_minor, p.currency,
-              p.image_url, p.category_id, c.name AS category_name,
+      `SELECT p.id, p.slug, p.name, p.description, p.price_minor, p.compare_at_price_minor,
+              p.currency, p.image_url, p.category_id, c.name AS category_name,
               p.stock, p.difficulty, p.is_published, p.created_at,
               COALESCE(AVG(r.rating), 0) AS average_rating,
               COUNT(r.id) AS review_count
@@ -259,6 +263,7 @@ export function updateProduct(id: number, input: Partial<NewProduct> & { isPubli
   if (input.name !== undefined) { fields.push('name = @name'); params.name = input.name; }
   if (input.description !== undefined) { fields.push('description = @description'); params.description = input.description; }
   if (input.priceMinor !== undefined) { fields.push('price_minor = @priceMinor'); params.priceMinor = input.priceMinor; }
+  if (input.compareAtPriceMinor !== undefined) { fields.push('compare_at_price_minor = @compareAtPriceMinor'); params.compareAtPriceMinor = input.compareAtPriceMinor; }
   if (input.imageUrl !== undefined) { fields.push('image_url = @imageUrl'); params.imageUrl = input.imageUrl; }
   if (input.categoryId !== undefined) { fields.push('category_id = @categoryId'); params.categoryId = input.categoryId; }
   if (input.stock !== undefined) { fields.push('stock = @stock'); params.stock = input.stock; }
