@@ -1,24 +1,11 @@
-# Contributing to Foldify
+# Foldify — architecture & house rules
 
-Three people, one codebase, one semester. These rules exist so the site still
-looks like one site in November.
-
----
-
-## File ownership
-
-| Area | Owner | Everyone else |
-|---|---|---|
-| `frontend/app/globals.css` | team lead | do not edit |
-| `frontend/app/components/ui/` | team lead | consume only |
-| `frontend/tailwind.config.*` | team lead | (there isn't one — Tailwind v4 is CSS-first) |
-| `shared/types.ts` | agreed as a team | propose in the PR, do not change unilaterally |
-| `frontend/app/(shop)/`, `(auth)/`, `learn/` | frontend dev | |
-| `backend/src/` | backend dev | |
-| `frontend/app/admin/` | whoever takes it | |
-
-Editing something outside your column is not forbidden — it just needs to be
-the point of the PR rather than a side effect of it.
+This was planned as a three-person project; in practice it's been solo. The
+process rules from that plan (file ownership, PR review) are gone — there's
+no one else to coordinate with. What's kept below are the actual technical
+constraints, because they're decisions with reasons behind them, not just
+team etiquette, and they're still worth holding to solo so the codebase
+doesn't drift into three different styles across three different laptops.
 
 ---
 
@@ -26,9 +13,8 @@ the point of the PR rather than a side effect of it.
 
 This is the most important rule in this document.
 
-The team lead owns the design language. The other two build pages by assembling
-components. That only works if pages **cannot** change how components look —
-not accidentally, and not deliberately at 2am the night before a deadline.
+Pages assemble components; they don't reach in and change how components
+look. Not accidentally, and not deliberately at 2am.
 
 ### What you control
 
@@ -59,12 +45,9 @@ in a conflict the design system wins the specificity tie and your stray
 
 ### When the library does not have what you need
 
-Ask. Open an issue or message the lead: *"the product grid needs a card with an
-image at the top."* You will get a component or a new variant, everyone else
-gets it too, and the site stays coherent.
-
-What you must not do is build it yourself in the page with raw Tailwind. That
-is how a codebase ends up with four different greys and three button shapes.
+Add the component or variant properly rather than reaching for raw Tailwind
+in a page — that's how a codebase ends up with four different greys and three
+button shapes.
 
 **Start at [http://localhost:3000](http://localhost:3000)** — the showcase page
 lists every component with the exact JSX to copy.
@@ -121,7 +104,7 @@ your first query module.
 
 ### Performance budget — non-negotiable
 
-The three of us are on older Windows laptops with integrated graphics. So:
+These have run on older Windows laptops with integrated graphics. So:
 
 - No `filter`, no `backdrop-filter`, no large `blur()`, no `feTurbulence`.
 - At most two shadow layers per element.
@@ -145,26 +128,17 @@ The three of us are on older Windows laptops with integrated graphics. So:
 
 ---
 
-## Branches and pull requests
+## Before committing anything nontrivial
 
 ```
-feat/products-grid
-fix/cart-quantity-clamp
-chore/seed-more-products
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-- Branch from `main`. Never commit to `main` directly.
-- One concern per PR. A PR that adds a feature and reformats forty files
-  cannot be reviewed.
-- Before opening a PR:
-  ```
-  npm run typecheck
-  npm run lint
-  npm run build
-  ```
-  All three must pass. A failing build on `main` blocks two other people.
-- In the description say what you changed and what you deliberately left out.
-- If you touched `shared/types.ts`, say so in the title — it affects both sides.
+All three should pass. Branch names still follow `feat/…`, `fix/…`,
+`chore/…` if it's useful to you — no PR review to satisfy anymore, just your
+own future self reading `git log`.
 
 ---
 

@@ -164,7 +164,7 @@ The backend is Express. Routes should not be created under `frontend/app/api/` â
 
 The design uses two materials: paper (light, smooth, used as the writing surface) and cardboard (heavier, brown, used structurally). Texture is applied through small tileable images with CSS-gradient fallbacks. `filter`, `backdrop-filter`, and `feTurbulence` are avoided, since these re-rasterize on every paint and can cause dropped frames on lower-powered hardware. Depth is expressed through `box-shadow`, limited to at most two layers per element, with the light source positioned top-left. Dark mode is a separate visual tuning rather than a simple inversion. Corner radii are slightly irregular so surfaces read as cut paper. The signature UI element is `CreaseDivider`, drawn using real origami fold notation.
 
-The component library is closed for direct edits. See `CONTRIBUTING.md` before building a new page.
+The component library is closed for direct edits. See `ARCHITECTURE.md` before building a new page.
 
 ## 9. Known gaps in this commit
 
