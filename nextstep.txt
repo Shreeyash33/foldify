@@ -1,0 +1,99 @@
+FOLDIFY - local planning notes
+(gitignored: this file is not in the repo, so a fresh clone has no copy of it.
+This one was RECREATED on 2026-09-03 because the working copy had none. If you
+still have the original on another machine, reconcile the numbering with it -
+the item numbers below were reconstructed from CHANGELOG.md and README.md.)
+
+  1. [done] Scaffold, design system, closed component library      0.1.0
+  2. [done] Auth, products, cart, checkout, simulated payment      0.1.0
+  3. [done] Tutorials, /learn index and detail pages               0.2.0
+  4. [done] Admin section (items, orders, users, inbox)            0.2.0
+  5. [done] Product <-> tutorial cross-linking, contact, reviews   0.2.0
+  6. [done] Homepage marketing page, sale / compare-at pricing     0.3.0
+  7. [done] CRAFT MAKER + FOLD ANIMATION PLAYER                    0.4.0
+  8. [    ] Real payment gateway (eSewa / Khalti)
+  9. [    ] Texture image files (frontend/public/textures/)
+
+--------------------------------------------------------------------------
+7. CRAFT MAKER + FOLD ANIMATION PLAYER - done 2026-09-03
+
+The animation spike is finished and the feature is built. The spike's actual
+hard question was NOT the file format, it was how to represent paper once it
+stops being one flat shape. The answer that shipped:
+
+  Paper after N folds is an ORDERED STACK OF CONVEX POLYGONS, bottom first.
+  A fold cuts every layer along the fold line, reflects the pieces on the
+  moving side across it, and re-stacks those as a group IN REVERSE ORDER.
+  Valley drops the group on top, mountain slides it underneath.
+
+  It works because a rectangle is convex and both half-plane clipping and
+  reflection preserve convexity, so every layer stays convex forever. That
+  makes the whole engine a Sutherland-Hodgman clip plus a cosine - no
+  polygon-boolean library, no physics. Area is conserved exactly.
+
+  Animation: seen from overhead, a flap rotating out of plane only narrows by
+  cos(theta), so it closes to a crease at the halfway point and opens out
+  mirrored. GSAP tweens that one scalar; the paths are rebuilt per frame.
+
+WHAT IT DELIBERATELY DOES NOT DO (do not treat these as bugs):
+  - no paper thickness, no layers trapped inside a pocket
+  - no curved folds
+  - no TRUE reverse/squash/petal folds, which move part of a flap THROUGH the
+    stack rather than over it. Steps typed reverse/squash/petal still animate,
+    as the straight fold their line describes.
+  - layers capped at 96; real tutorials sit in the low tens
+
+WHERE IT LIVES:
+  frontend/app/lib/craft/geometry.ts      clip, reflect, project, path data
+  frontend/app/lib/craft/fold-model.ts    THE LAYERING MODEL - read this first
+  frontend/app/lib/craft/craft-file.ts    presets, defaults, parse/validate
+  frontend/app/components/craft/FoldStage.tsx   the GSAP renderer, shared by
+                                                the maker preview and the
+                                                public player
+  frontend/app/admin/craft-maker/         the authoring tool
+  frontend/app/learn/[slug]/FoldPlayer.tsx      the public player
+  backend: craft_files table, craft.queries.ts, craft.routes.ts
+
+TWO GOTCHAS WORTH KNOWING, both about folds that are geometrically correct
+and still look wrong:
+
+  1. A fold line that does not cross the shape the previous fold left behind
+     is not an error anywhere - it folds nothing, and the step plays as a
+     dead frame.
+  2. A fold that halves the shape EXACTLY covers the stationary half, so the
+     flap's back face is all you see and the paper reads as one flat colour.
+     Two-tone paint does not save you; the sequence has to leave both faces
+     showing. Corner folds and offset edge folds do, exact halves do not.
+
+The seeded sequence is checked against the replay engine for both, by
+rasterising each step and counting which face is actually visible. Checking
+area and layer counts alone does NOT catch #2.
+
+THE FOLD TOOL IS GESTURE BASED - do not "simplify" it back to drawing creases.
+Click 1 is the point of the paper that MOVES, click 2 is where it LANDS. The
+crease is the perpendicular bisector of that pair and the moving half is the
+half click 1 sits in, so both are DERIVED, never chosen. Fold type and which
+half travels are picked explicitly after that, and nothing is written to the
+step list until Record. The earlier version had you draw the crease directly
+and then defaulted side to left and foldType to valley: that made you do the
+bisector in your head, and the two defaults were right about half the time,
+which is what made the maker look like it was guessing every fold.
+CraftFoldStep.origin/target record the gesture. They are OPTIONAL because the
+player reads only from/to/side, so files authored before this replay fine.
+
+NOTE: getTutorialShell uses 'use cache' with cacheLife('hours'), so after a
+reseed the tutorial page keeps serving the OLD fold until that expires or the
+dev server is restarted. The backend is the source of truth - check
+/api/tutorials/<slug> before believing the page.
+
+SHARED CONTRACT CHANGE (flag this in the PR): shared/types.ts is team-owned.
+The provisional CraftFile was replaced with the real format and Tutorial
+gained `craftFile`. That change is the point of the PR, not a side effect.
+
+NEXT ON THIS FEATURE, IF ANYONE PICKS IT UP:
+  - only the traditional crane has an authored fold; everything else is a
+    written step list until somebody folds it in the Craft Maker
+  - undo/redo in the maker
+  - authoring the written instruction and the fold in one place (today the
+    instruction lives on tutorial_steps AND on the fold step, and the player
+    prefers tutorial_steps)

@@ -574,7 +574,7 @@ toast.info('Heads up.');`}
       <Section
         id="rules"
         title="House rules"
-        importPath="the full version lives in CONTRIBUTING.md"
+        importPath="the full version lives in ARCHITECTURE.md"
         description="The component library is closed. These are the rules that keep it that way."
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
