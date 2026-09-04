@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Container } from '@/app/components/layout/Container';
@@ -65,205 +65,24 @@ export default function HomePage() {
             <Button href="/learn" variant="primary">
               Browse the tutorials
             </Button>
-          </Specimen>
-        </SpecimenGrid>
-      </Section>
+          </div>
+        </section>
+      </Container>
+    </>
+  );
+}
 
-      {/* ------------------------------------------------------------- Tabs */}
-      <Section
-        id="tabs"
-        title="Tabs"
-        importPath="import { Tabs } from '@/app/components/ui/Tabs';"
-        description="Controlled or uncontrolled. Arrow keys move between tabs, Home and End jump to the ends, and only the active tab is in the tab order."
-      >
-        <PaperSurface material="paper" elevation={1} className="p-4 sm:p-5">
-          <Tabs
-            defaultValue="description"
-            items={[
-              {
-                value: 'description',
-                label: 'Description',
-                content: (
-                  <p className="font-body text-ink">
-                    Single-sided kami in a hundred colours. The default paper for practice: cheap
-                    enough to waste, crisp enough to hold a crease.
-                  </p>
-                ),
-              },
-              {
-                value: 'specs',
-                label: 'Specs',
-                content: (
-                  <dl className="grid grid-cols-2 gap-2 font-mono text-sm text-ink">
-                    <dt className="text-ink-muted">size</dt>
-                    <dd>150 × 150 mm</dd>
-                    <dt className="text-ink-muted">weight</dt>
-                    <dd>70 gsm</dd>
-                    <dt className="text-ink-muted">sheets</dt>
-                    <dd>100</dd>
-                  </dl>
-                ),
-              },
-              {
-                value: 'reviews',
-                label: 'Reviews',
-                content: <p className="font-body text-ink-muted">No reviews yet.</p>,
-              },
-              { value: 'disabled', label: 'Disabled', content: null, disabled: true },
-            ]}
-          />
-        </PaperSurface>
-      </Section>
+/** The top banner: folded square mark, headline, and the two main calls to action. */
+function SectionHero() {
+  return (
+    <PaperSurface material="cardboard" elevation={0} className="rounded-none border-x-0 border-t-0">
+      <Container width="wide" className="flex flex-col gap-6 py-10 sm:py-14">
+        <Link href="/products" className="inline-flex w-fit">
+          <PaperSurface material="crumpled" elevation={1} className="p-2">
+            <Mark />
+          </PaperSurface>
+        </Link>
 
-      {/* ---------------------------------------------------- CreaseDivider */}
-      <Section
-        id="crease-divider"
-        title="CreaseDivider"
-        importPath="import { CreaseDivider } from '@/app/components/ui/CreaseDivider';"
-        description="The signature element, drawn in genuine origami notation: dashed for a valley fold, dash-dot for a mountain fold, with an optional direction arrow. Pure SVG — no image, no filter."
-      >
-        <PaperSurface material="paper" elevation={1} className="px-5 py-2">
-          <CreaseDivider variant="valley" />
-          <CreaseDivider variant="valley" label="valley fold" />
-          <CreaseDivider variant="mountain" />
-          <CreaseDivider variant="mountain" label="mountain fold" withArrow />
-        </PaperSurface>
-
-        <PaperSurface material="sunken" className="overflow-x-auto p-3">
-          <code className="block font-mono text-xs whitespace-pre text-ink-muted">
-            {`<CreaseDivider variant="valley" />
-<CreaseDivider variant="mountain" label="mountain fold" withArrow />`}
-          </code>
-        </PaperSurface>
-      </Section>
-
-      {/* -------------------------------------------------- ResizablePanel */}
-      <Section
-        id="resizable-panel"
-        title="ResizablePanel"
-        importPath="import { ResizablePanel } from '@/app/components/ui/ResizablePanel';"
-        description="Drag the crease, or focus it and use the arrow keys — Home and End jump to the limits. Below md it stacks and resizing switches off entirely; a horizontal resizer on a 375px screen is not a feature. This becomes the Craft Maker's canvas/controls split later."
-      >
-        <PaperSurface material="paper" elevation={1} className="p-2">
-          <ResizablePanel
-            label="Resize the demo panels"
-            defaultSize={50}
-            minSize={25}
-            maxSize={75}
-            onResize={setPanelSize}
-            className="h-64"
-            first={
-              <PaperSurface
-                material="sunken"
-                className="flex h-full items-center justify-center p-4"
-              >
-                <span className="font-mono text-sm text-ink-muted">
-                  canvas  {Math.round(panelSize)}%
-                </span>
-              </PaperSurface>
-            }
-            second={
-              <PaperSurface
-                material="sunken"
-                className="flex h-full items-center justify-center p-4"
-              >
-                <span className="font-mono text-sm text-ink-muted">controls</span>
-              </PaperSurface>
-            }
-          />
-        </PaperSurface>
-
-        <PaperSurface material="sunken" className="overflow-x-auto p-3">
-          <code className="block font-mono text-xs whitespace-pre text-ink-muted">
-            {`<ResizablePanel
-  direction="horizontal"
-  defaultSize={50}
-  minSize={25}
-  maxSize={75}
-  onResize={setSize}
-  first={<Canvas />}
-  second={<Controls />}
-/>`}
-          </code>
-        </PaperSurface>
-      </Section>
-
-      {/* -------------------------------------------------------- the rules */}
-      <Section
-        id="rules"
-        title="House rules"
-        importPath="the full version lives in CONTRIBUTING.md"
-        description="The component library is closed. These are the rules that keep it that way."
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>You control</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <ul className="flex list-disc flex-col gap-1 pl-5 font-body text-ink">
-                <li>Content and children</li>
-                <li>
-                  <code className="font-mono text-xs">variant</code>,{' '}
-                  <code className="font-mono text-xs">size</code>,{' '}
-                  <code className="font-mono text-xs">tone</code>,{' '}
-                  <code className="font-mono text-xs">material</code>,{' '}
-                  <code className="font-mono text-xs">elevation</code>
-                </li>
-                <li>
-                  Layout placement via <code className="font-mono text-xs">className</code> — margin,
-                  width, grid and flex only
-                </li>
-              </ul>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>You do not</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <ul className="flex list-disc flex-col gap-1 pl-5 font-body text-ink">
-                <li>
-                  No <code className="font-mono text-xs">style</code> prop, anywhere
-                </li>
-                <li>No colour, font, padding, radius or shadow props</li>
-                <li>No Tailwind colour or padding utilities in page files</li>
-                <li>
-                  No edits to <code className="font-mono text-xs">globals.css</code>,{' '}
-                  <code className="font-mono text-xs">app/components/ui/</code> or{' '}
-                  <code className="font-mono text-xs">shared/</code>
-                </li>
-                <li>Need something new? Ask for a component or a variant.</li>
-              </ul>
-            </CardBody>
-          </Card>
-        </div>
-      </Section>
-
-      <div className="pb-16" />
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Delete this product?"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                setIsModalOpen(false);
-                toast.success('Nothing was deleted — this is a demo.');
-              }}
-            >
-              Delete
-            </Button>
-          </>
-        }
-      >
         <div className="flex flex-col gap-3">
           <span className="font-mono text-xs tracking-[0.18em] text-ink-muted uppercase">
             Foldify — folded origami
