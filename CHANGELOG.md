@@ -34,6 +34,20 @@ The model leans on one property: a rectangle is convex, and both half-plane clip
 - `shared/types.ts` — **team-owned file, and this change is the point of the PR, not a side effect.** The provisional `CraftFile` is replaced by the real format (`CraftPoint`, `CraftSheet`, `CraftSheetPreset`, `CraftVertex`, `CraftFoldSide`, `CraftFoldStep`, `CraftFileData`, `CraftFile`, `SaveCraftFileRequest`), and `Tutorial` gains `craftFile`.
 - `gsap` added as a frontend dependency.
 
+## [0.4.1] — 2026-09-05
+
+### Fixed
+
+**The fold player never shows a black flap again.** In dark mode `--color-paper-raised` — the token the back face had borrowed — is near-black, so the very first recorded fold, which newly presents the back face, rendered as a solid black void, and a flip-side that carried the big half across the model blacked out the whole canvas. The geometry was already correct; the paint was wrong. The back face is now the one fixed warm-white the design system already uses, pinned in `FoldStage.FACE_FILL` and documented there, so the two-tone "paper" cue stays legible in both themes while the coloured face still follows the theme.
+
+**A destination near where the fold starts is not a misclick.** The fold tool's guard against folding a point onto itself used a radius that also ate every legitimate destination within a couple of millimetres of the origin — exactly where a small fold landing next to its starting point lives — so the click was silently swallowed and the gesture ran one pick behind. The guard now only rejects a true same-point fold and keeps the explanatory toast for that one case.
+
+**The stage's fill intent is explicit.** The fold stage SVG now carries `width`/`height` of 100% and `preserveAspectRatio="xMidYMid meet"`, so fill-and-centre is guaranteed by the replaced element itself rather than by whatever CSS wraps it.
+
+### Verified
+
+The fold engine's numeric checks were re-run against the current source: area is conserved exactly across every tutorial step and both recorded-gesture repros, no NaN/Inf vertices appear, and the two-tone coverage ratios are unchanged. `npm run typecheck`, `npm run lint`, and `npm run build` (21 routes) all pass.
+
 ## [0.3.0] — 2026-09-03
 
 ### Added

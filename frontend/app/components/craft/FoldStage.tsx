@@ -63,10 +63,20 @@ type Plan =
  * The fills are opaque on purpose. Translucent layers blend the two faces into
  * each other, which is what made the previous pair of near-identical off-whites
  * impossible to tell apart.
+ *
+ * The back face is deliberately NOT var(--color-paper-raised): in dark mode
+ * that token is near-black, so a folded flap — the region that newly shows the
+ * back face — rendered as a solid black void the moment a fold was recorded,
+ * and a flap that covered the model turned the whole canvas black. The back of
+ * real origami paper is pale in any room, so the one fixed warm-white the
+ * design system already uses (`--on-fill` in light mode) is pinned here and
+ * the coloured face stays on the theme (`--color-indigo`). That keeps the
+ * two-tone cue legible in both modes instead of borrowing a token that does the
+ * opposite of "white paper" on dark surfaces.
  */
 const FACE_FILL = {
   front: 'var(--color-indigo)',
-  back: 'var(--color-paper-raised)',
+  back: '#fbfaf7',
 } as const;
 
 function prefersReducedMotion(): boolean {
@@ -192,6 +202,9 @@ export function FoldStage({
     <svg
       ref={svgRef}
       viewBox={viewBoxOf(bounds)}
+      preserveAspectRatio="xMidYMid meet"
+      width="100%"
+      height="100%"
       role="img"
       aria-label={ariaLabel ?? 'Folded paper'}
       onClick={onPickPoint === undefined ? undefined : handleClick}

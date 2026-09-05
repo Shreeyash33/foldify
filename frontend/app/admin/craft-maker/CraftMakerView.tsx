@@ -43,7 +43,6 @@ import { VertexPanel } from './VertexPanel';
 import type { FoldDraft } from './fold-draft';
 import { StepList } from './StepList';
 import {
-  SNAP_RADIUS,
   destinationTargets,
   formatPoint,
   projectOnOutline,
@@ -273,7 +272,13 @@ export function CraftMakerView() {
         scale,
       );
 
-      if (distance(draft.origin, destination) < SNAP_RADIUS * scale * 0.5) {
+      /* Only a true double-click on the origin is not a fold: the engine
+         returns null only when the two picks coincide (foldFromGesture). The
+         old SNAP_RADIUS*scale*0.5 threshold ate every destination within a few
+         millimetres of the origin, which is exactly where a fold STARTING at a
+         vertex lands when the author picks a nearby vertex as the destination —
+         the click was silently swallowed and the gesture ran one pick behind. */
+      if (distance(draft.origin, destination) < 0.001) {
         toast.error('Pick a destination away from the point you are folding.');
         return;
       }
