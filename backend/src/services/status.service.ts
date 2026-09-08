@@ -5,8 +5,7 @@ import { getDbHealth } from '../db/index.ts';
 /**
  * services/ = business logic. No SQL, no `req`/`res`.
  *
- * This one assembles the health payload that the showcase page renders live —
- * it is this commit's proof that frontend and backend actually talk to each other.
+ * This one assembles the health payload that the showcase page renders live.
  */
 
 const startedAt = Date.now();
@@ -15,9 +14,8 @@ const startedAt = Date.now();
  * Which parts of the API are real today.
  *
  * 'degraded' means some endpoints in the module work and some are still 501
- * stubs. Update the value as you land each piece — the showcase page renders
- * this live, so it doubles as the project's progress board and nobody has to
- * maintain a separate status doc that goes stale.
+ * stubs. The showcase page renders this map live, so it doubles as a status
+ * surface and no separate status doc can go stale.
  */
 const MODULES: Record<string, ModuleHealth> = {
   status: 'ok',

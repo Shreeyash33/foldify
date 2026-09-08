@@ -49,13 +49,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 /**
  * With this on, every function below returns lib/mock-data.ts and the backend
- * is never contacted — the whole frontend renders with the API stopped, so
- * page work never blocks on an endpoint someone else has not written yet.
+ * is never contacted — the whole frontend renders with the API stopped.
  *
- * Defaults to OFF, because `npm run dev` starts both apps. Turn it on in
- * frontend/.env.local when you want to work with the backend stopped:
- *
- *   NEXT_PUBLIC_USE_MOCK=true
+ * Defaults to OFF, because `npm run dev` starts both apps.
  */
 export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
 

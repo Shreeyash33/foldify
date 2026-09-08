@@ -6,10 +6,9 @@ import { PaperSurface } from '@/app/components/ui/PaperSurface';
 /**
  * One notification system for the whole app.
  *
- * This exists in the skeleton on purpose: every form the team writes tomorrow
- * needs to tell the user something went right or wrong, and without a shared
- * one you end up with three homegrown notification systems and three visual
- * languages for "error".
+ * Every form needs to tell the user something went right or wrong, and without
+ * a shared one you end up with three homegrown notification systems and three
+ * visual languages for "error".
  *
  *   const toast = useToast();
  *   toast.success('Saved.');

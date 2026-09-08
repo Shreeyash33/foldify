@@ -60,9 +60,8 @@ type Plan =
  * upwards - the coloured one, matching the "start coloured side up" the
  * instructions open with.
  *
- * The fills are opaque on purpose. Translucent layers blend the two faces into
- * each other, which is what made the previous pair of near-identical off-whites
- * impossible to tell apart.
+ * The fills are opaque on purpose. Translucent layers would blend the two faces
+ * into each other and make them impossible to tell apart.
  *
  * The back face is deliberately NOT var(--color-paper-raised): in dark mode
  * that token is near-black, so a folded flap — the region that newly shows the

@@ -350,8 +350,6 @@ export interface CartItem {
 /* ------------------------------------------------------------------ */
 
 /**
- * The fold format, designed against the animation spike (see CHANGELOG 0.6.0).
- *
  * A CraftFile is a rectangular sheet plus an ORDERED list of straight folds.
  * Nothing about the folded state is stored: the player replays the steps from
  * the flat sheet, so the file stays small and there is exactly one description
