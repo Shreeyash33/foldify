@@ -1,5 +1,5 @@
 import type { CraftFileData, CraftPoint, CraftVertex } from '@foldify/shared';
-import { boundsOf, distance, projectOnSegment, type Bounds } from '@/app/lib/craft/geometry';
+import { boundsOf, distance, pointInConvexPolygon, projectOnSegment, type Bounds } from '@/app/lib/craft/geometry';
 import {
   contentBounds,
   outlineEdges,
@@ -131,4 +131,19 @@ export function resolveDestination(
   scale: number,
 ): CraftPoint {
   return nearestTarget(raw, targets, SNAP_RADIUS * scale) ?? raw;
+}
+
+/**
+ * How many layers a draft origin should move by default: the topmost layer
+ * containing the picked point, plus everything stacked above it. Folding the
+ * near wing of a plane picks the wing (1) instead of dragging the far wing
+ * too, which is what an `all` default did.
+ */
+export function scopeForOrigin(state: FoldState, origin: CraftPoint): number {
+  let firstContaining = -1;
+  for (let i = 0; i < state.layers.length; i += 1) {
+    if (pointInConvexPolygon(origin, state.layers[i]!.polygon)) firstContaining = i;
+  }
+  if (firstContaining === -1) return 1;
+  return state.layers.length - firstContaining;
 }

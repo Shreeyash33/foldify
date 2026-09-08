@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CraftFoldSide, CraftLayerScope, CraftStepKind, FoldType } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
@@ -32,6 +32,7 @@ export interface FoldDraftPanelProps {
   onLayerScope: (scope: CraftLayerScope) => void;
   /** Layers in the stack right now, so the control cannot exceed them. */
   layerCount: number;
+  warning?: string | null;
   onRecord: () => void;
   onCancel: () => void;
 }
@@ -48,6 +49,7 @@ export function FoldDraftPanel({
   layerScope,
   onLayerScope,
   layerCount,
+  warning,
   onRecord,
   onCancel,
 }: FoldDraftPanelProps) {
@@ -55,6 +57,10 @@ export function FoldDraftPanel({
   const maxLayers = Math.max(1, layerCount);
   const singleLayer = layerCount <= 1;
   const [count, setCount] = useState(String(typeof layerScope === 'number' ? layerScope : 1));
+
+  useEffect(() => {
+    setCount(String(typeof layerScope === 'number' ? layerScope : 1));
+  }, [layerScope]);
 
   const commitCount = (raw: string) => {
     const parsed = Number(raw);
@@ -180,6 +186,10 @@ export function FoldDraftPanel({
               </p>
             ) : null}
           </div>
+
+          {warning === null || warning === undefined ? null : (
+            <p className="font-body text-sm text-beni">{warning}</p>
+          )}
 
           <div className="flex items-center gap-2">
             <Button type="button" variant="primary" size="sm" onClick={onRecord} className="flex-1">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { CraftFileData, CraftFoldSide, CraftFoldStep, CraftPoint } from '@foldify/shared';
+import type { CraftFileData, CraftFoldSide, CraftFoldStep, CraftPoint, CraftRotation } from '@foldify/shared';
 import { FoldStage } from '@/app/components/craft/FoldStage';
 import { contentBounds, replay } from '@/app/lib/craft/fold-model';
 import {
@@ -12,6 +12,7 @@ import {
   sideOf,
   toPathData,
 } from '@/app/lib/craft/geometry';
+import { inverseRotationTransform } from '@/app/lib/craft/rotation';
 import {
   SNAP_RADIUS,
   destinationTargets,
@@ -46,6 +47,9 @@ export interface CraftCanvasProps {
   draftSide: CraftFoldSide | null;
   hover: CraftPoint | null;
   playing: boolean;
+  rotation?: CraftRotation;
+  /** Right-click on the canvas, delivered in sheet coordinates. Handled by the view. */
+  onContextPoint?: (point: CraftPoint) => void;
   /** The author vertex currently selected, when the vertex tool is active. */
   selectedVertexId: string | null;
   onSelectVertex: (id: string | null) => void;
@@ -98,6 +102,8 @@ export function CraftCanvas({
   draftSide,
   hover,
   playing,
+  rotation,
+  onContextPoint,
   selectedVertexId,
   onSelectVertex,
   onPickPoint,
@@ -113,6 +119,7 @@ export function CraftCanvas({
     const picking = drafting && draft.target === null;
 
     const centre = { x: data.sheet.width / 2, y: data.sheet.height / 2 };
+    const invert = inverseRotationTransform(rotation, centre);
     // The sheet centre is only ever a landing spot, so it joins the targets
     // while the destination is being chosen and not before.
     const targets = picking
@@ -207,6 +214,17 @@ export function CraftCanvas({
               stroke="var(--color-ink)"
               strokeWidth={0.7 * scale}
             />
+            {draft.targetVertexId !== null && (
+              <circle
+                cx={destination.x}
+                cy={destination.y}
+                r={5.6 * scale}
+                fill="none"
+                stroke="var(--color-beni)"
+                strokeWidth={0.8 * scale}
+                strokeDasharray={`${2.8 * scale} ${1.4 * scale}`}
+              />
+            )}
           </g>
         ) : null}
 
@@ -277,6 +295,17 @@ export function CraftCanvas({
               stroke="var(--color-beni)"
               strokeWidth={0.7 * scale}
             />
+            {draft.originVertexId !== null && (
+              <circle
+                cx={draft.origin.x}
+                cy={draft.origin.y}
+                r={5.6 * scale}
+                fill="none"
+                stroke="var(--color-beni)"
+                strokeWidth={0.8 * scale}
+                strokeDasharray={`${2.8 * scale} ${1.4 * scale}`}
+              />
+            )}
           </g>
         ) : null}
 
@@ -298,7 +327,7 @@ export function CraftCanvas({
             point.x = event.clientX;
             point.y = event.clientY;
             const local = point.matrixTransform(matrix.inverse());
-            onHover({ x: local.x, y: local.y });
+            onHover(invert({ x: local.x, y: local.y }));
           }}
           onMouseLeave={() => onHover(null)}
         />
@@ -391,6 +420,7 @@ export function CraftCanvas({
     draftSide,
     hover,
     playing,
+    rotation,
     selectedVertexId,
     onSelectVertex,
     onHover,
@@ -400,6 +430,8 @@ export function CraftCanvas({
     <FoldStage
       data={data}
       stepIndex={previewIndex}
+      rotation={rotation}
+      onContextPoint={onContextPoint}
       onFoldComplete={onFoldComplete}
       onPickPoint={onPickPoint}
       overlay={overlay}

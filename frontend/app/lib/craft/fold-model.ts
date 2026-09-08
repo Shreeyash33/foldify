@@ -6,8 +6,13 @@ import type {
 } from '@foldify/shared';
 import {
   boundsOf,
+  foldPoint,
   foldPolygon,
   isDegenerate,
+  MIN_AREA,
+  pointInConvexPolygon,
+  polygonArea,
+  sideOf,
   splitByLine,
   type Bounds,
   type Polygon,
@@ -74,6 +79,12 @@ function movingKeep(side: CraftFoldStep['side']): 1 | -1 {
   return side === 'left' ? 1 : -1;
 }
 
+function scopeStart(state: FoldState, step: CraftFoldStep): number {
+  return step.layerScope === undefined || step.layerScope === 'all'
+    ? 0
+    : Math.max(0, state.layers.length - Math.max(1, Math.floor(step.layerScope)));
+}
+
 /**
  * The stack part-way through one fold. `t` of 0 is the state before the step,
  * 1 is the state after it, and everything between is the flap in mid-air —
@@ -87,10 +98,7 @@ export function foldFrame(state: FoldState, step: CraftFoldStep, t: number): Fol
 
   const keep = movingKeep(step.side);
   // Bottom first, so the top N layers are the last N.
-  const first =
-    step.layerScope === undefined || step.layerScope === 'all'
-      ? 0
-      : Math.max(0, state.layers.length - Math.max(1, Math.floor(step.layerScope)));
+  const first = scopeStart(state, step);
 
   const untouched: FoldLayer[] = [];
   const stay: FoldLayer[] = [];
@@ -132,16 +140,135 @@ export function applyFold(state: FoldState, step: CraftFoldStep): FoldState {
   return { layers: next.layers.map((layer) => ({ ...layer, moving: false })) };
 }
 
-/** The crease lines pressed into the paper by the first `count` steps. */
+/** The stack layers a step actually folds: everything from the scope cut down to the top. */
+export function inScopeLayers(state: FoldState, step: CraftFoldStep): FoldLayer[] {
+  return state.layers.slice(scopeStart(state, step));
+}
+
+export interface FoldQuality {
+  /** The crease actually cuts paper in scope (the step is a real fold/crease, not a dead frame). */
+  cutsPaper: boolean;
+  /** The whole in-scope paper moves over — nothing stays in place, so the reader sees one flat colour. */
+  foldsAll: boolean;
+  /** 0..1 fraction of in-scope area carried across the crease. */
+  movingFraction: number;
+}
+
+/**
+ * Whether a step plays: a crease that misses the paper folds nothing (a dead
+ * frame), and a fold that carries the entire in-scope area — or near-half of
+ * it — reads as one flat colour.
+ */
+export function foldQuality(state: FoldState, step: CraftFoldStep): FoldQuality {
+  const keep = movingKeep(step.side);
+
+  let cutsPaper = false;
+  let movingArea = 0;
+  let staticArea = 0;
+
+  for (const layer of inScopeLayers(state, step)) {
+    const { left, right } = splitByLine(layer.polygon, step.from, step.to);
+
+    if (step.kind === 'crease') {
+      if (!isDegenerate(left) && !isDegenerate(right)) cutsPaper = true;
+      continue;
+    }
+
+    const movingPart = keep === 1 ? left : right;
+    const staticPart = keep === 1 ? right : left;
+
+    if (!isDegenerate(movingPart) && !isDegenerate(staticPart)) cutsPaper = true;
+    movingArea += polygonArea(movingPart);
+    staticArea += polygonArea(staticPart);
+  }
+
+  if (step.kind === 'crease') return { cutsPaper, foldsAll: false, movingFraction: 0 };
+
+  const total = movingArea + staticArea;
+  const foldsAll = total > 0 && staticArea < MIN_AREA;
+  const movingFraction = total > 0 ? movingArea / total : 0;
+  return { cutsPaper, foldsAll, movingFraction };
+}
+
+/** The first step in the sequence that folds nothing (dead frame), or null when every step plays. */
+export function firstDeadFrame(data: CraftFileData): { index: number } | null {
+  let state = initialState(data.sheet);
+  for (let i = 0; i < data.steps.length; i += 1) {
+    const step = data.steps[i]!;
+    if (!foldQuality(state, step).cutsPaper) return { index: i };
+    state = applyFold(state, step);
+  }
+  return null;
+}
+
+/** The crease lines pressed into the paper by the first `count` steps, carried through every later fold. */
 export function creaseLines(
   data: CraftFileData,
   count: number,
 ): { from: CraftPoint; to: CraftPoint }[] {
   const limit = Math.max(0, Math.min(count, data.steps.length));
-  return data.steps
-    .slice(0, limit)
-    .filter((step) => step.kind === 'crease')
-    .map((step) => ({ from: step.from, to: step.to }));
+  let state = initialState(data.sheet);
+  const segments: { from: CraftPoint; to: CraftPoint }[] = [];
+
+  for (let i = 0; i < limit; i += 1) {
+    const step = data.steps[i]!;
+
+    if (step.kind === 'crease') {
+      segments.push({ from: step.from, to: step.to });
+      continue;
+    }
+
+    // Carry every existing segment through this fold.
+    const keep = movingKeep(step.side);
+    const moving: Polygon[] = [];
+    for (const layer of inScopeLayers(state, step)) {
+      const { left, right } = splitByLine(layer.polygon, step.from, step.to);
+      const piece = keep === 1 ? left : right;
+      if (!isDegenerate(piece)) moving.push(piece);
+    }
+
+    const reflect = (p: CraftPoint): CraftPoint =>
+      foldPoint(p, step.from, step.to, 1);
+
+    const insideMoving = (p: CraftPoint): boolean =>
+      moving.some((piece) => pointInConvexPolygon(p, piece));
+
+    const carried: { from: CraftPoint; to: CraftPoint }[] = [];
+
+    for (const seg of segments) {
+      const aMoves = insideMoving(seg.from);
+      const bMoves = insideMoving(seg.to);
+
+      if (aMoves && bMoves) {
+        carried.push({ from: reflect(seg.from), to: reflect(seg.to) });
+      } else if (!aMoves && !bMoves) {
+        carried.push(seg);
+      } else {
+        // One endpoint moves – split at the fold line.
+        const a = aMoves ? seg.from : seg.to;
+        const b = aMoves ? seg.to : seg.from;
+        const sa = sideOf(a, step.from, step.to);
+        const sb = sideOf(b, step.from, step.to);
+        const t = sa / (sa - sb);
+        const c: CraftPoint = {
+          x: a.x + (b.x - a.x) * t,
+          y: a.y + (b.y - a.y) * t,
+        };
+        // Static piece: c (on axis) to the non-moving endpoint.
+        if (Math.hypot(c.x - b.x, c.y - b.y) >= 1e-3) carried.push({ from: c, to: b });
+        // Moving piece: reflected endpoint to c.
+        const ra = reflect(a);
+        if (Math.hypot(ra.x - c.x, ra.y - c.y) >= 1e-3) carried.push({ from: ra, to: c });
+      }
+    }
+
+    // Replace segments with the carried result, then apply the fold to state.
+    segments.length = 0;
+    segments.push(...carried);
+    state = applyFold(state, step);
+  }
+
+  return segments;
 }
 
 /** The stack after the first `count` steps have been folded. */

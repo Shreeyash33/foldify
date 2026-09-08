@@ -213,7 +213,7 @@ export function StepList({
             <li key={step.id}>
               <div
                 className={cn(
-                  'flex items-center gap-2 rounded-[var(--radius-cut)] border p-2',
+                  'flex flex-col gap-2 rounded-[var(--radius-cut)] border p-2',
                   step.id === selectedId ? 'border-indigo' : 'border-crease',
                   previewIndex === index + 1 ? 'bg-paper-sunken' : undefined,
                 )}
@@ -221,7 +221,7 @@ export function StepList({
                 <button
                   type="button"
                   onClick={() => onSelect(index)}
-                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                  className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
                 >
                   <span className="font-mono text-xs text-ink-muted">{index + 1}</span>
                   <Badge size="sm" tone={step.id === selectedId ? 'accent' : 'neutral'}>
@@ -237,12 +237,12 @@ export function StepList({
                       top {step.layerScope}
                     </Badge>
                   ) : null}
-                  <span className="min-w-0 flex-1 truncate font-body text-sm text-ink">
+                  <span className="min-w-0 flex-1 line-clamp-2 font-body text-sm text-ink">
                     {step.instruction.trim() === '' ? 'No instruction yet' : step.instruction}
                   </span>
                 </button>
 
-                <div className="flex shrink-0 items-center">
+                <div className="flex shrink-0 items-center justify-end gap-1 border-t border-crease/60 pt-1">
                   <Button
                     variant="ghost"
                     size="sm"

@@ -19,6 +19,10 @@ export interface VertexPanelProps {
   onMove: (id: string, point: CraftPoint) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  /** How many other author vertices sit within snap radius of this one. */
+  nearCount?: number;
+  /** Merge all of them into the selected vertex. */
+  onMerge?: () => void;
 }
 
 function label(value: number): string {
@@ -31,6 +35,8 @@ export function VertexPanel({
   onMove,
   onDelete,
   onClose,
+  nearCount,
+  onMerge,
 }: VertexPanelProps): React.JSX.Element {
   // Seeded once; the caller keys this component on vertex.id.
   const [x, setX] = useState(() => label(vertex.x));
@@ -85,6 +91,12 @@ export function VertexPanel({
           onBlur={(event) => commit('y', event.target.value)}
         />
       </div>
+
+      {nearCount !== undefined && nearCount > 0 && onMerge !== undefined ? (
+        <Button type="button" variant="secondary" size="sm" onClick={onMerge} className="w-full">
+          Merge {nearCount} nearby {nearCount === 1 ? 'point' : 'points'} into this one
+        </Button>
+      ) : null}
 
       <div className="flex items-center gap-2">
         {isCorner ? null : (

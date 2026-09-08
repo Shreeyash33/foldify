@@ -1,8 +1,10 @@
 import type {
+  CraftAxis,
   CraftFileData,
   CraftFoldStep,
   CraftLayerScope,
   CraftPoint,
+  CraftRotation,
   CraftSheet,
   CraftSheetPreset,
   CraftStepKind,
@@ -101,6 +103,16 @@ function isPoint(value: unknown): value is CraftPoint {
   return Number.isFinite(point.x) && Number.isFinite(point.y);
 }
 
+function isRotation(value: unknown): value is CraftRotation {
+  if (typeof value !== 'object' || value === null) return false;
+  const raw = value as Record<string, unknown>;
+  return (
+    (raw.axis === 'x' || raw.axis === 'y' || raw.axis === 'z') &&
+    typeof raw.degrees === 'number' &&
+    Number.isFinite(raw.degrees)
+  );
+}
+
 /**
  * Narrows an untrusted payload to `CraftFileData`, returning null when it is
  * not one. Used on both sides of the wire: the backend stores the file as an
@@ -150,5 +162,6 @@ export function parseCraftData(value: unknown): CraftFileData | null {
     },
     vertices: parsedVertices,
     steps: parsedSteps,
+    ...(isRotation(raw.rotation) ? { rotation: { axis: raw.rotation.axis as CraftAxis, degrees: Math.max(-180, Math.min(180, raw.rotation.degrees)) } } : {}),
   };
 }

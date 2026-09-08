@@ -2,22 +2,27 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
+  CraftAxis,
   CraftFile,
   CraftFileData,
   CraftFoldSide,
   CraftFoldStep,
   CraftPoint,
+  CraftRotation,
   CraftSheet,
   CraftLayerScope,
   CraftStatus,
   CraftStepKind,
+  CraftVertex,
   FoldType,
   Tutorial,
 } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/app/components/ui/Card';
+import { Input } from '@/app/components/ui/Input';
 import { Modal } from '@/app/components/ui/Modal';
+import { Select } from '@/app/components/ui/Select';
 import { PageHeader } from '@/app/components/layout/PageHeader';
 import { ErrorCard } from '@/app/components/feedback/ErrorCard';
 import { useToast } from '@/app/contexts/ToastContext';
@@ -32,8 +37,8 @@ import {
   updateCraftFile,
 } from '@/app/lib/api-client';
 import { cornerVertices, craftId, emptyCraftData, foldFromGesture } from '@/app/lib/craft/craft-file';
-import { contentBounds, replay } from '@/app/lib/craft/fold-model';
-import { distance } from '@/app/lib/craft/geometry';
+import { contentBounds, firstDeadFrame, foldQuality, replay } from '@/app/lib/craft/fold-model';
+import { distance, pointInConvexPolygon } from '@/app/lib/craft/geometry';
 import { CraftCanvas, isCornerVertex, type CraftTool } from './CraftCanvas';
 import { FileControls, NEW_FILE } from './FileControls';
 import { ProjectHistory } from './ProjectHistory';
@@ -43,11 +48,13 @@ import { VertexPanel } from './VertexPanel';
 import type { FoldDraft } from './fold-draft';
 import { StepList } from './StepList';
 import {
+  SNAP_RADIUS,
   destinationTargets,
   formatPoint,
+  nearestTarget,
   projectOnOutline,
   resolveDestination,
-  resolveOrigin,
+  scopeForOrigin,
   snapTargets,
   stageBounds,
   stageFrame,
@@ -84,6 +91,23 @@ function snapshotOf(name: string, tutorialId: number | null, data: CraftFileData
   return JSON.stringify({ name, tutorialId, data });
 }
 
+/** The nearest vertex within `tolerance` of `point`, or null. */
+const vertexAt = (
+  point: CraftPoint,
+  vertices: { id: string; x: number; y: number }[],
+  tolerance: number,
+) =>
+  vertices.reduce<{ id: string; x: number; y: number } | null>((best, vertex) => {
+    const gap = distance(point, vertex);
+    return best === null || gap < distance(point, best) ? (gap <= tolerance ? vertex : best) : best;
+  }, null);
+
+/** Adds an author vertex at `point` unless one already sits within snap radius. */
+function appendVertexIfMissing(vertices: CraftVertex[], point: CraftPoint): CraftVertex[] {
+  if (vertices.some((vertex) => distance(vertex, point) <= SNAP_RADIUS)) return vertices;
+  return [...vertices, { id: craftId('vertex'), x: point.x, y: point.y }];
+}
+
 type Confirm =
   | { kind: 'open'; target: string }
   | { kind: 'delete' }
@@ -99,7 +123,7 @@ export function CraftMakerView() {
   const [draft, setDraft] = useState<FoldDraft | null>(null);
   const [draftType, setDraftType] = useState<FoldType>('valley');
   const [draftKind, setDraftKind] = useState<CraftStepKind>('fold');
-  const [draftScope, setDraftScope] = useState<CraftLayerScope>('all');
+  const [draftScope, setDraftScope] = useState<CraftLayerScope>(1);
   const [draftSide, setDraftSide] = useState<CraftFoldSide | null>(null);
   const [selectedVertexId, setSelectedVertexId] = useState<string | null>(null);
   const [hover, setHover] = useState<CraftPoint | null>(null);
@@ -138,6 +162,33 @@ export function CraftMakerView() {
   useEffect(() => {
     stepCountRef.current = data.steps.length;
   }, [data.steps.length]);
+
+  const history = useRef<{ past: CraftFileData[]; future: CraftFileData[] }>({ past: [], future: [] });
+
+  /** Records the CURRENT data onto the undo stack; call BEFORE a mutation. */
+  const pushHistory = useCallback(() => {
+    const { past } = history.current;
+    history.current = {
+      past: past.length >= 50 ? [...past.slice(1), data] : [...past, data],
+      future: [],
+    };
+  }, [data]);
+
+  const undo = () => {
+    const { past, future } = history.current;
+    const previous = past[past.length - 1];
+    if (previous === undefined) return;
+    history.current = { past: past.slice(0, -1), future: [data, ...future] };
+    setData(previous);
+  };
+
+  const redo = () => {
+    const { past, future } = history.current;
+    const next = future[0];
+    if (next === undefined) return;
+    history.current = { past: [...past, data], future: future.slice(1) };
+    setData(next);
+  };
 
   const reloadFiles = useCallback(async () => {
     setFiles(await listCraftFiles());
@@ -225,7 +276,7 @@ export function CraftMakerView() {
 
   const stepPreview = (delta: -1 | 1) => {
     stopPlaying();
-    setPreviewIndex((current) => Math.max(0, Math.min(current + delta, data.steps.length)));
+    setPreviewIndex((current) => Math.max(0, Math.min(current + delta, stepCountRef.current)));
   };
 
   /* Canvas --------------------------------------------------------------- */
@@ -239,10 +290,9 @@ export function CraftMakerView() {
 
       if (tool === 'vertex') {
         const placed = projectOnOutline(raw, state);
-        if (placed === null) {
-          toast.error('No edge close enough to place a point on.');
-          return;
-        }
+        // Silent: an off-paper click is a deselect, not a failed placement.
+        if (placed === null || distance(raw, placed) > SNAP_RADIUS) return;
+        pushHistory();
         setData((current) => ({
           ...current,
           vertices: [...current.vertices, { id: craftId('vertex'), x: placed.x, y: placed.y }],
@@ -257,12 +307,20 @@ export function CraftMakerView() {
          the first point sits in. Both follow from the picks, so nothing here
          has to be assumed and then corrected. */
       if (draft === null) {
-        const origin = resolveOrigin(raw, state, snapTargets(state, data.vertices, scale), scale);
+        const origin =
+          nearestTarget(raw, snapTargets(state, data.vertices, scale), SNAP_RADIUS * scale) ??
+          (state.layers.some((layer) => pointInConvexPolygon(raw, layer.polygon)) ? raw : null);
         if (origin === null) {
-          toast.error('Click a point on the paper to fold from.');
+          toast.error('Click on the paper to fold from.');
           return;
         }
-        setDraft({ origin, target: null });
+        const originVertex = vertexAt(raw, data.vertices, SNAP_RADIUS * scale);
+        setDraft({
+          origin,
+          originVertexId: originVertex === null ? null : originVertex.id,
+          target: null,
+          targetVertexId: null,
+        });
         return;
       }
 
@@ -283,11 +341,52 @@ export function CraftMakerView() {
         return;
       }
 
+      // Empty-space clicks must not act on the paper: the picked destination
+      // has to land on paper or within snap radius of a target (which includes
+      // the sheet centre).
+      const onPaper = state.layers.some((layer) => pointInConvexPolygon(raw, layer.polygon));
+      if (distance(raw, destination) > SNAP_RADIUS * scale && !onPaper) {
+        toast.error('The destination must land on the paper.');
+        return;
+      }
+
       // Re-clicking before Record just moves the destination.
-      setDraft({ origin: draft.origin, target: destination });
+      const targetVertex = vertexAt(raw, data.vertices, SNAP_RADIUS * scale);
+      setDraft({
+        origin: draft.origin,
+        originVertexId: draft.originVertexId,
+        target: destination,
+        targetVertexId: targetVertex === null ? null : targetVertex.id,
+      });
+      const grabbed =
+        draft.originVertexId === null
+          ? draft.origin
+          : (data.vertices.find((v) => v.id === draft.originVertexId) ?? draft.origin);
+      setDraftScope(scopeForOrigin(state, grabbed));
       setDraftSide(null);
     },
     [data, previewIndex, tool, draft, toast],
+  );
+
+  const handleContextPoint = useCallback(
+    (raw: CraftPoint) => {
+      if (draft === null || (draft.originVertexId === null && draft.targetVertexId === null)) return;
+      const nearOrigin = draft.originVertexId !== null ? distance(raw, draft.origin) : Infinity;
+      const nearTarget =
+        draft.targetVertexId !== null && draft.target !== null ? distance(raw, draft.target) : Infinity;
+      const detachTarget = draft.targetVertexId !== null && nearTarget < nearOrigin;
+      setDraft((current) =>
+        current === null
+          ? current
+          : {
+              ...current,
+              originVertexId: detachTarget ? current.originVertexId : null,
+              targetVertexId: detachTarget ? null : current.targetVertexId,
+            },
+      );
+      toast.info('Fold end detached from its vertex.');
+    },
+    [draft, toast],
   );
 
   const layerCount = useMemo(() => replay(data, previewIndex).layers.length, [data, previewIndex]);
@@ -300,6 +399,48 @@ export function CraftMakerView() {
     return foldFromGesture(draft.origin, draft.target, bounds, draftType, draftKind, draftScope);
   }, [draft, data, previewIndex, draftType, draftKind, draftScope]);
 
+  const draftQuality = useMemo(() => {
+    if (draftFold === null) return null;
+    return foldQuality(replay(data, previewIndex), draftFold);
+  }, [draftFold, data, previewIndex]);
+
+  const draftWarning = useMemo(() => {
+    if (draftQuality === null) return null;
+    if (!draftQuality.cutsPaper) return 'The crease will not cross the paper here — nothing would fold. Pick the destination so the crease cuts the sheet.';
+    if (draftQuality.foldsAll) return 'This fold swings nearly the whole piece over itself — the reader would see one flat colour. Consider a corner or offset edge.';
+    if (draftQuality.movingFraction > 0.4 && draftQuality.movingFraction < 0.6) return 'This fold carries about half the shape over itself — the model may read as one flat colour. Consider a corner or offset edge.';
+    return null;
+  }, [draftQuality]);
+
+  const rotation = data.rotation ?? { axis: 'z' as CraftAxis, degrees: 0 };
+  const updateRotation = (patch: Partial<CraftRotation>) => {
+    if (playing) return;
+    const degrees = Math.max(-180, Math.min(180, Math.round(patch.degrees ?? rotation.degrees)));
+    pushHistory();
+    setData((current) => ({
+      ...current,
+      rotation: { axis: patch.axis ?? rotation.axis, degrees },
+    }));
+  };
+
+  /* Degrees commits on blur, like durations elsewhere: the field holds its own
+     text while the user types, and a half-typed number never rotates the model.
+     Sanitising here means the stored value is always a whole degree in range. */
+  const [degreesDraft, setDegreesDraft] = useState(String(rotation.degrees));
+  useEffect(() => {
+    setDegreesDraft(String(data.rotation?.degrees ?? 0));
+  }, [data.rotation]);
+  const commitDegrees = (raw: string) => {
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      setDegreesDraft(String(rotation.degrees));
+      return;
+    }
+    const next = Math.max(-180, Math.min(180, Math.round(parsed)));
+    setDegreesDraft(String(next));
+    if (next !== rotation.degrees) updateRotation({ degrees: next });
+  };
+
   const recordFold = () => {
     if (draftFold === null) {
       toast.error('That is not a fold - the two points are the same.');
@@ -310,6 +451,16 @@ export function CraftMakerView() {
       draftSide === null || draftSide === draftFold.side
         ? draftFold
         : applyStepPatch(draftFold, { side: draftSide });
+
+    const quality = foldQuality(replay(data, previewIndex), step);
+    if (!quality.cutsPaper) {
+      toast.error('That crease does not cross the paper here — nothing would fold. Pick the destination on the other side of the shape.');
+      return;
+    }
+    if (quality.foldsAll || (quality.movingFraction > 0.4 && quality.movingFraction < 0.6)) {
+      toast.info('Heads up: this fold carries a lot of the paper over itself and may read as one flat colour. A corner or offset edge reads better.');
+    }
+
     /* Inserted at the preview position, not appended. The points were picked
        against the paper as it stands after `previewIndex` folds, so that is the
        only place in the sequence where this crease means what the author drew. */
@@ -318,9 +469,13 @@ export function CraftMakerView() {
     setDraft(null);
     setDraftSide(null);
     setHover(null);
+    pushHistory();
     setData((current) => ({
       ...current,
       steps: [...current.steps.slice(0, at), step, ...current.steps.slice(at)],
+      ...(step.kind === 'crease'
+        ? { vertices: appendVertexIfMissing(appendVertexIfMissing(current.vertices, step.from), step.to) }
+        : {}),
     }));
     setSelectedId(step.id);
     setPreviewIndex(at + 1);
@@ -329,7 +484,36 @@ export function CraftMakerView() {
 
   const selectedVertex = data.vertices.find((vertex) => vertex.id === selectedVertexId) ?? null;
 
+  const mergeCandidates = useMemo(() => {
+    if (selectedVertex === null) return [];
+    return data.vertices.filter(
+      (vertex) =>
+        vertex.id !== selectedVertex.id &&
+        !isCornerVertex(vertex.id) &&
+        distance(vertex, selectedVertex) <= SNAP_RADIUS,
+    );
+  }, [selectedVertex, data.vertices]);
+
+  const mergeVertices = () => {
+    if (selectedVertex === null || mergeCandidates.length === 0) return;
+    const keep = new Set([
+      selectedVertex.id,
+      ...data.vertices
+        .filter((v) => isCornerVertex(v.id) || !mergeCandidates.some((m) => m.id === v.id))
+        .map((v) => v.id),
+    ]);
+    pushHistory();
+    setData((current) => ({
+      ...current,
+      vertices: current.vertices.filter((vertex) => keep.has(vertex.id)),
+    }));
+    toast.success(
+      `Merged ${mergeCandidates.length} ${mergeCandidates.length === 1 ? 'point' : 'points'} into the selected one.`,
+    );
+  };
+
   const moveVertex = (id: string, point: CraftPoint) => {
+    pushHistory();
     setData((current) => ({
       ...current,
       vertices: current.vertices.map((vertex) =>
@@ -340,6 +524,7 @@ export function CraftMakerView() {
 
   const deleteVertex = (id: string) => {
     setSelectedVertexId(null);
+    pushHistory();
     setData((current) => ({
       ...current,
       vertices: current.vertices.filter((vertex) => vertex.id !== id),
@@ -358,7 +543,7 @@ export function CraftMakerView() {
     setTool(next);
     setDraft(null);
     setDraftSide(null);
-    setDraftScope('all');
+    setDraftScope(1);
     setSelectedVertexId(null);
     setHover(null);
   };
@@ -377,37 +562,50 @@ export function CraftMakerView() {
     stopPlaying();
     const target = index + delta;
     if (target < 0 || target >= data.steps.length) return;
-    const steps = [...data.steps];
-    const from = steps[index];
-    const to = steps[target];
-    if (from === undefined || to === undefined) return;
-    steps[index] = to;
-    steps[target] = from;
-    setData((current) => ({ ...current, steps }));
-    setPreviewIndex((current) => Math.max(0, Math.min(current, steps.length)));
+    pushHistory();
+    setData((current) => {
+      const steps = [...current.steps];
+      const from = steps[index];
+      const to = steps[target];
+      if (from === undefined || to === undefined) return current;
+      steps[index] = to;
+      steps[target] = from;
+      return { ...current, steps };
+    });
+    setPreviewIndex((current) => Math.max(0, Math.min(current, data.steps.length)));
   };
 
   const deleteStep = (index: number) => {
     stopPlaying();
     const step = data.steps[index];
     if (step === undefined) return;
-    const steps = data.steps.filter((_, position) => position !== index);
-    setData((current) => ({ ...current, steps }));
-    if (selectedId === step.id) setSelectedId(null);
-    setPreviewIndex((current) => Math.max(0, Math.min(current, steps.length)));
-  };
-
-  const updateStep = useCallback((id: string, patch: Partial<CraftFoldStep>) => {
+    pushHistory();
     setData((current) => ({
       ...current,
-      steps: current.steps.map((step) => (step.id === id ? applyStepPatch(step, patch) : step)),
+      steps: current.steps.filter((_, position) => position !== index),
     }));
-  }, []);
+    if (selectedId === step.id) setSelectedId(null);
+    setPreviewIndex((current) => Math.max(0, Math.min(current, data.steps.length)));
+  };
+
+  const updateStep = useCallback(
+    (id: string, patch: Partial<CraftFoldStep>) => {
+      const index = data.steps.findIndex((step) => step.id === id);
+      pushHistory();
+      setData((current) => ({
+        ...current,
+        steps: current.steps.map((step) => (step.id === id ? applyStepPatch(step, patch) : step)),
+      }));
+      if (index >= 0 && previewIndex > index + 1) setPreviewIndex(index + 1);
+    },
+    [data.steps, previewIndex, pushHistory],
+  );
 
   const changeSheet = (sheet: CraftSheet) => {
     stopPlaying();
     setDraft(null);
     setDraftSide(null);
+    pushHistory();
     setData((current) => ({
       ...current,
       sheet,
@@ -425,6 +623,7 @@ export function CraftMakerView() {
 
   const resetTo = (file: CraftFile | null) => {
     stopPlaying();
+    history.current = { past: [], future: [] };
     const next = file === null ? emptyCraftData() : file.data;
     const nextName = file === null ? UNTITLED : file.name;
     const nextTutorial = file === null ? null : file.tutorialId;
@@ -469,14 +668,22 @@ export function CraftMakerView() {
 
   /** A deployed project is what a reader actually plays, so it has to be attached
       and non-empty; the button stays disabled until both hold. */
-  const deployBlockedReason =
-    tutorialId === null && data.steps.length === 0
-      ? 'Attach a tutorial and record at least one fold before deploying.'
-      : tutorialId === null
-        ? 'Attach this project to a tutorial before deploying.'
-        : data.steps.length === 0
-          ? 'Record at least one fold before deploying.'
-          : null;
+  const deployBlockedReason = (() => {
+    if (tutorialId === null && data.steps.length === 0) {
+      return 'Attach a tutorial and record at least one fold before deploying.';
+    }
+    if (tutorialId === null) {
+      return 'Attach this project to a tutorial before deploying.';
+    }
+    if (data.steps.length === 0) {
+      return 'Record at least one fold before deploying.';
+    }
+    const dead = firstDeadFrame(data);
+    if (dead !== null) {
+      return `Fold ${dead.index + 1} does not cross the paper — fix it before deploying.`;
+    }
+    return null;
+  })();
 
   const handleSave = async (nextStatus: CraftStatus = status) => {
     setBusy(true);
@@ -557,6 +764,42 @@ export function CraftMakerView() {
     }
   };
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const tag = (event.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (playingRef.current) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (confirm !== null) { setConfirm(null); return; }
+        if (draft !== null) { cancelDraft(); return; }
+        if (selectedVertexId !== null) { setSelectedVertexId(null); return; }
+        if (selectedId !== null) setSelectedId(null);
+        return;
+      }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); stepPreview(-1); return; }
+      if (event.key === 'ArrowRight') { event.preventDefault(); stepPreview(1); return; }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redo(); else undo();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if ((event.key === 'Delete' || event.key === 'Backspace') && tool === 'vertex' && selectedVertexId !== null) {
+        event.preventDefault();
+        if (isCornerVertex(selectedVertexId)) toast.error('Sheet corners cannot be removed.');
+        else deleteVertex(selectedVertexId);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   /* Render --------------------------------------------------------------- */
 
   const hint = useMemo(() => {
@@ -633,6 +876,8 @@ export function CraftMakerView() {
                 onPickPoint={handlePick}
                 onHover={setHover}
                 onFoldComplete={handleFoldComplete}
+                rotation={rotation}
+                onContextPoint={handleContextPoint}
               />
             </div>
 
@@ -655,6 +900,12 @@ export function CraftMakerView() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={undo} disabled={playing || history.current.past.length === 0}>
+                Undo
+              </Button>
+              <Button size="sm" variant="secondary" onClick={redo} disabled={playing || history.current.future.length === 0}>
+                Redo
+              </Button>
               <Button
                 size="sm"
                 variant="secondary"
@@ -694,6 +945,8 @@ export function CraftMakerView() {
                   onMove={moveVertex}
                   onDelete={deleteVertex}
                   onClose={() => setSelectedVertexId(null)}
+                  nearCount={mergeCandidates.length}
+                  onMerge={mergeVertices}
                 />
               )}
 
@@ -710,6 +963,7 @@ export function CraftMakerView() {
                   originSide={draftFold?.side ?? 'left'}
                   onFoldType={setDraftType}
                   onSide={setDraftSide}
+                  warning={draftWarning}
                   onRecord={recordFold}
                   onCancel={cancelDraft}
                 />
@@ -725,6 +979,49 @@ export function CraftMakerView() {
                 onDelete={deleteStep}
                 onUpdate={updateStep}
               />
+
+              <div className="flex flex-col gap-2 border-t border-crease pt-4">
+                <p className="font-mono text-xs tracking-wider text-ink-muted uppercase">
+                  Model rotation
+                </p>
+                <p className="font-body text-sm text-ink-muted">
+                  Turn the whole model on an axis. Z spins it in place; X and Y foreshorten it like
+                  a real 3D turn.
+                </p>
+                <div className="flex items-end gap-2">
+                  <Select
+                    label="Axis"
+                    value={rotation.axis}
+                    onChange={(event) => updateRotation({ axis: event.target.value as CraftAxis })}
+                    options={[
+                      { value: 'x', label: 'X' },
+                      { value: 'y', label: 'Y' },
+                      { value: 'z', label: 'Z' },
+                    ]}
+                  />
+                  <Input
+                    label="Degrees"
+                    type="number"
+                    min={-180}
+                    max={180}
+                    step={15}
+                    size="sm"
+                    value={degreesDraft}
+                    onChange={(event) => setDegreesDraft(event.target.value)}
+                    onBlur={(event) => commitDegrees(event.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={playing}
+                    onClick={() => updateRotation({ degrees: 0 })}
+                    className="mb-0.5"
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
             </CardBody>
           </Card>
 

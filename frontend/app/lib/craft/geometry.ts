@@ -14,7 +14,7 @@ export type Polygon = CraftPoint[];
 
 const EPS = 1e-9;
 /** Square millimetres. Below this a clipped piece is a sliver, not a layer. */
-const MIN_AREA = 1e-4;
+export const MIN_AREA = 1e-4;
 
 /**
  * Twice the signed area of the triangle (a, b, p). Positive when p lies to the
@@ -37,6 +37,30 @@ export function polygonArea(polygon: Polygon): number {
 
 export function isDegenerate(polygon: Polygon): boolean {
   return polygon.length < 3 || polygonArea(polygon) < MIN_AREA;
+}
+
+/**
+ * Point-in-polygon for the convex polygons the fold model always produces.
+ * `ringSign` settles the winding once, then every edge must agree with it
+ * (or sit exactly on the boundary), which is the convex definition of inside.
+ */
+export function pointInConvexPolygon(p: CraftPoint, polygon: Polygon): boolean {
+  if (polygon.length < 3) return false;
+
+  let ring = 0;
+  for (let i = 0; i < polygon.length; i += 1) {
+    const current = polygon[i]!;
+    const next = polygon[(i + 1) % polygon.length]!;
+    ring += current.x * next.y - next.x * current.y;
+  }
+  const ringSign = ring > 0 ? 1 : -1;
+
+  for (let i = 0; i < polygon.length; i += 1) {
+    const current = polygon[i]!;
+    const next = polygon[(i + 1) % polygon.length]!;
+    if (sideOf(p, current, next) * ringSign < -EPS) return false;
+  }
+  return true;
 }
 
 function intersect(p: CraftPoint, q: CraftPoint, dp: number, dq: number): CraftPoint {

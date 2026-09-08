@@ -376,6 +376,20 @@ export interface CraftSheet {
   height: number;
 }
 
+export type CraftAxis = 'x' | 'y' | 'z';
+
+/**
+ * Rotation of the entire folded model, stored as a single 3D turn about the
+ * sheet centre. The engine stays planar: `z` spins the model in its plane,
+ * `x`/`y` foreshorten it, which is what makes any axis read as the model
+ * turning in space.
+ */
+export interface CraftRotation {
+  axis: CraftAxis;
+  /** Degrees, clamped to -180..180. 0 is the scene default. */
+  degrees: number;
+}
+
 /**
  * An author-placed point on the sheet outline, used as a snap target by the
  * Craft Maker. The player ignores these — a step carries its own coordinates.
@@ -438,6 +452,8 @@ export interface CraftFileData {
   sheet: CraftSheet;
   vertices: CraftVertex[];
   steps: CraftFoldStep[];
+  /** Optional whole-model turn; absent means the flat-facing default. */
+  rotation?: CraftRotation;
 }
 
 /** Where a fold project sits in its lifecycle: still being authored, or live. */

@@ -2,8 +2,14 @@
 
 import gsap from 'gsap';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CraftFileData, CraftPoint } from '@foldify/shared';
+import type { CraftFileData, CraftPoint, CraftRotation } from '@foldify/shared';
 import { toPathData } from '@/app/lib/craft/geometry';
+import {
+  rotationTransform,
+  inverseRotationTransform,
+  transformBounds,
+  rotationAffine,
+} from '@/app/lib/craft/rotation';
 import {
   contentBounds,
   creaseLines,
@@ -36,6 +42,10 @@ export interface FoldStageProps {
   /** Drawn in sheet coordinates on top of the paper. Editor handles live here. */
   overlay?: React.ReactNode;
   onPickPoint?: (point: CraftPoint) => void;
+  /** Whole-model turn applied to everything drawn (layers, marks, overlay). */
+  rotation?: CraftRotation;
+  /** Editor right-click, delivered in SHEET coordinates. */
+  onContextPoint?: (point: CraftPoint) => void;
   ariaLabel?: string;
   /** LAYOUT ONLY. */
   className?: string;
@@ -88,6 +98,8 @@ export function FoldStage({
   onFoldComplete,
   overlay,
   onPickPoint,
+  rotation,
+  onContextPoint,
   ariaLabel,
   className,
 }: FoldStageProps) {
@@ -95,8 +107,18 @@ export function FoldStage({
   const pathsRef = useRef(new Map<string, SVGPathElement>());
   const shownRef = useRef({ index: stepIndex, data });
 
-  const bounds = useMemo(() => contentBounds(data), [data]);
-  const scale = Math.max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) / 100;
+  const centre = useMemo(() => ({ x: data.sheet.width / 2, y: data.sheet.height / 2 }), [data.sheet]);
+
+  const rawBounds = useMemo(() => contentBounds(data), [data]);
+  const scale = Math.max(rawBounds.maxX - rawBounds.minX, rawBounds.maxY - rawBounds.minY) / 100;
+
+  const transform = useMemo(() => rotationTransform(rotation, centre), [rotation, centre]);
+  const invert = useMemo(() => inverseRotationTransform(rotation, centre), [rotation, centre]);
+  const affine = useMemo(() => rotationAffine(rotation, centre), [rotation, centre]);
+  const bounds = useMemo(
+    () => (affine === null ? rawBounds : transformBounds(rawBounds, transform)),
+    [affine, rawBounds, transform],
+  );
 
   const [plan, setPlan] = useState<Plan>(() => ({ kind: 'static', layers: replay(data, stepIndex).layers }));
 
@@ -176,21 +198,39 @@ export function FoldStage({
     };
   }, [plan, data, onFoldComplete]);
 
+  const sheetPointFromEvent = useCallback(
+    (clientX: number, clientY: number): CraftPoint | null => {
+      const svg = svgRef.current;
+      if (svg === null) return null;
+      const matrix = svg.getScreenCTM();
+      if (matrix === null) return null;
+      const point = svg.createSVGPoint();
+      point.x = clientX;
+      point.y = clientY;
+      const local = point.matrixTransform(matrix.inverse());
+      return invert(local);
+    },
+    [invert],
+  );
+
   const handleClick = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
-      const svg = svgRef.current;
-      if (onPickPoint === undefined || svg === null) return;
-
-      const matrix = svg.getScreenCTM();
-      if (matrix === null) return;
-
-      const point = svg.createSVGPoint();
-      point.x = event.clientX;
-      point.y = event.clientY;
-      const local = point.matrixTransform(matrix.inverse());
-      onPickPoint({ x: local.x, y: local.y });
+      if (onPickPoint === undefined) return;
+      const p = sheetPointFromEvent(event.clientX, event.clientY);
+      if (p !== null) onPickPoint(p);
     },
-    [onPickPoint],
+    [onPickPoint, sheetPointFromEvent],
+  );
+
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      if (onPickPoint === undefined) return;
+      event.preventDefault();
+      if (onContextPoint === undefined) return;
+      const p = sheetPointFromEvent(event.clientX, event.clientY);
+      if (p !== null) onContextPoint(p);
+    },
+    [onPickPoint, onContextPoint, sheetPointFromEvent],
   );
 
   const activeStep = plan.kind === 'fold' ? data.steps[plan.stepIndex] : undefined;
@@ -207,9 +247,17 @@ export function FoldStage({
       role="img"
       aria-label={ariaLabel ?? 'Folded paper'}
       onClick={onPickPoint === undefined ? undefined : handleClick}
+      onContextMenu={handleContextMenu}
       className={cn(className, 'block h-full w-full touch-none select-none')}
     >
-      {plan.layers.map((layer) => (
+      <g
+        transform={
+          affine === null
+            ? undefined
+            : `matrix(${affine.a} ${affine.b} ${affine.c} ${affine.d} ${affine.e} ${affine.f})`
+        }
+      >
+        {plan.layers.map((layer) => (
         <path
           key={layer.id}
           ref={(node) => {
@@ -254,6 +302,7 @@ export function FoldStage({
       )}
 
       {overlay}
+      </g>
     </svg>
   );
 }
