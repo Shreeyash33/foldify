@@ -62,10 +62,10 @@ export function CheckoutView() {
       toast.success('Order placed.');
 
       /*
-       * The simulated gateway redirects back into this app and its reference
-       * alone is not enough to verify against — that needs the order id. A real
-       * gateway will hand back an absolute URL of its own instead, which is a
-       * full page departure rather than a client-side route change.
+       * Relative redirect: the dev-only simulated fallback landing on
+       * /checkout/return — its ref alone isn't enough to verify, so we append
+       * the order id.  Absolute URL: the real Khalti hosted checkout page,
+       * which is a full-page departure rather than a client-side route change.
        */
       if (payment.redirectUrl.startsWith('/')) {
         const separator = payment.redirectUrl.includes('?') ? '&' : '?';

@@ -6,6 +6,7 @@ import {
   insertOrder,
   listAllOrders,
   listOrdersForUser,
+  restoreStockForOrder,
   setOrderStatus,
   type NewOrderItem,
 } from '../db/queries/orders.queries.ts';
@@ -168,8 +169,13 @@ router.get('/:id', (req, res) => {
 /**
  * POST /api/orders/:id/verify — confirms payment with the provider.
  *
- * The result comes from paymentService, never from a success flag posted by the
- * browser: the browser is the one party with a reason to lie about it.
+ * Three outcomes based on the provider's answer and the order's current status:
+ *  1. `success` + order `pending`  → order promoted to `paid`.
+ *  2. `failed`  + order `pending`  → stock restored, order set to `cancelled`.
+ *  3. `pending` (still confirming) → order left as-is.
+ *
+ * Repeated calls are idempotent: the status guard prevents double-restocking
+ * or walking an already-processed order backwards.
  */
 router.post(
   '/:id/verify',
@@ -180,6 +186,12 @@ router.post(
     }
 
     const verification = await paymentService.verify(order.paymentRef);
+
+    // Failed verification on a pending order: release stock and cancel.
+    if (verification.status === 'failed' && order.status === 'pending') {
+      restoreStockForOrder(order.id);
+      setOrderStatus(order.id, 'cancelled');
+    }
 
     // Only 'pending' is promoted — a shipped order must not walk back to 'paid'.
     if (verification.status === 'success' && order.status === 'pending') {

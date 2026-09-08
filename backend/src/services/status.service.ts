@@ -24,7 +24,7 @@ const MODULES: Record<string, ModuleHealth> = {
   tutorials: 'ok', // list, detail, steps + admin CRUD (create, update, append steps, unpublish)
   orders: 'ok', // customer list/create/detail/verify + admin status updates
   contact: 'ok', // public submit + admin inbox (list, mark handled)
-  payments: 'not-implemented', // simulated gateway only — no real provider yet
+  payments: 'ok', // Khalti sandbox + simulated fallback when unconfigured
 };
 
 export function getStatus(): StatusResponse {

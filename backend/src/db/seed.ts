@@ -148,34 +148,10 @@ function seed(): void {
   applySchema();
 
   const run = db.transaction(() => {
-    // Prune rows that are no longer part of the seed, so a changed catalogue
-    // REPLACES instead of accumulating over time. Products are pruned before
-    // categories because categories RESTRICT on delete. A product referenced
-    // by an order cannot be deleted, so it is soft-deleted (unpublished)
-    // instead — the row must survive for the order's line items.
-    const seedProductSlugs = PRODUCTS.map((product) => product.slug);
-    const pSlugs = seedProductSlugs.map(() => '?').join(',');
-    db.prepare(
-      `DELETE FROM products
-       WHERE slug NOT IN (${pSlugs})
-         AND id NOT IN (SELECT DISTINCT product_id FROM order_items)`,
-    ).run(...seedProductSlugs);
-    db.prepare(`UPDATE products SET is_published = 0 WHERE slug NOT IN (${pSlugs})`).run(
-      ...seedProductSlugs,
-    );
-
-    const seedCategorySlugs = CATEGORIES.map((category) => category.slug);
-    const cSlugs = seedCategorySlugs.map(() => '?').join(',');
-    db.prepare(`DELETE FROM categories WHERE slug NOT IN (${cSlugs})`).run(...seedCategorySlugs);
-
-    // Tutorials prune the same way; steps cascade away with their tutorial.
-    const seedTutorialSlugs = TUTORIALS.map((tutorial) => tutorial.slug);
-    const tSlugs = seedTutorialSlugs.map(() => '?').join(',');
-    db.prepare(`DELETE FROM tutorials WHERE slug NOT IN (${tSlugs})`).run(...seedTutorialSlugs);
-
-    // Craft files prune by id, so a renamed or retired demo fold is replaced
-    // rather than left behind holding its tutorial's UNIQUE tutorial_id.
-    db.prepare('DELETE FROM craft_files WHERE id NOT IN (?)').run(CRANE_CRAFT.id);
+    // Additive seed: every insert below is an upsert keyed on a natural unique
+    // column, so the seed only ever inserts its own known rows or updates its
+    // own known rows in place. It never deletes anything the application or a
+    // user created, so it is safe to run over a live database.
 
     // Admin user
     const passwordHash = bcrypt.hashSync(config.seedAdminPassword, 10);
@@ -312,14 +288,13 @@ function seed(): void {
 
     // Product ↔ tutorial pairings: the folded models sold in the shop, and the
     // tutorials teaching that same fold, joined so the two pages can point at
-    // each other. Rebuilt wholesale every run, so the seed stays the single
-    // source of truth for which fold pairs appear on the site.
+    // each other. Inserted with DO NOTHING so the pairs the seed knows about
+    // still get created while any the user added survive.
     const PRODUCT_TUTORIAL_PAIRS: ReadonlyArray<readonly [productSlug: string, tutorialSlug: string]> = [
       ['crane-traditional-white', 'traditional-crane'],
       ['sonobe-cube-six-unit', 'modular-sonobe-cube'],
     ];
 
-    db.prepare('DELETE FROM tutorial_product_links').run();
     const linkTutorialToProduct = db.prepare(
       `INSERT INTO tutorial_product_links (tutorial_id, product_id)
        VALUES (@tutorialId, @productId)

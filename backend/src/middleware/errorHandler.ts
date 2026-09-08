@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { ApiResponse } from '@foldify/shared';
-import { isProduction } from '../config.ts';
 import { AppError } from '../lib/errors.ts';
 
 /**
@@ -9,8 +8,10 @@ import { AppError } from '../lib/errors.ts';
  *
  * Every failure leaves through here in the same envelope, so the frontend has
  * exactly one error shape to handle. Unexpected exceptions are logged in full
- * server-side and reduced to a generic message client-side: stack traces and
- * raw SQLite messages tell an attacker about your schema.
+ * server-side (including the full error and stack trace) and always reduced to
+ * the same generic message client-side — in both development and production.
+ * Stack traces, raw provider payloads, or database details must never reach
+ * the client.
  */
 export function errorHandler(
   err: unknown,
@@ -30,9 +31,7 @@ export function errorHandler(
     ok: false,
     error: {
       code: 'INTERNAL_ERROR',
-      message: isProduction
-        ? 'Something went wrong. Please try again.'
-        : 'Something went wrong — check the backend console for the stack trace.',
+      message: 'Something went wrong. Please try again.',
     },
   };
   res.status(500).json(body);
