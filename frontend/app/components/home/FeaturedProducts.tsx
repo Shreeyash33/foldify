@@ -5,7 +5,7 @@ import type { Product } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody } from '@/app/components/ui/Card';
-import { Skeleton } from '@/app/components/ui/Skeleton';
+import { CardGridSkeleton } from '@/app/components/feedback/CardGridSkeleton';
 import { listProducts, ApiClientError } from '@/app/lib/api-client';
 import { ProductCard } from '@/app/(shop)/products/ProductCard';
 
@@ -26,17 +26,7 @@ const FETCH_PAGE_SIZE = 12;
 
 export function FeaturedProductsSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      {Array.from({ length: 4 }, (_, index) => (
-        <Card key={index}>
-          <Skeleton shape="block" />
-          <CardBody className="flex flex-col gap-2">
-            <Skeleton shape="title" />
-            <Skeleton shape="text" lines={2} />
-          </CardBody>
-        </Card>
-      ))}
-    </div>
+    <CardGridSkeleton count={4} className="grid grid-cols-2 gap-4 md:grid-cols-4" />
   );
 }
 

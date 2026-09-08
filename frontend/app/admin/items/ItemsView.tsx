@@ -24,6 +24,7 @@ import {
   updateProduct,
 } from '@/app/lib/api-client';
 import { formatMoney } from '@/app/lib/utils';
+import { revalidateCatalog } from '@/app/lib/revalidate';
 import type {
   Category,
   CreateCategoryRequest,
@@ -449,6 +450,7 @@ export function ItemsView() {
 
   const handleSaveNew = async (state: ProductFormState) => {
     await createProduct(formToCreate(state, categories));
+    await revalidateCatalog();
     toast.success('Item created.');
     setEditing(null);
     await refreshAfterMutation();
@@ -457,6 +459,7 @@ export function ItemsView() {
   const handleSaveEdit = async (state: ProductFormState) => {
     if (editing === null || editing === 'new') return;
     await updateProduct(editing.id, formToUpdate(state, categories));
+    await revalidateCatalog();
     toast.success('Item saved.');
     setEditing(null);
     await refreshAfterMutation();
@@ -468,6 +471,7 @@ export function ItemsView() {
       setConfirmingId(null);
       try {
         await deleteProduct(product.id);
+        await revalidateCatalog();
         toast.success(`"${product.name}" moved out of sale.`);
         await refreshAfterMutation();
       } catch (cause) {

@@ -5,6 +5,7 @@ import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardMedia, CardTitle } from '@/app/components/ui/Card';
 import { CreaseDivider } from '@/app/components/ui/CreaseDivider';
 import { Skeleton } from '@/app/components/ui/Skeleton';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
 import { PageHeader } from '@/app/components/layout/PageHeader';
 import { getProduct } from '@/app/lib/api-client';
 import { getProductShell } from '@/app/lib/catalogue';
@@ -83,14 +84,7 @@ export async function ProductShell({ params }: { params: Promise<{ id: string }>
   try {
     product = await getProductShell(slug);
   } catch {
-    return (
-      <Card>
-        <CardBody className="flex flex-col items-start gap-3">
-          <Badge tone="danger">Problem</Badge>
-          <p>This model could not be loaded right now. Please try again shortly.</p>
-        </CardBody>
-      </Card>
-    );
+    return <ErrorCard message="This model could not be loaded right now. Please try again shortly." />;
   }
 
   if (product === null) notFound();

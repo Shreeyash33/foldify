@@ -1,8 +1,9 @@
 import type { Difficulty, ProductFilters } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
-import { Card, CardBody } from '@/app/components/ui/Card';
-import { Skeleton } from '@/app/components/ui/Skeleton';
+import { CardGridSkeleton } from '@/app/components/feedback/CardGridSkeleton';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
+import { EmptyState } from '@/app/components/feedback/EmptyState';
 import { getProductPage } from '@/app/lib/catalogue';
 import { ApiClientError } from '@/app/lib/api-client';
 import { ProductCard } from './ProductCard';
@@ -60,17 +61,10 @@ function buildHref(params: ProductSearchParams, page: number): string {
 
 export function ProductGridSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {Array.from({ length: 8 }, (_, index) => (
-        <Card key={index}>
-          <Skeleton shape="block" />
-          <CardBody className="flex flex-col gap-2">
-            <Skeleton shape="title" />
-            <Skeleton shape="text" lines={2} />
-          </CardBody>
-        </Card>
-      ))}
-    </div>
+    <CardGridSkeleton
+      count={8}
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    />
   );
 }
 
@@ -87,28 +81,23 @@ export async function ProductGrid({ searchParams }: { searchParams: Promise<Prod
         : 'The shop could not be loaded. Please try again shortly.';
 
     return (
-      <Card>
-        <CardBody className="flex flex-col items-start gap-3">
-          <Badge tone="danger">Problem</Badge>
-          <p>{message}</p>
-          <Button href="/products" variant="secondary" size="sm">
-            Try again
-          </Button>
-        </CardBody>
-      </Card>
+      <ErrorCard
+        message={message}
+        retryHref="/products"
+      />
     );
   }
 
   if (page.items.length === 0) {
     return (
-      <Card>
-        <CardBody className="flex flex-col items-start gap-3">
-          <p>Nothing matches those filters yet.</p>
+      <EmptyState
+        message="Nothing matches those filters yet."
+        action={
           <Button href="/products" variant="secondary" size="sm">
             Clear filters
           </Button>
-        </CardBody>
-      </Card>
+        }
+      />
     );
   }
 

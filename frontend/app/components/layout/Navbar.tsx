@@ -11,6 +11,7 @@ import { Button } from '@/app/components/ui/Button';
 import { PaperSurface } from '@/app/components/ui/PaperSurface';
 import { ThemeToggle } from '@/app/components/ui/ThemeToggle';
 import { Container } from './Container';
+import { LogoMark } from '@/app/components/brand/LogoMark';
 
 /** Cardboard, with a visible cut edge along the bottom. */
 
@@ -56,7 +57,7 @@ export function Navbar() {
           className="flex shrink-0 items-center gap-2 font-display text-xl text-ink"
           aria-label="Foldify home"
         >
-          <FoldMark />
+          <LogoMark className="size-6 text-ink" />
           Foldify
         </Link>
 
@@ -163,7 +164,7 @@ export function NavbarFallback() {
     >
       <Container width="wide" className="flex min-h-16 items-center justify-between gap-3">
         <span className="flex shrink-0 items-center gap-2 font-display text-xl text-ink">
-          <FoldMark />
+          <LogoMark className="size-6 text-ink" />
           Foldify
         </span>
 
@@ -201,22 +202,6 @@ function NavLink({
     >
       {children}
     </Link>
-  );
-}
-
-/** A folded square — the logo mark. */
-function FoldMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 text-ink">
-      <path
-        d="M4 4h11l5 5v11H4z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M15 4v5h5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-    </svg>
   );
 }
 

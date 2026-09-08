@@ -2,6 +2,7 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { cn } from '@/app/lib/utils';
 import { PaperSurface, type Elevation } from './PaperSurface';
+import { LogoMark } from '@/app/components/brand/LogoMark';
 
 /**
  * A sheet of raised paper. The default container for anything with content:
@@ -129,24 +130,7 @@ export function CardMedia({
     >
       {src === null ? (
         <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
-          {/* The same folded square the Spinner draws — an empty slot still
-              reads as Foldify rather than as a missing asset. */}
-          <svg viewBox="0 0 24 24" className="size-10 text-ink-muted opacity-40">
-            <path
-              d="M4 4h11l5 5v11H4z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M15 4l5 5h-5z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <LogoMark className="size-10 text-ink-muted opacity-40" />
         </span>
       ) : (
         <Image
