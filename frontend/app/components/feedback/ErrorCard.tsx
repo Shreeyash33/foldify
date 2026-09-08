@@ -9,7 +9,15 @@ import { Card, CardBody } from '@/app/components/ui/Card';
  * learn, reviews — renders the same Problem card, so it lives here once
  * instead of being copy-pasted a dozen times.
  */
-export function ErrorCard({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorCard({
+  message,
+  onRetry,
+  retryHref,
+}: {
+  message: string;
+  onRetry?: () => void;
+  retryHref?: string;
+}) {
   return (
     <Card>
       <CardBody className="flex flex-col items-start gap-3">
@@ -17,6 +25,10 @@ export function ErrorCard({ message, onRetry }: { message: string; onRetry?: () 
         <p>{message}</p>
         {onRetry !== undefined ? (
           <Button onClick={() => onRetry()} variant="secondary" size="sm">
+            Try again
+          </Button>
+        ) : retryHref !== undefined ? (
+          <Button href={retryHref} variant="secondary" size="sm">
             Try again
           </Button>
         ) : null}

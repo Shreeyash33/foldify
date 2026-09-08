@@ -5,6 +5,7 @@ import { Container } from '@/app/components/layout/Container';
 import { CreaseDivider } from '@/app/components/ui/CreaseDivider';
 import { PaperSurface } from '@/app/components/ui/PaperSurface';
 import { Button } from '@/app/components/ui/Button';
+import { LogoMark } from '@/app/components/brand/LogoMark';
 import { FeaturedProducts, FeaturedProductsSkeleton } from '@/app/components/home/FeaturedProducts';
 
 export const metadata: Metadata = {
@@ -79,7 +80,7 @@ function SectionHero() {
       <Container width="wide" className="flex flex-col gap-6 py-10 sm:py-14">
         <Link href="/products" className="inline-flex w-fit">
           <PaperSurface material="crumpled" elevation={1} className="p-2">
-            <Mark />
+            <LogoMark className="size-12 text-ink" />
           </PaperSurface>
         </Link>
 
@@ -107,27 +108,5 @@ function SectionHero() {
         </div>
       </Container>
     </PaperSurface>
-  );
-}
-
-/** The folded-square mark, reused from the design-system showcase vocabulary. */
-function Mark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-12 text-ink">
-      <path
-        d="M4 4h11l5 5v11H4z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M15 4l5 5h-5z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

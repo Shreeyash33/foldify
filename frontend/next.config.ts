@@ -20,6 +20,13 @@ const nextConfig: NextConfig = {
    */
   cacheComponents: true,
 
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
+    ],
+  },
+
   typescript: {
     // Never let a type error through. The component library relies on the type
     // system being the enforcement mechanism, so a broken build must fail.
