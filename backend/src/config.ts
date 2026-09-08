@@ -38,6 +38,8 @@ export const config = {
   dbPath: path.join(BACKEND_ROOT, str('DB_PATH', './data/foldify.db')),
   seedAdminEmail: str('SEED_ADMIN_EMAIL', 'admin@foldify.local'),
   seedAdminPassword: str('SEED_ADMIN_PASSWORD', 'foldify-admin'),
+  khaltiSecretKey: str('KHALTI_SECRET_KEY', ''),
+  khaltiBaseUrl: str('KHALTI_BASE_URL', 'https://dev.khalti.com'),
   version: '0.1.0',
 } as const;
 

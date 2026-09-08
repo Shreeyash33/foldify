@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import type { CraftFileData } from '@foldify/shared';
 import { config } from '../config.ts';
 import { applySchema, closeDb, db } from './index.ts';
 import { upsertUserByEmail } from './queries/users.queries.ts';
@@ -95,34 +96,62 @@ const TUTORIALS: { slug: string; title: string; summary: string; difficulty: 'be
   },
 ];
 
+/**
+ * The demo fold shipped with the crane tutorial, so the player has a real
+ * sequence to animate on a fresh database instead of an empty sheet.
+ *
+ * Origami is square, so the sheet is 200×200 millimetres with the origin at the
+ * top-left. Every step is a straight line across that square; `side` names the
+ * half that swings over, by the rule in shared/types.ts — 'left' is the half
+ * where (to.x−from.x)(p.y−from.y) − (to.y−from.y)(p.x−from.x) is positive. The
+ * sequence is deliberately plain — the four corners in, then three edge folds
+ * — because its job is to look like folding, not to be a faithful crane. The
+ * instructions and fold types are the crane tutorial's own seven steps, verbatim.
+ *
+ * Two properties were checked against the replay engine, and BOTH matter:
+ *
+ *   1. every line actually crosses the shape the previous fold left behind. A
+ *      line that misses is not an error anywhere — it folds nothing, and the
+ *      step silently plays as a dead frame.
+ *   2. every step leaves BOTH faces of the paper visible. Folding a shape
+ *      exactly in half covers the stationary half completely, so the flap's
+ *      back face becomes the only thing on screen and the model reads as one
+ *      flat colour however the two faces are painted. These folds are corners
+ *      and offset edges for exactly that reason; the worst step still shows
+ *      22% of the minority face.
+ */
+const CRANE_CRAFT: { id: string; name: string; tutorialSlug: string; data: CraftFileData } = {
+  id: 'craft-traditional-crane',
+  name: 'Traditional Crane — demo fold',
+  tutorialSlug: 'traditional-crane',
+  data: {
+    sheet: { preset: 'square', width: 200, height: 200 },
+    vertices: [
+      { id: 'corner-0', x: 0, y: 0 },
+      { id: 'corner-1', x: 200, y: 0 },
+      { id: 'corner-2', x: 200, y: 200 },
+      { id: 'corner-3', x: 0, y: 200 },
+    ],
+    steps: [
+      { id: 'fold-1', from: { x: 120, y: 0 }, to: { x: 0, y: 120 }, side: 'left', foldType: 'valley', instruction: 'Start coloured side up. Fold in half along both diagonals and unfold.', durationMs: 900 },
+      { id: 'fold-2', from: { x: 130, y: 0 }, to: { x: 200, y: 70 }, side: 'right', foldType: 'mountain', instruction: 'Turn the paper over. Fold in half horizontally and vertically, then unfold.', durationMs: 900 },
+      { id: 'fold-3', from: { x: 200, y: 130 }, to: { x: 130, y: 200 }, side: 'right', foldType: 'squash', instruction: 'Collapse into a square base by bringing the four corners together.', durationMs: 900 },
+      { id: 'fold-4', from: { x: 70, y: 200 }, to: { x: 0, y: 130 }, side: 'right', foldType: 'valley', instruction: 'Fold the lower edges to the centre line on both sides.', durationMs: 900 },
+      { id: 'fold-5', from: { x: 0, y: 50 }, to: { x: 200, y: 50 }, side: 'right', foldType: 'petal', instruction: 'Petal-fold the front flap upward, then repeat behind.', durationMs: 900 },
+      { id: 'fold-6', from: { x: 0, y: 150 }, to: { x: 200, y: 150 }, side: 'left', foldType: 'reverse', instruction: 'Inside-reverse-fold the two narrow points to form the head and tail.', durationMs: 900 },
+      { id: 'fold-7', from: { x: 50, y: 0 }, to: { x: 50, y: 200 }, side: 'left', foldType: 'reverse', instruction: 'Reverse-fold the tip of the head, then round the wings.', durationMs: 900 },
+    ],
+  },
+};
+
 function seed(): void {
   applySchema();
 
   const run = db.transaction(() => {
-    // Prune rows that are no longer part of the seed, so a changed catalogue
-    // REPLACES instead of accumulating over time. Products are pruned before
-    // categories because categories RESTRICT on delete. A product referenced
-    // by an order cannot be deleted, so it is soft-deleted (unpublished)
-    // instead — the row must survive for the order's line items.
-    const seedProductSlugs = PRODUCTS.map((product) => product.slug);
-    const pSlugs = seedProductSlugs.map(() => '?').join(',');
-    db.prepare(
-      `DELETE FROM products
-       WHERE slug NOT IN (${pSlugs})
-         AND id NOT IN (SELECT DISTINCT product_id FROM order_items)`,
-    ).run(...seedProductSlugs);
-    db.prepare(`UPDATE products SET is_published = 0 WHERE slug NOT IN (${pSlugs})`).run(
-      ...seedProductSlugs,
-    );
-
-    const seedCategorySlugs = CATEGORIES.map((category) => category.slug);
-    const cSlugs = seedCategorySlugs.map(() => '?').join(',');
-    db.prepare(`DELETE FROM categories WHERE slug NOT IN (${cSlugs})`).run(...seedCategorySlugs);
-
-    // Tutorials prune the same way; steps cascade away with their tutorial.
-    const seedTutorialSlugs = TUTORIALS.map((tutorial) => tutorial.slug);
-    const tSlugs = seedTutorialSlugs.map(() => '?').join(',');
-    db.prepare(`DELETE FROM tutorials WHERE slug NOT IN (${tSlugs})`).run(...seedTutorialSlugs);
+    // Additive seed: every insert below is an upsert keyed on a natural unique
+    // column, so the seed only ever inserts its own known rows or updates its
+    // own known rows in place. It never deletes anything the application or a
+    // user created, so it is safe to run over a live database.
 
     // Admin user
     const passwordHash = bcrypt.hashSync(config.seedAdminPassword, 10);
@@ -213,16 +242,59 @@ function seed(): void {
       });
     }
 
+    // The demo fold, and the tutorial_steps pointer back to it. Written after
+    // the tutorials so the tutorial id exists; upserted by id so re-running the
+    // seed replaces the fold in place instead of colliding on tutorial_id.
+    const craftTutorialId = tutorialIdBySlug.get(CRANE_CRAFT.tutorialSlug);
+    if (craftTutorialId === undefined) {
+      throw new Error(`Unknown tutorial slug for craft file: ${CRANE_CRAFT.tutorialSlug}`);
+    }
+
+    db.prepare(
+      `INSERT INTO craft_files (id, name, version, tutorial_id, status, data)
+       VALUES (@id, @name, 1, @tutorialId, 'deployed', @data)
+       ON CONFLICT (id) DO UPDATE SET
+         name = excluded.name,
+         tutorial_id = excluded.tutorial_id,
+         status = excluded.status,
+         data = excluded.data,
+         updated_at = datetime('now')`,
+    ).run({
+      id: CRANE_CRAFT.id,
+      name: CRANE_CRAFT.name,
+      tutorialId: craftTutorialId,
+      data: JSON.stringify(CRANE_CRAFT.data),
+    });
+
+    // Revision 1 of the demo fold, so its history is not empty out of the box.
+    // Upserted on (craft_file_id, revision) rather than appended, or a reseed
+    // would stack an identical snapshot on every run.
+    db.prepare(
+      `INSERT INTO craft_file_versions (craft_file_id, revision, name, data)
+       VALUES (@id, 1, @name, @data)
+       ON CONFLICT (craft_file_id, revision) DO UPDATE SET
+         name = excluded.name,
+         data = excluded.data`,
+    ).run({
+      id: CRANE_CRAFT.id,
+      name: CRANE_CRAFT.name,
+      data: JSON.stringify(CRANE_CRAFT.data),
+    });
+
+    db.prepare('UPDATE tutorial_steps SET craft_file_id = ? WHERE tutorial_id = ?').run(
+      CRANE_CRAFT.id,
+      craftTutorialId,
+    );
+
     // Product ↔ tutorial pairings: the folded models sold in the shop, and the
     // tutorials teaching that same fold, joined so the two pages can point at
-    // each other. Rebuilt wholesale every run, so the seed stays the single
-    // source of truth for which fold pairs appear on the site.
+    // each other. Inserted with DO NOTHING so the pairs the seed knows about
+    // still get created while any the user added survive.
     const PRODUCT_TUTORIAL_PAIRS: ReadonlyArray<readonly [productSlug: string, tutorialSlug: string]> = [
       ['crane-traditional-white', 'traditional-crane'],
       ['sonobe-cube-six-unit', 'modular-sonobe-cube'],
     ];
 
-    db.prepare('DELETE FROM tutorial_product_links').run();
     const linkTutorialToProduct = db.prepare(
       `INSERT INTO tutorial_product_links (tutorial_id, product_id)
        VALUES (@tutorialId, @productId)
@@ -247,6 +319,8 @@ function seed(): void {
     tutorials: (db.prepare('SELECT COUNT(*) AS c FROM tutorials').get() as { c: number }).c,
     tutorialSteps: (db.prepare('SELECT COUNT(*) AS c FROM tutorial_steps').get() as { c: number }).c,
     links: (db.prepare('SELECT COUNT(*) AS c FROM tutorial_product_links').get() as { c: number }).c,
+    craftFiles: (db.prepare('SELECT COUNT(*) AS c FROM craft_files').get() as { c: number }).c,
+    craftVersions: (db.prepare('SELECT COUNT(*) AS c FROM craft_file_versions').get() as { c: number }).c,
   };
 
   console.log('');
@@ -257,6 +331,8 @@ function seed(): void {
   console.log(`     tutorials       ${counts.tutorials}`);
   console.log(`     tutorial_steps  ${counts.tutorialSteps}`);
   console.log(`     product↔tutorial links ${counts.links}`);
+  console.log(`     craft_files     ${counts.craftFiles}`);
+  console.log(`     craft_versions  ${counts.craftVersions}`);
   console.log(`     admin login     ${config.seedAdminEmail}`);
   console.log('');
   console.log('  Re-running this is safe — every insert is an upsert.');

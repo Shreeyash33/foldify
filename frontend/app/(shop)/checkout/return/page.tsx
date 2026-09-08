@@ -5,9 +5,9 @@ import { PageHeader } from '@/app/components/layout/PageHeader';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { PaymentReturn } from './PaymentReturn';
 
-export const metadata: Metadata = { title: 'Payment' };
+export const metadata: Metadata = { title: 'Payment return' };
 
-export default function SimulatedPaymentPage() {
+export default function PaymentReturnPage() {
   return (
     <Container width="narrow" className="flex flex-col gap-6 pb-16">
       <PageHeader

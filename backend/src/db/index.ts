@@ -42,6 +42,14 @@ export function applySchema(): void {
   if (!productColumns.some((column) => column.name === 'compare_at_price_minor')) {
     db.exec(`ALTER TABLE products ADD COLUMN compare_at_price_minor INTEGER`);
   }
+
+  // Same story for databases created before a fold had a draft/deployed
+  // lifecycle. SQLite cannot add a CHECK to an existing table, so the constraint
+  // lives in schema.sql for fresh databases and the column alone is added here.
+  const craftColumns = db.prepare(`PRAGMA table_info(craft_files)`).all() as { name: string }[];
+  if (!craftColumns.some((column) => column.name === 'status')) {
+    db.exec(`ALTER TABLE craft_files ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`);
+  }
 }
 
 export interface DbHealth {

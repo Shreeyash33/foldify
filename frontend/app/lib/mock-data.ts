@@ -1,4 +1,4 @@
-import type { Product, StatusResponse, Tutorial, User } from '@foldify/shared';
+import type { CraftFile, Product, StatusResponse, Tutorial, User } from '@foldify/shared';
 
 /**
  * Fake data for USE_MOCK mode.
@@ -33,6 +33,39 @@ export const mockProducts: Product[] = [
   { id: 12, slug: 'star-bowl-eight-point', name: 'Eight-Point Star Bowl', description: 'A shallow bowl that folds up into eight points, in deep green tant. Holds keys by the door, or nothing at all.', priceMinor: 112000, compareAtPriceMinor: 130000, currency: 'NPR', imageUrl: null, categoryId: 4, categoryName: 'Boxes & Vessels', stock: 26, difficulty: 'intermediate', isPublished: true, createdAt: '2026-07-13T10:00:00.000Z' },
 ];
 
+/**
+ * The same demo fold the backend seeds for the crane, so the player animates a
+ * real sequence with USE_MOCK on. Sheet millimetres, origin top-left; keep the
+ * numbers in step with CRANE_CRAFT in backend/src/db/seed.ts.
+ */
+const mockCraneCraftFile: CraftFile = {
+  id: 'craft-traditional-crane',
+  name: 'Traditional Crane — demo fold',
+  version: 1,
+  tutorialId: 1,
+  status: 'deployed',
+  createdAt: '2026-07-02T12:00:00.000Z',
+  updatedAt: '2026-07-02T12:00:00.000Z',
+  data: {
+    sheet: { preset: 'square', width: 200, height: 200 },
+    vertices: [
+      { id: 'corner-0', x: 0, y: 0 },
+      { id: 'corner-1', x: 200, y: 0 },
+      { id: 'corner-2', x: 200, y: 200 },
+      { id: 'corner-3', x: 0, y: 200 },
+    ],
+    steps: [
+      { id: 'fold-1', from: { x: 120, y: 0 }, to: { x: 0, y: 120 }, side: 'left', foldType: 'valley', instruction: 'Start coloured side up. Fold in half along both diagonals and unfold.', durationMs: 900 },
+      { id: 'fold-2', from: { x: 130, y: 0 }, to: { x: 200, y: 70 }, side: 'right', foldType: 'mountain', instruction: 'Turn the paper over. Fold in half horizontally and vertically, then unfold.', durationMs: 900 },
+      { id: 'fold-3', from: { x: 200, y: 130 }, to: { x: 130, y: 200 }, side: 'right', foldType: 'squash', instruction: 'Collapse into a square base by bringing the four corners together.', durationMs: 900 },
+      { id: 'fold-4', from: { x: 70, y: 200 }, to: { x: 0, y: 130 }, side: 'right', foldType: 'valley', instruction: 'Fold the lower edges to the centre line on both sides.', durationMs: 900 },
+      { id: 'fold-5', from: { x: 0, y: 50 }, to: { x: 200, y: 50 }, side: 'right', foldType: 'petal', instruction: 'Petal-fold the front flap upward, then repeat behind.', durationMs: 900 },
+      { id: 'fold-6', from: { x: 0, y: 150 }, to: { x: 200, y: 150 }, side: 'left', foldType: 'reverse', instruction: 'Inside-reverse-fold the two narrow points to form the head and tail.', durationMs: 900 },
+      { id: 'fold-7', from: { x: 50, y: 0 }, to: { x: 50, y: 200 }, side: 'left', foldType: 'reverse', instruction: 'Reverse-fold the tip of the head, then round the wings.', durationMs: 900 },
+    ],
+  },
+};
+
 export const mockTutorials: Tutorial[] = [
   {
     id: 1,
@@ -45,14 +78,15 @@ export const mockTutorials: Tutorial[] = [
     isPublished: true,
     createdAt: '2026-07-02T12:00:00.000Z',
     steps: [
-      { id: 1, tutorialId: 1, stepNumber: 1, instruction: 'Start coloured side up. Fold in half along both diagonals and unfold.', foldType: 'valley', imageUrl: null, craftFileId: null },
-      { id: 2, tutorialId: 1, stepNumber: 2, instruction: 'Turn the paper over. Fold in half horizontally and vertically, then unfold.', foldType: 'mountain', imageUrl: null, craftFileId: null },
-      { id: 3, tutorialId: 1, stepNumber: 3, instruction: 'Collapse into a square base by bringing the four corners together.', foldType: 'squash', imageUrl: null, craftFileId: null },
-      { id: 4, tutorialId: 1, stepNumber: 4, instruction: 'Fold the lower edges to the centre line on both sides.', foldType: 'valley', imageUrl: null, craftFileId: null },
-      { id: 5, tutorialId: 1, stepNumber: 5, instruction: 'Petal-fold the front flap upward, then repeat behind.', foldType: 'petal', imageUrl: null, craftFileId: null },
-      { id: 6, tutorialId: 1, stepNumber: 6, instruction: 'Inside-reverse-fold the two narrow points to form the head and tail.', foldType: 'reverse', imageUrl: null, craftFileId: null },
-      { id: 7, tutorialId: 1, stepNumber: 7, instruction: 'Reverse-fold the tip of the head, then round the wings.', foldType: 'reverse', imageUrl: null, craftFileId: null },
+      { id: 1, tutorialId: 1, stepNumber: 1, instruction: 'Start coloured side up. Fold in half along both diagonals and unfold.', foldType: 'valley', imageUrl: null, craftFileId: 'craft-traditional-crane' },
+      { id: 2, tutorialId: 1, stepNumber: 2, instruction: 'Turn the paper over. Fold in half horizontally and vertically, then unfold.', foldType: 'mountain', imageUrl: null, craftFileId: 'craft-traditional-crane' },
+      { id: 3, tutorialId: 1, stepNumber: 3, instruction: 'Collapse into a square base by bringing the four corners together.', foldType: 'squash', imageUrl: null, craftFileId: 'craft-traditional-crane' },
+      { id: 4, tutorialId: 1, stepNumber: 4, instruction: 'Fold the lower edges to the centre line on both sides.', foldType: 'valley', imageUrl: null, craftFileId: 'craft-traditional-crane' },
+      { id: 5, tutorialId: 1, stepNumber: 5, instruction: 'Petal-fold the front flap upward, then repeat behind.', foldType: 'petal', imageUrl: null, craftFileId: 'craft-traditional-crane' },
+      { id: 6, tutorialId: 1, stepNumber: 6, instruction: 'Inside-reverse-fold the two narrow points to form the head and tail.', foldType: 'reverse', imageUrl: null, craftFileId: 'craft-traditional-crane' },
+      { id: 7, tutorialId: 1, stepNumber: 7, instruction: 'Reverse-fold the tip of the head, then round the wings.', foldType: 'reverse', imageUrl: null, craftFileId: 'craft-traditional-crane' },
     ],
+    craftFile: mockCraneCraftFile,
   },
   {
     id: 2,

@@ -98,7 +98,8 @@ CREATE TABLE IF NOT EXISTS tutorial_steps (
   fold_type     TEXT    NOT NULL DEFAULT 'valley'
                         CHECK (fold_type IN ('valley', 'mountain', 'reverse', 'squash', 'petal', 'other')),
   image_url     TEXT,
-  -- Provisional: the Craft Maker file format is not designed yet.
+  -- The craft_files row whose fold sequence this tutorial's steps belong to.
+  -- Stamped when a craft file is attached to the tutorial; see craft.queries.ts.
   craft_file_id TEXT,
   UNIQUE (tutorial_id, step_number),
   FOREIGN KEY (tutorial_id) REFERENCES tutorials (id) ON DELETE CASCADE
@@ -120,6 +121,50 @@ CREATE TABLE IF NOT EXISTS tutorial_product_links (
 
 CREATE INDEX IF NOT EXISTS idx_tutorial_product_links_product_id
   ON tutorial_product_links (product_id);
+
+-- ---------------------------------------------------------- craft files
+
+-- One Craft Maker fold per tutorial: a sheet plus the ordered list of straight
+-- folds the player replays. The whole fold sequence is ONE row, not one row per
+-- step, because the steps are only ever read and written together — and because
+-- `data` is opaque to SQL anyway, stored as the CraftFileData JSON from
+-- shared/types.ts. Version is pinned to 1 by a CHECK so a future format change
+-- has to be a deliberate migration rather than silently mixed-version rows.
+CREATE TABLE IF NOT EXISTS craft_files (
+  id          TEXT PRIMARY KEY,
+  name        TEXT    NOT NULL,
+  version     INTEGER NOT NULL DEFAULT 1 CHECK (version = 1),
+  -- NULL while the fold is a draft; UNIQUE so a tutorial can never end up with
+  -- two competing folds.
+  tutorial_id INTEGER UNIQUE,
+  -- Lifecycle: a draft is still being authored, a deployed fold is the one the
+  -- player is meant to show.
+  status      TEXT    NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'deployed')),
+  data        TEXT    NOT NULL,
+  created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (tutorial_id) REFERENCES tutorials (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_craft_files_tutorial_id ON craft_files (tutorial_id);
+CREATE INDEX IF NOT EXISTS idx_craft_files_updated_at ON craft_files (updated_at);
+
+-- One snapshot per save of a craft file, so an author can look back through the
+-- project's history and restore an earlier revision. Append-only: a restore
+-- writes a new revision rather than rewinding, which keeps it undoable.
+CREATE TABLE IF NOT EXISTS craft_file_versions (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  craft_file_id TEXT    NOT NULL,
+  revision      INTEGER NOT NULL,
+  name          TEXT    NOT NULL,
+  data          TEXT    NOT NULL,
+  created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (craft_file_id, revision),
+  FOREIGN KEY (craft_file_id) REFERENCES craft_files (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_craft_file_versions_craft_file_id
+  ON craft_file_versions (craft_file_id);
 
 -- --------------------------------------------------------------- orders
 

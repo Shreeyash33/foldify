@@ -3,8 +3,7 @@ import { Skeleton } from '@/app/components/ui/Skeleton';
 
 /**
  * The shared loading placeholder for a vertical stack of cards (admin lists,
- * the home strip, etc.). Every view used to hand-write the same
- * `Array.from(...)` of title + text skeletons; this is that loop in one place.
+ * the home strip, etc.) — the title + text skeleton loop in one place.
  */
 export function ListSkeleton({
   count = 4,

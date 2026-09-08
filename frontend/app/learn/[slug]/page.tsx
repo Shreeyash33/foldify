@@ -6,6 +6,7 @@ import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody } from '@/app/components/ui/Card';
 import { Container } from '@/app/components/layout/Container';
 import { Skeleton } from '@/app/components/ui/Skeleton';
+import { ErrorCard } from '@/app/components/feedback/ErrorCard';
 import { PageHeader } from '@/app/components/layout/PageHeader';
 import type { Tutorial } from '@foldify/shared';
 import { getTutorialList, getTutorialShell } from '@/app/lib/catalogue';
@@ -34,14 +35,7 @@ async function TutorialContent({ params }: { params: Promise<{ slug: string }> }
   try {
     tutorial = await getTutorialShell(slug);
   } catch {
-    return (
-      <Card>
-        <CardBody className="flex flex-col items-start gap-3">
-          <Badge tone="danger">Problem</Badge>
-          <p>This tutorial could not be loaded right now. Please try again shortly.</p>
-        </CardBody>
-      </Card>
-    );
+    return <ErrorCard message="This tutorial could not be loaded right now. Please try again shortly." />;
   }
 
   if (tutorial === null) notFound();

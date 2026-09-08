@@ -26,6 +26,10 @@ interface CartContextValue {
   remove: (productId: number) => void;
   updateQty: (productId: number, quantity: number) => void;
   clear: () => void;
+  /** Merges order items back into the cart after a cancelled payment. */
+  restore: (
+    orderItems: ReadonlyArray<{ productId: number; name: string; unitPriceMinor: number; quantity: number }>,
+  ) => void;
   /** Total number of units, for the navbar badge. */
   count: number;
   /** Sum in minor units. Display-only — the server computes the real total. */
@@ -89,6 +93,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clear = useCallback(() => setCartItems([]), []);
 
+  const restore = useCallback(
+    (
+      orderItems: ReadonlyArray<{ productId: number; name: string; unitPriceMinor: number; quantity: number }>,
+    ) => {
+      const current = getSnapshot();
+      const next = [...current];
+
+      for (const oi of orderItems) {
+        const existing = next.find((item) => item.productId === oi.productId);
+        if (existing !== undefined) {
+          existing.quantity = Math.min(existing.quantity + oi.quantity, MAX_QTY_PER_LINE);
+        } else {
+          next.push({
+            productId: oi.productId,
+            slug: undefined,
+            name: oi.name,
+            unitPriceMinor: oi.unitPriceMinor,
+            imageUrl: null,
+            quantity: Math.min(oi.quantity, MAX_QTY_PER_LINE),
+          });
+        }
+      }
+
+      setCartItems(next);
+    },
+    [],
+  );
+
   const count = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
 
   const subtotalMinor = useMemo(
@@ -103,11 +135,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       remove,
       updateQty,
       clear,
+      restore,
       count,
       subtotalMinor,
       isEmpty: items.length === 0,
     }),
-    [items, add, remove, updateQty, clear, count, subtotalMinor],
+    [items, add, remove, updateQty, clear, restore, count, subtotalMinor],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

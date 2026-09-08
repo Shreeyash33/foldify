@@ -17,7 +17,7 @@ const router: Router = Router();
 
 /**
  * LAYER RULE: routes/ is HTTP only — parse, validate, call a service or query,
- * respond. No SQL here, no business rules here. See ARCHITECTURE.md.
+ * respond. No SQL here, no business rules here.
  */
 
 /* ---------------------------------------------------------------- WORKING */

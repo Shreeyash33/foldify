@@ -48,3 +48,6 @@ coverage/
 
 # local planning notes — not for the repo
 nextstep.txt
+
+package-lock.json
+frontend/package.json
