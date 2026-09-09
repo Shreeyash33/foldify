@@ -71,7 +71,8 @@ export function CartView() {
                   onChange={(event) =>
                     updateQty(item.productId, Number.parseInt(event.target.value, 10) || 0)
                   }
-                  className="w-24"
+                  className="w-24 shrink-0"
+                  fullWidth={false}
                 />
 
                 <Badge tone="neutral">
@@ -82,6 +83,7 @@ export function CartView() {
                   type="button"
                   variant="ghost"
                   size="sm"
+                  className="min-h-10"
                   onClick={() => remove(item.productId)}
                 >
                   Remove
@@ -99,7 +101,7 @@ export function CartView() {
         </CardBody>
 
         <CardFooter className="justify-between">
-          <Button type="button" variant="ghost" size="sm" onClick={clear}>
+          <Button type="button" variant="ghost" size="sm" className="min-h-10" onClick={clear}>
             Clear cart
           </Button>
           <Button href="/checkout" variant="primary">

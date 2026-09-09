@@ -38,7 +38,10 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
         Admin
       </span>
 
-      <nav aria-label="Admin" className="flex flex-col gap-0.5">
+      <nav
+        aria-label="Admin"
+        className="flex gap-0.5 overflow-x-auto md:flex-col md:overflow-visible"
+      >
         {LINKS.map((link) => {
           const isActive = pathname === link.href;
 
@@ -48,7 +51,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
               href={link.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex min-h-11 items-center justify-between gap-2 rounded-[var(--radius-cut-sm)] px-3',
+                'flex min-h-11 shrink-0 items-center justify-between gap-2 rounded-[var(--radius-cut-sm)] px-3 whitespace-nowrap',
                 'font-body text-base text-ink',
                 isActive ? 'surface-paper elevation-1' : undefined,
               )}

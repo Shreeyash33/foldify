@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
@@ -118,9 +119,20 @@ function TutorialSkeleton() {
   );
 }
 
+/** Next 16 prerenders metadata ahead of the page; `await connection()` inside
+    Suspense marks the route dynamic so `generateMetadata` sees request-time
+    params instead of being flagged as blocking. */
+async function MetadataDynamicMarker() {
+  await connection();
+  return null;
+}
+
 export default function TutorialPage({ params }: { params: Promise<{ slug: string }> }) {
   return (
     <Container width="wide" className="flex flex-col gap-6 pb-16">
+      <Suspense>
+        <MetadataDynamicMarker />
+      </Suspense>
       <Suspense fallback={<TutorialSkeleton />}>
         <TutorialContent params={params} />
       </Suspense>

@@ -132,7 +132,7 @@ function ReviewForm({ slug, onSubmitted }: { slug: string; onSubmitted: () => vo
         <CardBody className="flex flex-col items-start gap-3">
           <CardTitle>Folded it?</CardTitle>
           <p>Sign in to rate this model and tell everyone how it went.</p>
-          <Button href={`/login?next=/products/${encodeURIComponent(slug)}`} variant="secondary" size="sm">
+          <Button href={`/login?next=/products/${encodeURIComponent(slug)}`} variant="secondary" size="md">
             Sign in to review
           </Button>
         </CardBody>

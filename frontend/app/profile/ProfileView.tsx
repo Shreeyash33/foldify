@@ -168,7 +168,7 @@ function ProfileTabs({
       </nav>
 
       <div className="mt-2 border-t border-cardboard-edge pt-2">
-        <Button type="button" variant="ghost" size="sm" fullWidth onClick={onLogout}>
+        <Button type="button" variant="ghost" size="sm" fullWidth className="min-h-10" onClick={onLogout}>
           Sign out
         </Button>
       </div>
@@ -213,7 +213,7 @@ function ProfileTab({
 
         {isAdmin ? (
           <CardFooter className="justify-between">
-            <Button href="/admin" variant="secondary" size="sm">
+            <Button href="/admin" variant="secondary" size="sm" className="min-h-10">
               Admin
             </Button>
             <span />
@@ -254,7 +254,7 @@ function OrderList({ orders, error }: { orders: Order[] | null; error: string | 
       <Card>
         <CardBody className="flex flex-col items-start gap-3">
           <CardTitle>No orders yet</CardTitle>
-          <Button href="/products" variant="primary" size="sm">
+          <Button href="/products" variant="primary" size="sm" className="min-h-10">
             Browse the shop
           </Button>
         </CardBody>
@@ -330,6 +330,7 @@ function SettingsTab() {
                 type="button"
                 variant="secondary"
                 size="sm"
+                className="min-h-10"
                 disabled={fontSize === 'sm'}
                 onClick={() => {
                   const prev = FONT_SIZE_LEVELS[FONT_SIZE_LEVELS.indexOf(fontSize) - 1];
@@ -342,6 +343,7 @@ function SettingsTab() {
                 type="button"
                 variant="secondary"
                 size="sm"
+                className="min-h-10"
                 disabled={fontSize === '2xl'}
                 onClick={() => {
                   const next = FONT_SIZE_LEVELS[FONT_SIZE_LEVELS.indexOf(fontSize) + 1];
@@ -354,6 +356,7 @@ function SettingsTab() {
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="min-h-10"
                 disabled={fontSize === 'base'}
                 onClick={() => setFontSize('base')}
               >

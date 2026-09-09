@@ -1,29 +1,11 @@
 import { Suspense } from 'react';
-import { notFound, redirect } from 'next/navigation';
-import { AdminGate } from './AdminGate';
+import { AdminCheck } from './admin-layout-content';
 import { AdminSidebar } from '@/app/components/layout/AdminSidebar';
 import { Container } from '@/app/components/layout/Container';
-import { getCurrentUser } from '@/app/lib/api-client';
 
-async function AdminCheck({ children }: { children: React.ReactNode }) {
-  let user: Awaited<ReturnType<typeof getCurrentUser>>;
-  try {
-    user = await getCurrentUser();
-  } catch {
-    user = null;
-  }
-
-  if (user === null) {
-    redirect('/login');
-  }
-
-  if (user.role !== 'admin') {
-    notFound();
-  }
-
-  return <AdminGate>{children}</AdminGate>;
-}
-
+/** /admin chrome. The server runs the admin check inside Suspense; the gate
+    always renders children so the segment is never dropped by instant
+    navigation. */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <Container width="wide" className="flex flex-col gap-6 py-6 md:flex-row md:py-8">
