@@ -54,7 +54,7 @@ The fold engine's numeric checks were re-run against the current source: area is
 
 **Homepage marketing page** (`/`)
 - `/` now renders a proper landing page instead of the design-system showcase: a cardboard hero banner with a headline and two calls to action, a curated "Featured" strip of in-stock products, and a "Learn" section linking to `/products` and `/learn`.
-- The showcase remains available at `/showcasepage` for the design system reference.
+- The showcase remains available at `/showcasepage` for the design system reference. *(Since removed — the `/showcasepage` route no longer exists.)*
 - The featured strip is client-fetched with a skeleton and skips sold-out rows, so the static hero shell never depends on the API at build time.
 - Featured cards are ~50% smaller (single row, up to four columns); "Featured" and "Learn" are plain section titles rather than buttons, with CTAs linking to `/products` and `/learn`.
 

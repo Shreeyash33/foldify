@@ -212,12 +212,31 @@
     font-variation-settings: "SOFT" 40, "WONK" 1;
   }
 
-  /* Every focusable thing gets the same visible ring. Non-negotiable. */
+  /* Every focusable thing gets the same visible ring. Non-negotiable.
+     :focus-visible is not recognised by Safari < 15.4 and Chrome < 86, so
+     a plain :focus rule sits at the end as a fallback — it will also ring on
+     mouse click in those browsers, which is acceptable. In modern browsers the
+     higher-specificity :focus:not(:focus-visible) removes the ring on click
+     and only the :focus-visible rule fires for keyboard focus. */
   :focus-visible {
     outline: 2px solid var(--indigo);
     outline-offset: 2px;
   }
 
+<<<<<<< HEAD
+=======
+:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Fallback for browsers that do not understand :focus-visible at all —
+     this is the only ring they will see. */
+  :focus {
+    outline: 2px solid var(--indigo);
+    outline-offset: 2px;
+  }
+
+>>>>>>> auditbranch
   /* Selection inverts the theme: dark highlight in light mode, light
      highlight in dark mode, so the selected text always contrasts. */
   ::selection {
@@ -294,6 +313,10 @@
   .pressable:hover:not(:disabled):not([aria-disabled="true"])::after {
     content: "";
     position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     inset: 0;
     border-radius: inherit;
     background-color: var(--tint-hover);

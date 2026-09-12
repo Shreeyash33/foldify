@@ -40,21 +40,22 @@ interface SeedProduct {
    * It describes the origami, never the object's quality or price.
    */
   difficulty: 'beginner' | 'intermediate' | 'advanced';
+  imageUrl: string | null;
 }
 
 const PRODUCTS: SeedProduct[] = [
-  { slug: 'crane-traditional-white', name: 'Traditional Crane', description: 'The classic tsuru, folded from crisp white kami and mounted on a small walnut block. The same model the crane tutorial teaches, if you would rather have one than fold one.', priceMinor: 45000, categorySlug: 'animals', stock: 60, difficulty: 'beginner' },
-  { slug: 'crane-flock-mobile', name: 'Crane Flock Mobile — Nine Cranes', description: 'Nine cranes in graded indigo, hung at staggered heights from a brass rod. Turns on its own in a draught.', priceMinor: 165000, compareAtPriceMinor: 190000, categorySlug: 'animals', stock: 24, difficulty: 'intermediate' },
-  { slug: 'koi-pair-red-white', name: 'Koi Pair', description: 'Two koi in red and white, wet-folded from tant so the bodies keep a curve instead of sitting flat.', priceMinor: 128000, compareAtPriceMinor: 150000, categorySlug: 'animals', stock: 30, difficulty: 'intermediate' },
-  { slug: 'dragon-western-black', name: 'Western Dragon', description: 'Folded from a single square of black double-tissue — no cuts, no glue, every spine and claw accounted for. Roughly four hundred steps.', priceMinor: 340000, categorySlug: 'animals', stock: 8, difficulty: 'advanced' },
-  { slug: 'lotus-blossom-pink', name: 'Lotus Blossom', description: 'Eight layers of soft pink washi opened petal by petal. Sits flat in the palm.', priceMinor: 52000, compareAtPriceMinor: 60000, categorySlug: 'flowers', stock: 55, difficulty: 'beginner' },
-  { slug: 'tulip-trio-stems', name: 'Tulip Trio', description: 'Three tulips on folded stems, in yellow, coral and white. Blown into shape through the base, the traditional way.', priceMinor: 68000, categorySlug: 'flowers', stock: 42, difficulty: 'beginner' },
-  { slug: 'rose-kawasaki-crimson', name: 'Kawasaki Rose', description: 'The twist-fold rose in crimson chiyogami. The spiral at its centre is one continuous move — the reason this one is not for a first attempt.', priceMinor: 215000, categorySlug: 'flowers', stock: 14, difficulty: 'advanced' },
-  { slug: 'sonobe-cube-six-unit', name: 'Sonobe Cube', description: 'Six identical units slotted into one another, no glue anywhere. The modular tutorial folds this exact cube.', priceMinor: 88000, categorySlug: 'modular', stock: 36, difficulty: 'intermediate' },
-  { slug: 'kusudama-flower-ball', name: 'Kusudama Flower Ball', description: 'Thirty flower units in five colours, threaded and tasselled. Hangs from a loop at the top.', priceMinor: 185000, compareAtPriceMinor: 210000, categorySlug: 'modular', stock: 20, difficulty: 'intermediate' },
-  { slug: 'star-cluster-icosahedron', name: 'Icosahedral Star Cluster', description: 'Thirty units, twenty points, one shape that holds itself together by tension alone. Drop it and it survives; pull one unit and it does not.', priceMinor: 295000, categorySlug: 'modular', stock: 9, difficulty: 'advanced' },
-  { slug: 'masu-box-nested-set', name: 'Nested Masu Boxes — Set of Three', description: 'Three lidded masu boxes that sit inside one another. Folded from patterned chiyogami, squared to the millimetre.', priceMinor: 74000, categorySlug: 'vessels', stock: 48, difficulty: 'beginner' },
-  { slug: 'star-bowl-eight-point', name: 'Eight-Point Star Bowl', description: 'A shallow bowl that folds up into eight points, in deep green tant. Holds keys by the door, or nothing at all.', priceMinor: 112000, compareAtPriceMinor: 130000, categorySlug: 'vessels', stock: 26, difficulty: 'intermediate' },
+  { slug: 'crane-traditional-white', name: 'Traditional Crane', description: 'The classic tsuru, folded from crisp white kami and mounted on a small walnut block. The same model the crane tutorial teaches, if you would rather have one than fold one.', priceMinor: 45000, categorySlug: 'animals', stock: 60, difficulty: 'beginner', imageUrl: '/products/crane-traditional-white.svg' },
+  { slug: 'crane-flock-mobile', name: 'Crane Flock Mobile — Nine Cranes', description: 'Nine cranes in graded indigo, hung at staggered heights from a brass rod. Turns on its own in a draught.', priceMinor: 165000, compareAtPriceMinor: 190000, categorySlug: 'animals', stock: 24, difficulty: 'intermediate', imageUrl: '/products/crane-flock-mobile.svg' },
+  { slug: 'koi-pair-red-white', name: 'Koi Pair', description: 'Two koi in red and white, wet-folded from tant so the bodies keep a curve instead of sitting flat.', priceMinor: 128000, compareAtPriceMinor: 150000, categorySlug: 'animals', stock: 30, difficulty: 'intermediate', imageUrl: '/products/koi-pair-red-white.svg' },
+  { slug: 'dragon-western-black', name: 'Western Dragon', description: 'Folded from a single square of black double-tissue — no cuts, no glue, every spine and claw accounted for. Roughly four hundred steps.', priceMinor: 340000, categorySlug: 'animals', stock: 8, difficulty: 'advanced', imageUrl: '/products/dragon-western-black.svg' },
+  { slug: 'lotus-blossom-pink', name: 'Lotus Blossom', description: 'Eight layers of soft pink washi opened petal by petal. Sits flat in the palm.', priceMinor: 52000, compareAtPriceMinor: 60000, categorySlug: 'flowers', stock: 55, difficulty: 'beginner', imageUrl: '/products/lotus-blossom-pink.svg' },
+  { slug: 'tulip-trio-stems', name: 'Tulip Trio', description: 'Three tulips on folded stems, in yellow, coral and white. Blown into shape through the base, the traditional way.', priceMinor: 68000, categorySlug: 'flowers', stock: 42, difficulty: 'beginner', imageUrl: '/products/tulip-trio-stems.svg' },
+  { slug: 'rose-kawasaki-crimson', name: 'Kawasaki Rose', description: 'The twist-fold rose in crimson chiyogami. The spiral at its centre is one continuous move — the reason this one is not for a first attempt.', priceMinor: 215000, categorySlug: 'flowers', stock: 14, difficulty: 'advanced', imageUrl: '/products/rose-kawasaki-crimson.svg' },
+  { slug: 'sonobe-cube-six-unit', name: 'Sonobe Cube', description: 'Six identical units slotted into one another, no glue anywhere. The modular tutorial folds this exact cube.', priceMinor: 88000, categorySlug: 'modular', stock: 36, difficulty: 'intermediate', imageUrl: '/products/sonobe-cube-six-unit.svg' },
+  { slug: 'kusudama-flower-ball', name: 'Kusudama Flower Ball', description: 'Thirty flower units in five colours, threaded and tasselled. Hangs from a loop at the top.', priceMinor: 185000, compareAtPriceMinor: 210000, categorySlug: 'modular', stock: 20, difficulty: 'intermediate', imageUrl: '/products/kusudama-flower-ball.svg' },
+  { slug: 'star-cluster-icosahedron', name: 'Icosahedral Star Cluster', description: 'Thirty units, twenty points, one shape that holds itself together by tension alone. Drop it and it survives; pull one unit and it does not.', priceMinor: 295000, categorySlug: 'modular', stock: 9, difficulty: 'advanced', imageUrl: '/products/star-cluster-icosahedron.svg' },
+  { slug: 'masu-box-nested-set', name: 'Nested Masu Boxes — Set of Three', description: 'Three lidded masu boxes that sit inside one another. Folded from patterned chiyogami, squared to the millimetre.', priceMinor: 74000, categorySlug: 'vessels', stock: 48, difficulty: 'beginner', imageUrl: '/products/masu-box-nested-set.svg' },
+  { slug: 'star-bowl-eight-point', name: 'Eight-Point Star Bowl', description: 'A shallow bowl that folds up into eight points, in deep green tant. Holds keys by the door, or nothing at all.', priceMinor: 112000, compareAtPriceMinor: 130000, categorySlug: 'vessels', stock: 26, difficulty: 'intermediate', imageUrl: '/products/star-bowl-eight-point.svg' },
 ];
 
 interface SeedStep {
@@ -144,6 +145,8 @@ const CRANE_CRAFT: { id: string; name: string; tutorialSlug: string; data: Craft
   },
 };
 
+const DEMO_EMAIL = 'demo@foldify.local';
+
 function seed(): void {
   applySchema();
 
@@ -186,7 +189,7 @@ function seed(): void {
         description: product.description,
         priceMinor: product.priceMinor,
         compareAtPriceMinor: product.compareAtPriceMinor ?? null,
-        imageUrl: null,
+        imageUrl: product.imageUrl ?? null,
         categoryId,
         stock: product.stock,
         difficulty: product.difficulty,
@@ -308,6 +311,222 @@ function seed(): void {
       }
       linkTutorialToProduct.run({ tutorialId, productId });
     }
+
+    // ─── Demo customer ───────────────────────────────────────────────
+    const demoPasswordHash = bcrypt.hashSync('foldify-demo', 10);
+    const demoUser = upsertUserByEmail({
+      email: DEMO_EMAIL,
+      name: 'Sita Rai',
+      passwordHash: demoPasswordHash,
+      role: 'customer',
+    });
+    const demoUserId = demoUser.id;
+
+    // ─── Demo orders ─────────────────────────────────────────────────
+    // Idempotency: look up existing orders by user_id + payment_ref and
+    // skip re-insertion if the order already exists.
+    const existingOrders = db
+      .prepare('SELECT id, payment_ref FROM orders WHERE user_id = ?')
+      .all(demoUserId) as { id: number; payment_ref: string | null }[];
+    const existingOrderRefs = new Set(
+      existingOrders.filter((o) => o.payment_ref !== null).map((o) => o.payment_ref),
+    );
+
+    type OrderSeed = {
+      status: string;
+      totalMinor: number;
+      paymentRef: string;
+      shippingName: string;
+      shippingPhone: string;
+      shippingAddress: string;
+      shippingCity: string;
+      createdAt: string;
+      items: { productSlug: string; productName: string; unitPriceMinor: number; quantity: number }[];
+    };
+
+    const ORDERS: OrderSeed[] = [
+      {
+        status: 'delivered',
+        totalMinor: 128000,
+        paymentRef: 'SIM-demo-001',
+        shippingName: 'Sita Rai',
+        shippingPhone: '9841000001',
+        shippingAddress: '12 Battisputali Road',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-08-20 10:30:00',
+        items: [
+          { productSlug: 'koi-pair-red-white', productName: 'Koi Pair', unitPriceMinor: 128000, quantity: 1 },
+        ],
+      },
+      {
+        status: 'pending',
+        totalMinor: 140000,
+        paymentRef: 'SIM-demo-002',
+        shippingName: 'Sita Rai',
+        shippingPhone: '9841000001',
+        shippingAddress: '12 Battisputali Road',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-09-05 14:15:00',
+        items: [
+          { productSlug: 'lotus-blossom-pink', productName: 'Lotus Blossom', unitPriceMinor: 52000, quantity: 1 },
+          { productSlug: 'masu-box-nested-set', productName: 'Nested Masu Boxes — Set of Three', unitPriceMinor: 74000, quantity: 1 },
+        ],
+      },
+      {
+        status: 'cancelled',
+        totalMinor: 45000,
+        paymentRef: 'SIM-demo-003',
+        shippingName: 'Sita Rai',
+        shippingPhone: '9841000001',
+        shippingAddress: '12 Battisputali Road',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-09-08 09:00:00',
+        items: [
+          { productSlug: 'crane-traditional-white', productName: 'Traditional Crane', unitPriceMinor: 45000, quantity: 1 },
+        ],
+      },
+    ];
+
+    const insertDemoOrder = db.prepare(
+      `INSERT INTO orders (user_id, status, total_minor, currency, payment_ref,
+                          shipping_name, shipping_phone, shipping_address, shipping_city, created_at)
+       VALUES (@userId, @status, @totalMinor, 'NPR', @paymentRef,
+               @shippingName, @shippingPhone, @shippingAddress, @shippingCity, @createdAt)`,
+    );
+    const insertDemoOrderItem = db.prepare(
+      `INSERT INTO order_items (order_id, product_id, product_name, unit_price_minor, quantity)
+       VALUES (@orderId, @productId, @productName, @unitPriceMinor, @quantity)`,
+    );
+
+    for (const order of ORDERS) {
+      if (existingOrderRefs.has(order.paymentRef)) continue;
+
+      const result = insertDemoOrder.run({
+        userId: demoUserId,
+        status: order.status,
+        totalMinor: order.totalMinor,
+        paymentRef: order.paymentRef,
+        shippingName: order.shippingName,
+        shippingPhone: order.shippingPhone,
+        shippingAddress: order.shippingAddress,
+        shippingCity: order.shippingCity,
+        createdAt: order.createdAt,
+      });
+      const orderId = Number(result.lastInsertRowid);
+
+      for (const item of order.items) {
+        const productId = productIdBySlug.get(item.productSlug);
+        if (productId === undefined) throw new Error(`Unknown product slug for demo order: ${item.productSlug}`);
+        insertDemoOrderItem.run({
+          orderId,
+          productId,
+          productName: item.productName,
+          unitPriceMinor: item.unitPriceMinor,
+          quantity: item.quantity,
+        });
+      }
+    }
+
+    // ─── Demo reviews ────────────────────────────────────────────────
+    // UNIQUE(product_id, user_id) lets us use INSERT … ON CONFLICT DO NOTHING.
+    type ReviewSeed = {
+      productSlug: string;
+      rating: number;
+      body: string;
+      createdAt: string;
+    };
+
+    const REVIEWS: ReviewSeed[] = [
+      {
+        productSlug: 'koi-pair-red-white',
+        rating: 5,
+        body: 'Absolutely stunning. The wet-fold technique gives the koi a lifelike curve I did not expect from paper.',
+        createdAt: '2026-08-25 16:40:00',
+      },
+      {
+        productSlug: 'lotus-blossom-pink',
+        rating: 4,
+        body: 'Beautiful layers of pink washi. A small crease showed on one petal but overall very happy.',
+        createdAt: '2026-09-07 11:20:00',
+      },
+      {
+        productSlug: 'crane-traditional-white',
+        rating: 4,
+        body: 'Clean fold on a nice walnut base. Simple and elegant — exactly what I wanted for my desk.',
+        createdAt: '2026-09-09 08:10:00',
+      },
+      {
+        productSlug: 'masu-box-nested-set',
+        rating: 3,
+        body: 'The boxes are well made but the smallest one arrived with a slightly lifted lid. Acceptable for the price.',
+        createdAt: '2026-09-10 13:55:00',
+      },
+    ];
+
+    const insertReview = db.prepare(
+      `INSERT INTO reviews (product_id, user_id, rating, body, created_at)
+       VALUES (@productId, @userId, @rating, @body, @createdAt)
+       ON CONFLICT (product_id, user_id) DO NOTHING`,
+    );
+
+    for (const review of REVIEWS) {
+      const productId = productIdBySlug.get(review.productSlug);
+      if (productId === undefined) throw new Error(`Unknown product slug for demo review: ${review.productSlug}`);
+      insertReview.run({
+        productId,
+        userId: demoUserId,
+        rating: review.rating,
+        body: review.body,
+        createdAt: review.createdAt,
+      });
+    }
+
+    // ─── Demo contact messages ───────────────────────────────────────
+    // No natural unique key — guard with a SELECT on (email, subject) to
+    // stay idempotent without adding a unique index.
+    type ContactSeed = {
+      name: string;
+      email: string;
+      subject: string;
+      body: string;
+      isHandled: number;
+      createdAt: string;
+    };
+
+    const CONTACTS: ContactSeed[] = [
+      {
+        name: 'Hiro Tanaka',
+        email: 'hiro@example.com',
+        subject: 'International shipping to Japan',
+        body: 'Do you ship internationally? I am in Tokyo and would love to order a Kawasaki Rose for a friend. Could you let me know about shipping costs and estimated delivery time?',
+        isHandled: 1,
+        createdAt: '2026-08-28 07:45:00',
+      },
+      {
+        name: 'Maya Gurung',
+        email: 'maya.gurung@example.com',
+        subject: 'Custom order — dragon model',
+        body: 'Hi there, I saw the Western Dragon on your site and was wondering if you take custom orders. I would like one in deep blue paper instead of black for a birthday gift next month. Is that possible and what would the lead time be?',
+        isHandled: 0,
+        createdAt: '2026-09-09 19:30:00',
+      },
+    ];
+
+    const existingContacts = db
+      .prepare('SELECT email, subject FROM contact_messages')
+      .all() as { email: string; subject: string }[];
+    const existingContactKeys = new Set(existingContacts.map((c) => `${c.email}|${c.subject}`));
+
+    const insertContact = db.prepare(
+      `INSERT INTO contact_messages (name, email, subject, body, is_handled, created_at)
+       VALUES (@name, @email, @subject, @body, @isHandled, @createdAt)`,
+    );
+
+    for (const msg of CONTACTS) {
+      const key = `${msg.email}|${msg.subject}`;
+      if (existingContactKeys.has(key)) continue;
+      insertContact.run(msg);
+    }
   });
 
   run();
@@ -321,6 +540,10 @@ function seed(): void {
     links: (db.prepare('SELECT COUNT(*) AS c FROM tutorial_product_links').get() as { c: number }).c,
     craftFiles: (db.prepare('SELECT COUNT(*) AS c FROM craft_files').get() as { c: number }).c,
     craftVersions: (db.prepare('SELECT COUNT(*) AS c FROM craft_file_versions').get() as { c: number }).c,
+    orders: (db.prepare('SELECT COUNT(*) AS c FROM orders').get() as { c: number }).c,
+    orderItems: (db.prepare('SELECT COUNT(*) AS c FROM order_items').get() as { c: number }).c,
+    reviews: (db.prepare('SELECT COUNT(*) AS c FROM reviews').get() as { c: number }).c,
+    contactMessages: (db.prepare('SELECT COUNT(*) AS c FROM contact_messages').get() as { c: number }).c,
   };
 
   console.log('');
@@ -333,7 +556,12 @@ function seed(): void {
   console.log(`     product↔tutorial links ${counts.links}`);
   console.log(`     craft_files     ${counts.craftFiles}`);
   console.log(`     craft_versions  ${counts.craftVersions}`);
+  console.log(`     orders          ${counts.orders}`);
+  console.log(`     order_items     ${counts.orderItems}`);
+  console.log(`     reviews         ${counts.reviews}`);
+  console.log(`     contact_messages ${counts.contactMessages}`);
   console.log(`     admin login     ${config.seedAdminEmail}`);
+  console.log(`     demo login      ${DEMO_EMAIL} / foldify-demo`);
   console.log('');
   console.log('  Re-running this is safe — every insert is an upsert.');
   console.log('');

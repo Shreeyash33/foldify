@@ -209,6 +209,23 @@ export async function logout(): Promise<void> {
   await request<{ ok: true }>('/auth/logout', { method: 'POST' });
 }
 
+/**
+ * Local to the client — the shared types file is co-owned, and this shape is
+ * used by exactly one call site besides being validated server-side.
+ */
+export interface UpdateProfileRequest {
+  name?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+export async function updateProfile(input: UpdateProfileRequest): Promise<User> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Profile updates need the API.' });
+  const data = await request<AuthResponse>('/auth/me', { method: 'PATCH', body: input });
+  return data.user;
+}
+
 /* =============================================================== products */
 
 export async function listProducts(

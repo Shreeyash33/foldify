@@ -4,12 +4,16 @@ import type { ApiResponse, AuthResponse, LoginRequest, RegisterRequest } from '@
 import { config } from '../config.ts';
 import {
   emailExists,
+  getUserByEmail,
   getUserByEmailWithSecret,
+  getUserByIdWithSecret,
   insertUser,
+  setUserPassword,
+  updateUser,
 } from '../db/queries/users.queries.ts';
 import { AppError } from '../lib/errors.ts';
 import { createSession, clearSessionCookie, destroySession, setSessionCookie } from '../lib/session.ts';
-import { isEmail, minLength, required, validateBody } from '../lib/validate.ts';
+import { isEmail, minLength, optional, required, validateBody } from '../lib/validate.ts';
 import { asyncHandler } from '../middleware/errorHandler.ts';
 import { attachUser, requireAuth } from '../middleware/requireAuth.ts';
 
@@ -36,6 +40,65 @@ router.get('/me', attachUser, (req, res) => {
   };
   res.json(body);
 });
+
+/**
+ * PATCH /api/auth/me — signed in only.
+ * Updates the caller's own account: name, email, and/or password. Every field
+ * is optional, and the password change must carry BOTH the current and the
+ * new password. Lives here rather than in users.routes.ts because that router
+ * is admin-gated; "me" is every signed-in user's own account.
+ */
+interface UpdateProfileRequest {
+  name?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+router.patch(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const body = validateBody<UpdateProfileRequest>(req.body, {
+      name: [optional(minLength(2))],
+      email: [optional(isEmail)],
+      currentPassword: [optional(minLength(1))],
+      newPassword: [optional(minLength(8))],
+    });
+
+    const updatingPassword = body.currentPassword !== undefined || body.newPassword !== undefined;
+    if (updatingPassword && (body.currentPassword === undefined || body.newPassword === undefined)) {
+      throw AppError.badRequest('Changing your password requires both your current and new password.', {
+        currentPassword: 'Both fields are required when changing your password.',
+        newPassword: 'Both fields are required when changing your password.',
+      });
+    }
+
+    // Verify the current password BEFORE touching anything: an attacker who has
+    // the session cookie but not the password must not be able to change the
+    // account's email or name as a side effect of a failed password attempt.
+    if (updatingPassword) {
+      const withSecret = getUserByIdWithSecret(req.user!.id);
+      if (withSecret === null) throw AppError.notFound('No such user.');
+      if (!(await bcrypt.compare(body.currentPassword!, withSecret.passwordHash))) {
+        throw AppError.unauthorized('Your current password is incorrect.');
+      }
+      setUserPassword(req.user!.id, await bcrypt.hash(body.newPassword!, 10));
+    }
+
+    const newEmail = body.email?.trim().toLowerCase();
+    if (newEmail !== undefined && newEmail !== req.user!.email) {
+      const taker = getUserByEmail(newEmail);
+      if (taker !== null) throw AppError.conflict('That email is already registered.');
+    }
+
+    const updated = updateUser(req.user!.id, { name: body.name, email: body.email });
+    if (updated === null) throw AppError.notFound('No such user.');
+
+    const response: ApiResponse<AuthResponse> = { ok: true, data: { user: updated } };
+    res.json(response);
+  }),
+);
 
 /**
  * POST /api/auth/register

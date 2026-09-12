@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efede6"/>
+      <stop offset="100%" stop-color="#d3d8dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- brass rod -->
+  <rect x="140" y="60" width="120" height="4" rx="2" fill="#cbae8b" opacity="0.8"/>
+  <!-- strings and cranes -->
+  <g>
+    <line x1="170" y1="64" x2="170" y2="130" stroke="#a98a64" stroke-width="0.8"/>
+    <polygon points="170,130 150,155 190,155" fill="#2e4a6b" opacity="0.9"/>
+    <polygon points="170,130 150,155 170,145" fill="#4a6a8b" opacity="0.7"/>
+    <polygon points="170,130 190,155 170,145" fill="#3a5a7b" opacity="0.8"/>
+    <polygon points="170,145 170,180 174,180" fill="#2e4a6b" opacity="0.8"/>
+    <polygon points="170,145 170,160 160,148" fill="#4a6a8b" opacity="0.6"/>
+  </g>
+  <g>
+    <line x1="200" y1="64" x2="200" y2="105" stroke="#a98a64" stroke-width="0.8"/>
+    <polygon points="200,105 183,125 217,125" fill="#efede6" opacity="0.9"/>
+    <polygon points="200,105 183,125 200,118" fill="#fbfaf7" opacity="0.8"/>
+    <polygon points="200,105 217,125 200,118" fill="#e0ddd5" opacity="0.8"/>
+    <polygon points="200,118 200,148 203,148" fill="#efede6" opacity="0.8"/>
+    <polygon points="200,118 200,130 192,120" fill="#fbfaf7" opacity="0.6"/>
+  </g>
+  <g>
+    <line x1="230" y1="64" x2="230" y2="145" stroke="#a98a64" stroke-width="0.8"/>
+    <polygon points="230,145 213,167 247,167" fill="#7a8a9b" opacity="0.9"/>
+    <polygon points="230,145 213,167 230,158" fill="#8a9aab" opacity="0.7"/>
+    <polygon points="230,145 247,167 230,158" fill="#6a7a8b" opacity="0.8"/>
+    <polygon points="230,158 230,193 233,193" fill="#7a8a9b" opacity="0.8"/>
+    <polygon points="230,158 230,172 222,161" fill="#8a9aab" opacity="0.6"/>
+  </g>
+  <g>
+    <line x1="185" y1="64" x2="185" y2="165" stroke="#a98a64" stroke-width="0.8"/>
+    <polygon points="185,165 170,184 200,184" fill="#a6344b" opacity="0.8"/>
+    <polygon points="185,165 170,184 185,177" fill="#c44a62" opacity="0.7"/>
+    <polygon points="185,165 200,184 185,177" fill="#8a2a3b" opacity="0.8"/>
+    <polygon points="185,177 185,210 188,210" fill="#a6344b" opacity="0.8"/>
+  </g>
+  <g>
+    <line x1="215" y1="64" x2="215" y2="120" stroke="#a98a64" stroke-width="0.8"/>
+    <polygon points="215,120 200,138 230,138" fill="#cbae8b" opacity="0.8"/>
+    <polygon points="215,120 200,138 215,131" fill="#a98a64" opacity="0.7"/>
+    <polygon points="215,120 230,138 215,131" fill="#b89a70" opacity="0.8"/>
+    <polygon points="215,131 215,160 218,160" fill="#cbae8b" opacity="0.8"/>
+  </g>
+</svg>

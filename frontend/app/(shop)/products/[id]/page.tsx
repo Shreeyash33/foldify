@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { Container } from '@/app/components/layout/Container';
 import { getProductShell } from '@/app/lib/catalogue';
@@ -35,9 +36,20 @@ export async function generateMetadata({
  * the whole route uncached-dynamic and fail the `cacheComponents` build. Held
  * behind Suspense, the shell still prerenders for every slug that was known.
  */
+/** Next 16 prerenders metadata ahead of the page; `await connection()` inside
+    Suspense marks the route dynamic so `generateMetadata` sees request-time
+    params instead of being flagged as blocking. */
+async function MetadataDynamicMarker() {
+  await connection();
+  return null;
+}
+
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Container width="default" className="flex flex-col gap-6 pb-16">
+      <Suspense>
+        <MetadataDynamicMarker />
+      </Suspense>
       <Suspense fallback={<ProductShellSkeleton />}>
         <ProductShell params={params} />
       </Suspense>

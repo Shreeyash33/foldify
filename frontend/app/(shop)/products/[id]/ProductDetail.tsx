@@ -122,7 +122,7 @@ export async function ProductShell({ params }: { params: Promise<{ id: string }>
                 <Button
                   href={`/learn/${firstTutorial.slug}`}
                   variant="secondary"
-                  size="sm"
+                  size="md"
                   className="self-start"
                 >
                   Fold it yourself

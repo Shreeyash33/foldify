@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efede6"/>
+      <stop offset="100%" stop-color="#d3d8dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- bowl base (octagonal) -->
+  <polygon points="200,200 250,170 290,200 280,250 240,280 200,270 160,280 120,250 110,200 150,170" fill="#5a8a4a" opacity="0.3"/>
+  <!-- star points (8 points radiating from center) -->
+  <polygon points="200,200 200,100 215,170" fill="#6a9a5a" stroke="#5a8a4a" stroke-width="0.8"/>
+  <polygon points="200,200 270,130 230,180" fill="#5a8a4a" stroke="#4a7a3a" stroke-width="0.8"/>
+  <polygon points="200,200 300,200 240,210" fill="#7aaa6a" stroke="#5a8a4a" stroke-width="0.8"/>
+  <polygon points="200,200 270,270 225,230" fill="#6a9a5a" stroke="#5a8a4a" stroke-width="0.8"/>
+  <polygon points="200,200 200,300 185,230" fill="#5a8a4a" stroke="#4a7a3a" stroke-width="0.8"/>
+  <polygon points="200,200 130,270 175,230" fill="#7aaa6a" stroke="#5a8a4a" stroke-width="0.8"/>
+  <polygon points="200,200 100,200 160,210" fill="#6a9a5a" stroke="#5a8a4a" stroke-width="0.8"/>
+  <polygon points="200,200 130,130 175,180" fill="#5a8a4a" stroke="#4a7a3a" stroke-width="0.8"/>
+  <!-- shading facets -->
+  <polygon points="200,200 200,100 215,170 230,180" fill="#8aba7a" opacity="0.3"/>
+  <polygon points="200,200 270,270 225,230 185,230" fill="#4a7a3a" opacity="0.3"/>
+  <!-- center -->
+  <circle cx="200" cy="200" r="12" fill="#5a8a4a" opacity="0.6"/>
+  <circle cx="200" cy="200" r="6" fill="#4a7a3a" opacity="0.5"/>
+</svg>

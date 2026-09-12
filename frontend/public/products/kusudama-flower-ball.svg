@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efede6"/>
+      <stop offset="100%" stop-color="#d3d8dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- main sphere outline -->
+  <circle cx="200" cy="190" r="90" fill="none" stroke="#e0ddd5" stroke-width="0.5" opacity="0.3"/>
+  <!-- flower units arranged in a sphere pattern -->
+  <g transform="translate(200,130)">
+    <polygon points="0,-15 -12,0 0,8 12,0" fill="#a6344b" opacity="0.8"/>
+    <polygon points="0,-15 -12,0 0,0" fill="#c44a62" opacity="0.6"/>
+  </g>
+  <g transform="translate(155,160)">
+    <polygon points="0,-12 -10,0 0,6 10,0" fill="#2e4a6b" opacity="0.8"/>
+    <polygon points="0,-12 -10,0 0,0" fill="#4a6a8b" opacity="0.6"/>
+  </g>
+  <g transform="translate(245,160)">
+    <polygon points="0,-12 -10,0 0,6 10,0" fill="#a6344b" opacity="0.75"/>
+    <polygon points="0,-12 -10,0 0,0" fill="#8a2a3b" opacity="0.6"/>
+  </g>
+  <g transform="translate(170,210)">
+    <polygon points="0,-12 -10,0 0,6 10,0" fill="#e8c840" opacity="0.7"/>
+    <polygon points="0,-12 -10,0 0,0" fill="#d4b430" opacity="0.6"/>
+  </g>
+  <g transform="translate(230,210)">
+    <polygon points="0,-12 -10,0 0,6 10,0" fill="#2e4a6b" opacity="0.75"/>
+    <polygon points="0,-12 -10,0 0,0" fill="#1a3a5b" opacity="0.6"/>
+  </g>
+  <g transform="translate(200,250)">
+    <polygon points="0,-10 -8,0 0,5 8,0" fill="#a6344b" opacity="0.7"/>
+    <polygon points="0,-10 -8,0 0,0" fill="#c44a62" opacity="0.5"/>
+  </g>
+  <g transform="translate(130,190)">
+    <polygon points="0,-10 -8,0 0,5 8,0" fill="#e8c840" opacity="0.65"/>
+    <polygon points="0,-10 -8,0 0,0" fill="#d4b430" opacity="0.5"/>
+  </g>
+  <g transform="translate(270,190)">
+    <polygon points="0,-10 -8,0 0,5 8,0" fill="#a6344b" opacity="0.65"/>
+    <polygon points="0,-10 -8,0 0,0" fill="#8a2a3b" opacity="0.5"/>
+  </g>
+  <g transform="translate(200,170)">
+    <polygon points="0,-10 -8,0 0,5 8,0" fill="#fbfaf7" opacity="0.7"/>
+    <polygon points="0,-10 -8,0 0,0" fill="#efede6" opacity="0.6"/>
+  </g>
+  <!-- tassel -->
+  <line x1="200" y1="280" x2="200" y2="340" stroke="#a98a64" stroke-width="1.5"/>
+  <polygon points="195,340 200,360 205,340" fill="#cbae8b" opacity="0.7"/>
+  <polygon points="193,342 195,355 197,342" fill="#a98a64" opacity="0.5"/>
+  <polygon points="203,342 205,355 207,342" fill="#a98a64" opacity="0.5"/>
+</svg>

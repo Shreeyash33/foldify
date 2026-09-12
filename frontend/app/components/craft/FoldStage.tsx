@@ -207,7 +207,11 @@ export function FoldStage({
       role="img"
       aria-label={ariaLabel ?? 'Folded paper'}
       onClick={onPickPoint === undefined ? undefined : handleClick}
-      className={cn(className, 'block h-full w-full touch-none select-none')}
+      className={cn(
+        className,
+        'block h-full w-full select-none',
+        onPickPoint !== undefined && 'touch-none',
+      )}
     >
       {plan.layers.map((layer) => (
         <path

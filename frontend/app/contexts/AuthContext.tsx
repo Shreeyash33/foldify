@@ -17,12 +17,17 @@ interface AuthContextValue {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  /**
+   * Replaces the stored user without a round trip — the profile form uses this
+   * to sync the navbar and every other consumer after its PATCH succeeds.
+   */
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isHydrated = useIsHydrated();
 
@@ -41,10 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .getCurrentUser()
       .then((current) => {
         // An anonymous visitor is a normal outcome, not an error.
-        if (!isStale) setUser(current);
+        if (!isStale) setUserState(current);
       })
       .catch(() => {
-        if (!isStale) setUser(null);
+        if (!isStale) setUserState(null);
       })
       .finally(() => {
         if (!isStale) setIsLoading(false);
@@ -59,9 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      setUser(await api.getCurrentUser());
+      setUserState(await api.getCurrentUser());
     } catch {
-      setUser(null);
+      setUserState(null);
     } finally {
       setIsLoading(false);
     }
@@ -70,11 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     // Deliberately lets ApiClientError through: the form needs error.fields
     // to highlight the offending input.
-    setUser(await api.login({ email, password }));
+    setUserState(await api.login({ email, password }));
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    setUser(await api.register({ name, email, password }));
+    setUserState(await api.register({ name, email, password }));
   }, []);
 
   const logout = useCallback(async () => {
@@ -82,8 +87,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await api.logout();
     } finally {
       // Clear locally even if the request failed — the user asked to be out.
-      setUser(null);
+      setUserState(null);
     }
+  }, []);
+
+  /** Local sync for a successful profile update — no round trip needed. */
+  const setUser = useCallback((next: User | null) => {
+    setUserState(next);
   }, []);
 
   const value = useMemo(
@@ -104,8 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       logout,
       refresh,
+      setUser,
     }),
-    [user, isHydrated, isLoading, login, register, logout, refresh],
+    [user, isHydrated, isLoading, login, register, logout, refresh, setUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

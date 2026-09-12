@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type { BadgeTone } from '@/app/components/ui/Badge';
-import type { Order, OrderStatus } from '@foldify/shared';
+import type { Order, OrderStatus, User } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
-import { Card, CardBody, CardFooter, CardMeta, CardTitle } from '@/app/components/ui/Card';
+import { Card, CardBody, CardFooter, CardHeader, CardMeta, CardTitle } from '@/app/components/ui/Card';
+import { Input } from '@/app/components/ui/Input';
 import { PaperSurface } from '@/app/components/ui/PaperSurface';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { ThemeToggle } from '@/app/components/ui/ThemeToggle';
@@ -17,7 +18,7 @@ import {
   useFontSize,
 } from '@/app/contexts/FontSizeContext';
 import { useToast } from '@/app/contexts/ToastContext';
-import { ApiClientError, listOrders } from '@/app/lib/api-client';
+import { ApiClientError, listOrders, updateProfile, type UpdateProfileRequest } from '@/app/lib/api-client';
 import { cn, formatDate, formatPrice } from '@/app/lib/utils';
 
 const STATUS_TONE: Record<OrderStatus, BadgeTone> = {
@@ -102,11 +103,7 @@ export function ProfileView() {
       <div className="min-w-0 flex-1">
         {activeTab === 'profile' ? (
           <ProfileTab
-            name={user.name}
-            email={user.email}
-            role={user.role}
-            joinedAt={user.createdAt}
-            isAdmin={user.role === 'admin'}
+            user={user}
             orders={orders}
             ordersError={ordersError}
           />
@@ -168,7 +165,7 @@ function ProfileTabs({
       </nav>
 
       <div className="mt-2 border-t border-cardboard-edge pt-2">
-        <Button type="button" variant="ghost" size="sm" fullWidth onClick={onLogout}>
+        <Button type="button" variant="ghost" size="sm" fullWidth className="min-h-10" onClick={onLogout}>
           Sign out
         </Button>
       </div>
@@ -179,22 +176,17 @@ function ProfileTabs({
 /* --------------------------------------------------------------- PROFILE */
 
 function ProfileTab({
-  name,
-  email,
-  role,
-  joinedAt,
-  isAdmin,
+  user,
   orders,
   ordersError,
 }: {
-  name: string;
-  email: string;
-  role: string;
-  joinedAt: string;
-  isAdmin: boolean;
+  user: User;
   orders: Order[] | null;
   ordersError: string | null;
 }) {
+  const { name, email, role, createdAt } = user;
+  const isAdmin = role === 'admin';
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -206,20 +198,22 @@ function ProfileTab({
               {role}
             </Badge>
             <Badge tone="neutral" size="sm">
-              Joined {formatDate(joinedAt)}
+              Joined {formatDate(createdAt)}
             </Badge>
           </div>
         </CardBody>
 
         {isAdmin ? (
           <CardFooter className="justify-between">
-            <Button href="/admin" variant="secondary" size="sm">
+            <Button href="/admin" variant="secondary" size="sm" className="min-h-10">
               Admin
             </Button>
             <span />
           </CardFooter>
         ) : null}
       </Card>
+
+      <AccountForm user={user} />
 
       <OrderList orders={orders} error={ordersError} />
     </div>
@@ -254,7 +248,7 @@ function OrderList({ orders, error }: { orders: Order[] | null; error: string | 
       <Card>
         <CardBody className="flex flex-col items-start gap-3">
           <CardTitle>No orders yet</CardTitle>
-          <Button href="/products" variant="primary" size="sm">
+          <Button href="/products" variant="primary" size="sm" className="min-h-10">
             Browse the shop
           </Button>
         </CardBody>
@@ -280,6 +274,142 @@ function OrderList({ orders, error }: { orders: Order[] | null; error: string | 
         </Card>
       ))}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------ EDIT DETAILS */
+
+/**
+ * Update name, email, and password for the signed-in user. The password fields
+ * are optional — leaving both blank keeps the current password. Saving syncs
+ * AuthContext.user so the navbar and this page's identity card update together.
+ */
+function AccountForm({ user }: { user: User }) {
+  const { setUser } = useAuth();
+  const toast = useToast();
+
+  const [name, setName] = useState(user.name);
+  const [email, setEmail] = useState(user.email);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFieldErrors({});
+    setFormError(null);
+
+    const changingPassword = currentPassword !== '' || newPassword !== '';
+    if (changingPassword && (currentPassword === '' || newPassword === '')) {
+      setFieldErrors({
+        currentPassword: 'Both fields are required to change your password.',
+        newPassword: 'Both fields are required to change your password.',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload: UpdateProfileRequest = { name, email };
+      if (changingPassword) {
+        payload.currentPassword = currentPassword;
+        payload.newPassword = newPassword;
+      }
+
+      setUser(await updateProfile(payload));
+      setCurrentPassword('');
+      setNewPassword('');
+      toast.success('Your details have been saved.');
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        if (error.fields !== undefined) setFieldErrors(error.fields);
+        else setFormError(error.message);
+      } else {
+        setFormError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Edit details</CardTitle>
+        <CardMeta>Change your name, email address, or password.</CardMeta>
+      </CardHeader>
+
+      <form onSubmit={handleSubmit} noValidate>
+        <CardBody className="flex flex-col gap-4">
+          {formError !== null ? (
+            <div className="flex flex-col gap-2" role="alert">
+              <Badge tone="danger" className="self-start">
+                Problem
+              </Badge>
+              <p>{formError}</p>
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
+            <Input
+              label="Name"
+              name="name"
+              autoComplete="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              error={fieldErrors.name}
+              required
+            />
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              error={fieldErrors.email}
+              required
+            />
+          </div>
+
+          <span className="pt-2 font-mono text-xs tracking-wider text-ink-muted uppercase">
+            Change password
+          </span>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
+            <Input
+              label="Current password"
+              name="currentPassword"
+              type="password"
+              autoComplete="current-password"
+              hint="Leave blank to keep your current password."
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              error={fieldErrors.currentPassword}
+            />
+            <Input
+              label="New password"
+              name="newPassword"
+              type="password"
+              autoComplete="new-password"
+              hint="At least 8 characters."
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              error={fieldErrors.newPassword}
+            />
+          </div>
+
+          <div>
+            <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting} className="min-h-10">
+              Save changes
+            </Button>
+          </div>
+        </CardBody>
+      </form>
+    </Card>
   );
 }
 
@@ -330,6 +460,7 @@ function SettingsTab() {
                 type="button"
                 variant="secondary"
                 size="sm"
+                className="min-h-10"
                 disabled={fontSize === 'sm'}
                 onClick={() => {
                   const prev = FONT_SIZE_LEVELS[FONT_SIZE_LEVELS.indexOf(fontSize) - 1];
@@ -342,6 +473,7 @@ function SettingsTab() {
                 type="button"
                 variant="secondary"
                 size="sm"
+                className="min-h-10"
                 disabled={fontSize === '2xl'}
                 onClick={() => {
                   const next = FONT_SIZE_LEVELS[FONT_SIZE_LEVELS.indexOf(fontSize) + 1];
@@ -354,6 +486,7 @@ function SettingsTab() {
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="min-h-10"
                 disabled={fontSize === 'base'}
                 onClick={() => setFontSize('base')}
               >

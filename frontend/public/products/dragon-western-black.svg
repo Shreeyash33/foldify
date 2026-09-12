@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efede6"/>
+      <stop offset="100%" stop-color="#d3d8dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- body -->
+  <polygon points="200,120 260,180 240,260 160,260 140,180" fill="#2a2a30" stroke="#3a3a40" stroke-width="0.8"/>
+  <polygon points="200,120 260,180 200,200" fill="#3a3a42" opacity="0.8"/>
+  <polygon points="200,120 140,180 200,200" fill="#1a1a20" opacity="0.8"/>
+  <!-- wings left -->
+  <polygon points="140,180 60,120 80,200 140,220" fill="#3a3a42" stroke="#4a4a52" stroke-width="0.8"/>
+  <polygon points="140,180 60,120 100,160" fill="#4a4a52" opacity="0.7"/>
+  <line x1="100" y1="160" x2="140" y2="220" stroke="#4a4a52" stroke-width="0.8" opacity="0.5"/>
+  <line x1="80" y1="140" x2="140" y2="210" stroke="#4a4a52" stroke-width="0.6" opacity="0.4"/>
+  <!-- wings right -->
+  <polygon points="260,180 340,120 320,200 260,220" fill="#2a2a32" stroke="#3a3a40" stroke-width="0.8"/>
+  <polygon points="260,180 340,120 300,160" fill="#3a3a42" opacity="0.7"/>
+  <line x1="300" y1="160" x2="260" y2="220" stroke="#3a3a42" stroke-width="0.8" opacity="0.5"/>
+  <!-- neck/head -->
+  <polygon points="200,120 190,70 210,70" fill="#2a2a30" stroke="#3a3a40" stroke-width="0.8"/>
+  <polygon points="190,70 210,70 200,50" fill="#3a3a42" opacity="0.8"/>
+  <!-- horns -->
+  <polygon points="190,70 180,50 185,72" fill="#4a4a52"/>
+  <polygon points="210,70 220,50 215,72" fill="#3a3a42"/>
+  <!-- eyes -->
+  <circle cx="195" cy="62" r="2" fill="#a6344b"/>
+  <circle cx="205" cy="62" r="2" fill="#a6344b"/>
+  <!-- tail -->
+  <polygon points="200,260 180,310 220,310" fill="#2a2a30"/>
+  <polygon points="180,310 160,330 200,320" fill="#3a3a42"/>
+  <!-- spines -->
+  <polygon points="195,260 200,250 205,260" fill="#4a4a52"/>
+  <polygon points="195,275 200,265 205,275" fill="#4a4a52"/>
+  <polygon points="195,290 200,280 205,290" fill="#3a3a42"/>
+  <!-- claws -->
+  <line x1="170" y1="260" x2="160" y2="280" stroke="#4a4a52" stroke-width="1.5"/>
+  <line x1="175" y1="262" x2="165" y2="282" stroke="#3a3a42" stroke-width="1.5"/>
+  <line x1="230" y1="260" x2="240" y2="280" stroke="#3a3a42" stroke-width="1.5"/>
+  <line x1="225" y1="262" x2="235" y2="282" stroke="#2a2a30" stroke-width="1.5"/>
+</svg>

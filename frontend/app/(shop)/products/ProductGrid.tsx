@@ -93,7 +93,7 @@ export async function ProductGrid({ searchParams }: { searchParams: Promise<Prod
       <EmptyState
         message="Nothing matches those filters yet."
         action={
-          <Button href="/products" variant="secondary" size="sm">
+          <Button href="/products" variant="secondary" size="md">
             Clear filters
           </Button>
         }
@@ -114,7 +114,7 @@ export async function ProductGrid({ searchParams }: { searchParams: Promise<Prod
           first and last page. */}
       <nav aria-label="Pagination" className="flex items-center justify-between gap-3">
         {page.page > 1 ? (
-          <Button href={buildHref(params, page.page - 1)} variant="secondary" size="sm">
+          <Button href={buildHref(params, page.page - 1)} variant="secondary" size="md">
             Previous
           </Button>
         ) : (
@@ -126,7 +126,7 @@ export async function ProductGrid({ searchParams }: { searchParams: Promise<Prod
         </Badge>
 
         {page.page < page.totalPages ? (
-          <Button href={buildHref(params, page.page + 1)} variant="secondary" size="sm">
+          <Button href={buildHref(params, page.page + 1)} variant="secondary" size="md">
             Next
           </Button>
         ) : (

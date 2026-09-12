@@ -315,7 +315,7 @@ function FoldCanvas({
 
   useEffect(() => {
     const element = columnRef.current;
-    if (element === null) return;
+    if (element === null || typeof ResizeObserver === 'undefined') return;
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
@@ -422,7 +422,7 @@ function PaginationControls({
         <Badge tone="neutral">
           Step {Math.min(stepIndex + 1, totalSteps)} of {totalSteps}
         </Badge>
-        <span className="font-mono text-[0.625rem] tracking-[0.18em] text-ink-muted uppercase">
+        <span className="hidden font-mono text-[0.625rem] tracking-[0.18em] text-ink-muted uppercase sm:block">
           Use the left and right arrow keys
         </span>
       </div>

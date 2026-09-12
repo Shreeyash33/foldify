@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efede6"/>
+      <stop offset="100%" stop-color="#d3d8dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- petals layer 1 (back) -->
+  <polygon points="200,100 170,180 230,180" fill="#c44a62" opacity="0.6"/>
+  <polygon points="140,140 160,220 200,160" fill="#a6344b" opacity="0.5"/>
+  <polygon points="260,140 240,220 200,160" fill="#a6344b" opacity="0.5"/>
+  <!-- petals layer 2 (mid) -->
+  <polygon points="200,110 165,185 235,185" fill="#a6344b" opacity="0.7"/>
+  <polygon points="155,150 170,210 200,170" fill="#c44a62" opacity="0.7"/>
+  <polygon points="245,150 230,210 200,170" fill="#c44a62" opacity="0.7"/>
+  <!-- petals layer 3 (front) -->
+  <polygon points="200,120 175,190 225,190" fill="#a6344b" opacity="0.85"/>
+  <polygon points="165,160 180,210 200,180" fill="#c44a62" opacity="0.85"/>
+  <polygon points="235,160 220,210 200,180" fill="#8a2a3b" opacity="0.85"/>
+  <!-- side petals -->
+  <polygon points="130,170 160,200 140,220" fill="#a6344b" opacity="0.6"/>
+  <polygon points="270,170 240,200 260,220" fill="#a6344b" opacity="0.6"/>
+  <!-- center -->
+  <circle cx="200" cy="175" r="8" fill="#cbae8b" opacity="0.8"/>
+  <circle cx="200" cy="175" r="4" fill="#a98a64" opacity="0.7"/>
+  <!-- leaf -->
+  <polygon points="160,250 200,230 240,250 200,280" fill="#6a8a5a" opacity="0.5"/>
+  <polygon points="200,230 200,280" stroke="#5a7a4a" stroke-width="0.8" opacity="0.5"/>
+</svg>
