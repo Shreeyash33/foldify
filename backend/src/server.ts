@@ -12,9 +12,9 @@ const app = express();
 /* ----------------------------------------------------------------- CORS */
 /*
  * Explicit origin, never '*'. A wildcard origin combined with
- * `credentials: true` is silently rejected by every browser, and the resulting
- * "cookie just doesn't arrive" bug costs days. The frontend must correspondingly
- * send `credentials: 'include'` on every request — see lib/api-client.ts.
+ * `credentials: true` is silently rejected by every browser, so the session
+ * cookie never arrives. The frontend must correspondingly send
+ * `credentials: 'include'` on every request — see lib/api-client.ts.
  */
 app.use(cors({ origin: config.frontendOrigin, credentials: true }));
 

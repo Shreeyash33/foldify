@@ -10,9 +10,10 @@ import { ProductShell, ProductShellSkeleton } from './ProductDetail';
  *
  * Baking one page per slug would need the API reachable during `npm run build`,
  * and under Cache Components an empty result is a hard build error rather than
- * "prerender nothing" — so building with the backend stopped fails outright.
- * The shell is cached for an hour in lib/catalogue.ts instead, which keeps the
- * shared-across-visitors win without making the build depend on a running server.
+ * "prerender nothing" — so running the build with the backend stopped fails
+ * entirely. The shell is cached for an hour in
+ * lib/catalogue.ts instead, which keeps the shared-across-visitors win without
+ * making the build depend on a running server.
  */
 export async function generateMetadata({
   params,

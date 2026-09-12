@@ -113,6 +113,8 @@ async function khaltiVerify(reference: string): Promise<PaymentVerification> {
 
   const khaltiStatus = json.status as string | undefined;
 
+  // Khalti maps to the tri-state verification: 'Completed' is the only
+  // guaranteed success, 'Pending' stays retryable, everything else is failed.
   let status: PaymentVerification['status'];
   switch (khaltiStatus) {
     case 'Completed':

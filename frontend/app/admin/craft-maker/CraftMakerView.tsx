@@ -31,6 +31,7 @@ import {
   restoreCraftFileVersion,
   updateCraftFile,
 } from '@/app/lib/api-client';
+import { revalidateCatalog } from '@/app/lib/revalidate';
 import { cornerVertices, craftId, emptyCraftData, foldFromGesture } from '@/app/lib/craft/craft-file';
 import { contentBounds, replay } from '@/app/lib/craft/fold-model';
 import { distance } from '@/app/lib/craft/geometry';
@@ -502,6 +503,9 @@ export function CraftMakerView() {
             : 'Project returned to draft.',
       );
       setHistoryToken((current) => current + 1);
+      if (status === 'deployed' || nextStatus === 'deployed') {
+        await revalidateCatalog();
+      }
       await reloadFiles();
     } catch (cause) {
       if (cause instanceof ApiClientError) {

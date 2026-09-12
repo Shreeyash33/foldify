@@ -40,7 +40,7 @@ The frontend serves a storefront (product catalogue, cart, checkout), a tutorial
 
 - Server-rendered pages via the App Router. All data fetching from pages goes through `app/lib/api-client.ts`, the single file in the project that calls `fetch`.
 - A closed component library lives in `app/components/ui/`. Pages compose these components; raw colour/padding/typography utilities are not used in page files.
-- Four application contexts provide cross-cutting state: `Theme` (with a pre-paint script to avoid flashes), `Auth`, `Cart`, and `Toast`.
+- Five application contexts provide cross-cutting state: `Theme` (with a pre-paint script to avoid flashes), `FontSize`, `Auth`, `Cart`, and `Toast`.
 - The fold player (`app/components/craft/FoldStage.tsx`) is an SVG renderer animated by GSAP, shared between the authoring tool and the public tutorial player.
 
 ### 2.2 Backend (`:4000`)
@@ -82,7 +82,7 @@ SQLite with WAL mode, foreign keys enabled, and CHECK constraints. There is deli
 | `product_views` / `tutorial_views` | Analytics counters |
 | `contact_messages` | Contact-form submissions with a handled flag |
 
-Normalisation notes (see the report's database-design chapter):
+Normalisation notes:
 
 - `order_items` snapshots price and title so later product changes cannot rewrite history.
 - Orders freeze the shipping address at purchase time.

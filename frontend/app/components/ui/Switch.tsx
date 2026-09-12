@@ -6,7 +6,7 @@ import { cn } from '@/app/lib/utils';
 /**
  * A physical-feeling switch: a paper tab that slides in a sunken channel.
  * Built on a real checkbox input so Space toggles it and screen readers
- * announce it correctly without any ARIA of our own.
+ * announce it correctly without extra ARIA attributes.
  *
  * Controlled only — a switch whose state the parent does not own is almost
  * always a bug waiting to happen.

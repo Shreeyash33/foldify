@@ -16,12 +16,12 @@ import { FoldPlayer } from './FoldPlayer';
 /**
  * The tutorial page — the fold player, hard at the centre.
  *
- * The player is a client component: it owns "which step am I on" and renders
+ * The player is a client component: it owns which step is current and renders
  * the full studio layout (left tutorial list, centre canvas with pagination,
  * right step description). This server component only fetches the data —
  * the current tutorial and, for the sidebar, every other published one —
- * then hands both over. The CraftMaker animation slot stays a placeholder
- * inside the player until the CraftFile format exists.
+ * then hands both over. FoldPlayer animates the tutorial's CraftFile in the
+ * centre stage, and shows a static fold mark when the tutorial has none.
  *
  * `params` is read inside the boundary rather than in the page body because
  * `cacheComponents` treats an awaited param on a route with no static params

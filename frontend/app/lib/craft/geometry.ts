@@ -204,7 +204,7 @@ export function clipLineToBounds(
  *
  * This is what makes the fold tool deterministic. The author says which point
  * moves and where it lands; the crease and the moving half both follow from
- * that, instead of being guessed from two points drawn freehand.
+ * that, instead of being inferred from two points drawn freehand.
  */
 export function perpendicularBisector(
   origin: CraftPoint,

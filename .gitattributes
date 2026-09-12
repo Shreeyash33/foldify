@@ -1,4 +1,4 @@
-# Normalise line endings across three Windows machines.
+# Normalise line endings on Windows.
 # Without this, CRLF/LF churn makes every diff look like a full rewrite.
 * text=auto eol=lf
 

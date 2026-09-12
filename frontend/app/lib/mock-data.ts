@@ -4,9 +4,9 @@ import type { CraftFile, Product, StatusResponse, Tutorial, User } from '@foldif
  * Fake data for USE_MOCK mode.
  *
  * NON-NEGOTIABLE: with USE_MOCK on and the backend stopped, the entire
- * frontend must still render. The API is two weeks out and page work cannot
- * block on it. Every mock below matches the real shared type exactly, so
- * switching to the live API changes nothing above api-client.ts.
+ * frontend must still render, so mock mode renders the full frontend while
+ * the backend is stopped. Every mock below matches the real shared type
+ * exactly, so switching to the live API changes nothing above api-client.ts.
  */
 
 export const mockUser: User = {
@@ -19,6 +19,7 @@ export const mockUser: User = {
 };
 
 export const mockProducts: Product[] = [
+  // imageUrl is null for every product on purpose, so mock mode renders the unstyled placeholder cards.
   { id: 1, slug: 'crane-traditional-white', name: 'Traditional Crane', description: 'The classic tsuru, folded from crisp white kami and mounted on a small walnut block. The same model the crane tutorial teaches, if you would rather have one than fold one.', priceMinor: 45000, compareAtPriceMinor: null, currency: 'NPR', imageUrl: null, categoryId: 1, categoryName: 'Animals', stock: 60, difficulty: 'beginner', isPublished: true, createdAt: '2026-07-02T10:00:00.000Z' },
   { id: 2, slug: 'crane-flock-mobile', name: 'Crane Flock Mobile — Nine Cranes', description: 'Nine cranes in graded indigo, hung at staggered heights from a brass rod. Turns on its own in a draught.', priceMinor: 165000, compareAtPriceMinor: 190000, currency: 'NPR', imageUrl: null, categoryId: 1, categoryName: 'Animals', stock: 24, difficulty: 'intermediate', isPublished: true, createdAt: '2026-07-03T10:00:00.000Z' },
   { id: 3, slug: 'koi-pair-red-white', name: 'Koi Pair', description: 'Two koi in red and white, wet-folded from tant so the bodies keep a curve instead of sitting flat.', priceMinor: 128000, compareAtPriceMinor: 150000, currency: 'NPR', imageUrl: null, categoryId: 1, categoryName: 'Animals', stock: 30, difficulty: 'intermediate', isPublished: true, createdAt: '2026-07-04T10:00:00.000Z' },

@@ -7,7 +7,8 @@
  *
  * Deliberately NOT clsx + tailwind-merge. Conflict resolution is handled by
  * ordering instead: every component places consumer `className` BEFORE its own
- * classes, so the component's colours and padding win the specificity tie.
+ * classes, so the component's colours and padding win the specificity tie and
+ * consumer classes cannot accidentally restyle the design system. See §3.4.
  */
 export function cn(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');

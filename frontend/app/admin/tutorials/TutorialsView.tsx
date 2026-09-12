@@ -21,6 +21,7 @@ import {
   listAdminTutorials,
   updateTutorial,
 } from '@/app/lib/api-client';
+import { revalidateCatalog } from '@/app/lib/revalidate';
 import type {
   CreateTutorialRequest,
   Difficulty,
@@ -252,6 +253,7 @@ export function TutorialsView() {
 
   const handleSaveNew = async (state: TutorialFormState) => {
     await createTutorial(formToCreate(state));
+    await revalidateCatalog();
     toast.success('Tutorial created.');
     setEditing(null);
     await refreshAfterMutation();
@@ -260,6 +262,7 @@ export function TutorialsView() {
   const handleSaveEdit = async (state: TutorialFormState) => {
     if (editing === null || editing === 'new') return;
     await updateTutorial(editing.id, formToUpdate(state));
+    await revalidateCatalog();
     toast.success('Tutorial saved.');
     setEditing(null);
     await refreshAfterMutation();
@@ -271,6 +274,7 @@ export function TutorialsView() {
       setConfirmingId(null);
       try {
         await deleteTutorial(tutorial.id);
+        await revalidateCatalog();
         toast.success(`"${tutorial.title}" unpublished.`);
         await refreshAfterMutation();
       } catch (cause) {
