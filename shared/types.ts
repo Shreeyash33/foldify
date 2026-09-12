@@ -338,7 +338,7 @@ export interface AppendTutorialStepRequest {
 
 export interface CartItem {
   productId: number;
-  slug: string;
+  slug?: string;
   name: string;
   unitPriceMinor: number;
   imageUrl: string | null;

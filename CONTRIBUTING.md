@@ -66,8 +66,9 @@ gets it too, and the site stays coherent.
 What you must not do is build it yourself in the page with raw Tailwind. That
 is how a codebase ends up with four different greys and three button shapes.
 
-**Start at [http://localhost:3000](http://localhost:3000)** — the showcase page
-lists every component with the exact JSX to copy.
+**Start at `frontend/app/components/ui/`** — the closed component library.
+Every component's props, variants and usage are documented in its own source;
+if you cannot find a prop, it does not exist.
 
 ---
 

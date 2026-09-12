@@ -93,6 +93,5 @@ frontend/app/learn/[slug]/FoldPlayer.tsx the public player
 
 The feature is additive. The public player degrades to a written step list when
 a tutorial has no craft file, so deleting the `craft_files` rows disables the
-animation without breaking `/learn`. Reverting `frontend/app/admin/craft-maker/`
-to the previous `ComingSoon` placeholder is a clean removal of the authoring
-tool on its own.
+animation without breaking `/learn`. Removing `frontend/app/admin/craft-maker/`
+is a clean removal of the authoring tool on its own.

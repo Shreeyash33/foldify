@@ -55,9 +55,13 @@ export function CartView() {
 
             <CardBody className="flex flex-1 flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <Link href={`/products/${item.slug}`}>
+                {item.slug ? (
+                  <Link href={`/products/${item.slug}`}>
+                    <CardTitle>{item.name}</CardTitle>
+                  </Link>
+                ) : (
                   <CardTitle>{item.name}</CardTitle>
-                </Link>
+                )}
                 <CardMeta>{formatPrice(item.unitPriceMinor)} each</CardMeta>
               </div>
 

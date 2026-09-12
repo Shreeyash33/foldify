@@ -177,6 +177,18 @@ export function insertOrder(input: NewOrder): Order {
   return created;
 }
 
+/**
+ * Restores the stock reserved by an unpaid order that is being cancelled.
+ * Runs one UPDATE per line item, mirroring the decrement loop in `insertOrder`.
+ */
+export function restoreStockForOrder(orderId: number): void {
+  const items = db.prepare(SELECT_ITEMS).all(orderId) as OrderItemRow[];
+  const restoreStock = db.prepare('UPDATE products SET stock = stock + @quantity WHERE id = @productId');
+  for (const item of items) {
+    restoreStock.run({ quantity: item.quantity, productId: item.product_id });
+  }
+}
+
 /** Sets the status, and the payment reference too when one is supplied. */
 export function setOrderStatus(id: number, status: OrderStatus, paymentRef?: string | null): void {
   if (paymentRef === undefined) {

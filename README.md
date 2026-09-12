@@ -51,7 +51,7 @@ npm run seed          # creates backend/data/foldify.db and populates it
 npm run dev           # starts frontend on :3000 and backend on :4000
 ```
 
-Then open <http://localhost:3000>. This is the marketing homepage — a hero banner, a curated strip of featured products, and links to the shop and the tutorials. The design-system showcase lives at <http://localhost:3000/showcasepage>.
+Then open <http://localhost:3000>. This is the marketing homepage — a hero banner, a curated strip of featured products, and links to the shop and the tutorials.
 
 Other available scripts:
 
@@ -81,13 +81,13 @@ copy frontend\.env.example frontend\.env.local
 | `SESSION_COOKIE_NAME` | backend | `foldify_sid` |
 | `DB_PATH` | backend | `./data/foldify.db` |
 | `NEXT_PUBLIC_API_URL` | frontend | `http://localhost:4000` |
-| `NEXT_PUBLIC_USE_MOCK` | frontend | `true` |
+| `NEXT_PUBLIC_USE_MOCK` | frontend | `false` |
 
 `FRONTEND_ORIGIN` must match the frontend's origin exactly. CORS with credentials rejects a wildcard origin, and the resulting symptom — the session cookie never arriving — can be difficult to trace back to this setting.
 
 ### The `USE_MOCK` flag
 
-When `NEXT_PUBLIC_USE_MOCK=true`, `lib/api-client.ts` returns the fixtures defined in `lib/mock-data.ts` and does not contact the backend. This allows the frontend to be developed and rendered independently of backend or API progress. Set it to `false` once the required endpoint is implemented and available.
+It is **off** by default — `NEXT_PUBLIC_USE_MOCK` matches the literal string `true` in code (`process.env.NEXT_PUBLIC_USE_MOCK === 'true'`), so unset or anything else means the frontend calls the real API. `npm run dev` starts both apps, so the default expectation is a live backend. Set `NEXT_PUBLIC_USE_MOCK=true` in `frontend/.env.local` only when you want to develop the frontend with the backend stopped: `lib/api-client.ts` then returns the fixtures defined in `lib/mock-data.ts` and does not contact the backend.
 
 ## 5. Stack
 
@@ -140,8 +140,7 @@ The backend is Express. Routes should not be created under `frontend/app/api/` �
 │   │   ├── components/
 │   │   │   ├── ui/          the closed component library — not to be edited directly
 │   │   │   ├── layout/      Navbar, Footer, Container, PageHeader, AdminSidebar
-│   │   │   ├── craft/       FoldStage - the GSAP fold renderer, shared by maker and player
-│   │   │   └── showcase/    showcase-page scaffolding only
+│   │   │   └── craft/       FoldStage - the GSAP fold renderer, shared by maker and player
 │   │   ├── lib/             api-client, mock-data, utils, hooks, cart-store
 │   │   │   └── craft/       fold geometry, the layering model, the CraftFile helpers
 │   │   ├── (auth)/          login, register
@@ -175,7 +174,7 @@ The component library is closed for direct edits. See `CONTRIBUTING.md` before b
 - **Admin endpoints (all behind `requireAuth` + `requireAdmin`):** `GET /api/admin/overview`, `GET /api/users`, `PATCH /api/users/:id/role`, `POST/PATCH/DELETE /api/products`, `GET /api/products/all`, `GET/POST /api/products/categories`, `GET /api/tutorials/all`, `POST/PATCH/DELETE /api/tutorials`, `POST /api/tutorials/:id/steps`, `GET /api/orders/all`, `PATCH /api/orders/:id/status`, `GET /api/contact`, `PATCH /api/contact/:id`, `GET/POST /api/craft-files`, `GET/PATCH/DELETE /api/craft-files/:id`.
 - The admin pages under `/admin` are client-rendered and gated by a client-side role check; the real enforcement is `requireAdmin` on the server.
 - The contact form is live (`/contact` → `POST /api/contact`), and customers can post reviews on the product detail page. Both surfaces are wired to the API and cannot do mock-mode submits (they need the backend running).
-- Only the simulated payment gateway is wired (`/pay/.../verify`). A real eSewa or Khalti provider needs live merchant accounts and API keys — this is the one feature nobody can finish without credentials.
+- Payments run through the Khalti sandbox gateway when `KHALTI_SECRET_KEY` is set in `backend/.env`, with a simulated in-memory fallback when it is not — `payment.service.ts` picks the gateway from `config.khaltiSecretKey`. Verification is always server-side via `POST /api/orders/:id/verify`. Going live only requires swapping in a real Khalti merchant account's credentials.
 - Texture image files have not been added yet; see `frontend/public/textures/README.md`. Surfaces render acceptably without them in the meantime.
 - **Craft Maker and the fold player are built** (`/admin/craft-maker`, `/learn/[slug]`), and `CraftFile` in `shared/types.ts` is now the real format. What they deliberately do NOT do: paper thickness, layers trapped inside a pocket, curved folds, and true reverse/squash/petal folds, which move part of a flap *through* the layer stack rather than over it. A step typed `reverse`, `squash` or `petal` still animates, as the straight fold its line describes. Layers are capped at 96. The model is a stack of convex polygons cut by a half-plane and reflected — see the 0.4.0 CHANGELOG entry for the reasoning and `frontend/app/lib/craft/fold-model.ts` for the code.
 - Only the traditional crane has an authored fold in the seed. Every other tutorial renders as a written step list until somebody folds it in the Craft Maker.

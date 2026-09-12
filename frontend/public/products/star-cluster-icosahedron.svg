@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efede6"/>
+      <stop offset="100%" stop-color="#d3d8dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- icosahedron wireframe with star points -->
+  <!-- main body (triangulated faces) -->
+  <polygon points="200,90 260,150 200,180" fill="#2e4a6b" stroke="#1a3a5b" stroke-width="0.8" opacity="0.8"/>
+  <polygon points="200,90 140,150 200,180" fill="#4a6a8b" stroke="#1a3a5b" stroke-width="0.8" opacity="0.8"/>
+  <polygon points="260,150 290,230 200,240" fill="#1a3a5b" stroke="#0a2a4b" stroke-width="0.8" opacity="0.8"/>
+  <polygon points="140,150 110,230 200,240" fill="#2e4a6b" stroke="#1a3a5b" stroke-width="0.8" opacity="0.75"/>
+  <polygon points="200,180 260,150 290,230" fill="#4a6a8b" opacity="0.5"/>
+  <polygon points="200,180 140,150 110,230" fill="#2a4a6b" opacity="0.5"/>
+  <polygon points="200,240 290,230 260,300" fill="#1a3a5b" stroke="#0a2a4b" stroke-width="0.8" opacity="0.7"/>
+  <polygon points="200,240 110,230 140,300" fill="#2e4a6b" stroke="#1a3a5b" stroke-width="0.8" opacity="0.7"/>
+  <polygon points="260,300 200,340 140,300" fill="#4a6a8b" stroke="#1a3a5b" stroke-width="0.8" opacity="0.65"/>
+  <!-- star points at vertices -->
+  <polygon points="200,90 195,65 205,65" fill="#fbfaf7" opacity="0.9"/>
+  <polygon points="260,150 280,140 275,155" fill="#efede6" opacity="0.8"/>
+  <polygon points="140,150 120,140 125,155" fill="#e0ddd5" opacity="0.8"/>
+  <polygon points="290,230 315,230 305,240" fill="#fbfaf7" opacity="0.7"/>
+  <polygon points="110,230 85,230 95,240" fill="#efede6" opacity="0.7"/>
+  <polygon points="260,300 278,315 262,312" fill="#e0ddd5" opacity="0.6"/>
+  <polygon points="140,300 122,315 138,312" fill="#fbfaf7" opacity="0.6"/>
+  <polygon points="200,340 195,358 205,358" fill="#efede6" opacity="0.6"/>
+</svg>

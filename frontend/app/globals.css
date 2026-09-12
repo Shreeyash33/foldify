@@ -224,9 +224,7 @@
     outline-offset: 2px;
   }
 
-<<<<<<< Updated upstream
-=======
-  :focus:not(:focus-visible) {
+:focus:not(:focus-visible) {
     outline: none;
   }
 
@@ -239,7 +237,6 @@
 
   /* Selection inverts the theme: dark highlight in light mode, light
      highlight in dark mode, so the selected text always contrasts. */
->>>>>>> Stashed changes
   ::selection {
     background-color: var(--cardboard);
     color: var(--ink);
