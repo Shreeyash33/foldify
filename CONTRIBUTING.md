@@ -1,21 +1,21 @@
 # Contributing to Foldify
 
-Three people, one codebase, one semester. These rules exist so the site still
-looks like one site in November.
+One codebase, one design language. These rules exist so the site still
+looks like one site.
 
 ---
 
 ## File ownership
 
-| Area | Owner | Everyone else |
-|---|---|---|
-| `frontend/app/globals.css` | team lead | do not edit |
-| `frontend/app/components/ui/` | team lead | consume only |
-| `frontend/tailwind.config.*` | team lead | (there isn't one — Tailwind v4 is CSS-first) |
-| `shared/types.ts` | agreed as a team | propose in the PR, do not change unilaterally |
-| `frontend/app/(shop)/`, `(auth)/`, `learn/` | frontend dev | |
-| `backend/src/` | backend dev | |
-| `frontend/app/admin/` | whoever takes it | |
+| Area | Policy |
+|---|---|
+| `frontend/app/globals.css` | do not edit directly |
+| `frontend/app/components/ui/` | consume only |
+| `frontend/tailwind.config.*` | (there isn't one — Tailwind v4 is CSS-first) |
+| `shared/types.ts` | propose in the PR, do not change unilaterally |
+| `frontend/app/(shop)/`, `(auth)/`, `learn/` | frontend area |
+| `backend/src/` | backend area |
+| `frontend/app/admin/` | as needed |
 
 Editing something outside your column is not forbidden — it just needs to be
 the point of the PR rather than a side effect of it.
@@ -26,9 +26,10 @@ the point of the PR rather than a side effect of it.
 
 This is the most important rule in this document.
 
-The team lead owns the design language. The other two build pages by assembling
-components. That only works if pages **cannot** change how components look —
-not accidentally, and not deliberately at 2am the night before a deadline.
+The design language lives in the component library. Pages are built by
+assembling components. That only works if pages **cannot** change how
+components look — not accidentally, and not deliberately at 2am the night
+before a deadline.
 
 ### What you control
 
@@ -59,9 +60,9 @@ in a conflict the design system wins the specificity tie and your stray
 
 ### When the library does not have what you need
 
-Ask. Open an issue or message the lead: *"the product grid needs a card with an
-image at the top."* You will get a component or a new variant, everyone else
-gets it too, and the site stays coherent.
+Ask. Open an issue describing the need: *"the product grid needs a card with an
+image at the top."* The result is a component or a new variant that the whole
+codebase then uses, and the site stays coherent.
 
 What you must not do is build it yourself in the page with raw Tailwind. That
 is how a codebase ends up with four different greys and three button shapes.
@@ -122,7 +123,7 @@ your first query module.
 
 ### Performance budget — non-negotiable
 
-The three of us are on older Windows laptops with integrated graphics. So:
+The project targets older Windows laptops with integrated graphics. So:
 
 - No `filter`, no `backdrop-filter`, no large `blur()`, no `feTurbulence`.
 - At most two shadow layers per element.
@@ -163,7 +164,7 @@ chore/seed-more-products
   npm run lint
   npm run build
   ```
-  All three must pass. A failing build on `main` blocks two other people.
+  All three must pass. A failing build on `main` blocks the whole codebase.
 - In the description say what you changed and what you deliberately left out.
 - If you touched `shared/types.ts`, say so in the title — it affects both sides.
 
