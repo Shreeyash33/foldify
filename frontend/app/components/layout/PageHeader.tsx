@@ -6,8 +6,7 @@ import { CreaseDivider } from '@/app/components/ui/CreaseDivider';
  * The top of every page: an optional eyebrow, the title, an optional
  * description, optional actions on the right, and a crease underneath.
  *
- * Using this everywhere is what makes fifteen pages written by three people
- * look like one site.
+ * Using this everywhere is what makes fifteen pages look like one site.
  */
 
 export interface PageHeaderProps {
