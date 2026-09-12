@@ -223,8 +223,6 @@
     outline-offset: 2px;
   }
 
-<<<<<<< HEAD
-=======
 :focus:not(:focus-visible) {
     outline: none;
   }
@@ -236,7 +234,6 @@
     outline-offset: 2px;
   }
 
->>>>>>> auditbranch
   /* Selection inverts the theme: dark highlight in light mode, light
      highlight in dark mode, so the selected text always contrasts. */
   ::selection {
