@@ -52,4 +52,8 @@ export class AppError extends Error {
   static notImplemented(message = 'This endpoint is not built yet.'): AppError {
     return new AppError(501, 'NOT_IMPLEMENTED', message);
   }
+
+  static badGateway(message: string): AppError {
+    return new AppError(502, 'BAD_GATEWAY', message);
+  }
 }

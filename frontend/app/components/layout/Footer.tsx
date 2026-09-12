@@ -63,7 +63,7 @@ export function Footer() {
         </div>
 
         <p className="font-mono text-xs text-ink-muted">
-          BSc CSIT semester project · built with Next.js, Express and SQLite
+          Built with Next.js, Express and SQLite
         </p>
       </Container>
     </PaperSurface>

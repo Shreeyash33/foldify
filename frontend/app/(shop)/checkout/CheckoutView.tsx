@@ -47,7 +47,7 @@ export function CheckoutView() {
 
     try {
       // Ids and quantities only. The server reads every price from its own
-      // products table — a total sent from here would be a total we chose.
+      // products table — a total sent from here would be the client's own.
       const { order, payment } = await createOrder({
         items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
         shippingName,
@@ -63,8 +63,8 @@ export function CheckoutView() {
 
       /*
        * Relative redirect: the dev-only simulated fallback landing on
-       * /checkout/return — its ref alone isn't enough to verify, so we append
-       * the order id.  Absolute URL: the real Khalti hosted checkout page,
+       * /checkout/return — its ref alone isn't enough to verify, so the order id
+       * is appended.  Absolute URL: the real Khalti hosted checkout page,
        * which is a full-page departure rather than a client-side route change.
        */
       if (payment.redirectUrl.startsWith('/')) {

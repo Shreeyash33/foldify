@@ -145,9 +145,10 @@ const INSERT_ITEM = `
  *
  * better-sqlite3 transactions are synchronous — nothing awaited may appear
  * inside `run`, so the payment gateway is the caller's job once this returns.
- * The stock UPDATE is guarded by the `stock >= 0` CHECK, so a concurrent order
- * that empties the shelf between the caller's check and this write aborts the
- * whole transaction instead of overselling.
+ * The stock UPDATE also requires `stock >= @quantity`, so a concurrent order
+ * that empties the shelf between the caller's check and this write changes no
+ * rows and aborts the transaction with a STOCK_CONFLICT error instead of
+ * relying on the `stock >= 0` CHECK to reject the overselling.
  */
 export function insertOrder(input: NewOrder): Order {
   const run = db.transaction((order: NewOrder): number => {
@@ -162,11 +163,18 @@ export function insertOrder(input: NewOrder): Order {
 
     const orderId = Number(result.lastInsertRowid);
     const insertItem = db.prepare(INSERT_ITEM);
-    const decrementStock = db.prepare('UPDATE products SET stock = stock - @quantity WHERE id = @productId');
+    const decrementStock = db.prepare(
+      'UPDATE products SET stock = stock - @quantity WHERE id = @productId AND stock >= @quantity',
+    );
 
     for (const item of order.items) {
       insertItem.run({ orderId, ...item });
-      decrementStock.run({ quantity: item.quantity, productId: item.productId });
+      const decrement = decrementStock.run({ quantity: item.quantity, productId: item.productId });
+      if (decrement.changes === 0) {
+        const error = new Error('Insufficient stock for one or more items.');
+        (error as { code?: string }).code = 'STOCK_CONFLICT';
+        throw error;
+      }
     }
 
     return orderId;
@@ -177,16 +185,42 @@ export function insertOrder(input: NewOrder): Order {
   return created;
 }
 
+/** Statuses in which the order's stock is still held and can be released back. */
+const RESTOCKABLE_STATUSES: readonly OrderStatus[] = [
+  'pending',
+  'paid',
+  'processing',
+  'shipped',
+  'delivered',
+];
+
 /**
- * Restores the stock reserved by an unpaid order that is being cancelled.
- * Runs one UPDATE per line item, mirroring the decrement loop in `insertOrder`.
+ * Restores the stock reserved by an order that is being cancelled or refunded.
+ *
+ * Each UPDATE only runs while the order row is still in one of
+ * `allowedStatuses`, checked inside the UPDATE itself. Two concurrent cancels
+ * therefore restore exactly once — the second sees the terminal status and
+ * matches no rows. Runs one UPDATE per line item, mirroring the decrement loop
+ * in `insertOrder`. Returns whether any stock was restored.
  */
-export function restoreStockForOrder(orderId: number): void {
+export function restoreStockForOrder(
+  orderId: number,
+  allowedStatuses: readonly string[] = RESTOCKABLE_STATUSES,
+): boolean {
   const items = db.prepare(SELECT_ITEMS).all(orderId) as OrderItemRow[];
-  const restoreStock = db.prepare('UPDATE products SET stock = stock + @quantity WHERE id = @productId');
+  const placeholders = allowedStatuses.map(() => '?').join(', ');
+  const restoreStock = db.prepare(
+    `UPDATE products SET stock = stock + ?
+     WHERE id = ?
+       AND (SELECT status FROM orders WHERE id = ?) IN (${placeholders})`,
+  );
+
+  let restored = false;
   for (const item of items) {
-    restoreStock.run({ quantity: item.quantity, productId: item.product_id });
+    const result = restoreStock.run(item.quantity, item.product_id, orderId, ...allowedStatuses);
+    if (result.changes > 0) restored = true;
   }
+  return restored;
 }
 
 /** Sets the status, and the payment reference too when one is supplied. */

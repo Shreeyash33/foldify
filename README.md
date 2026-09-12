@@ -6,7 +6,7 @@ An origami shop and fold-tutorial site. Customers buy crafts, or they follow a t
 
 **`difficulty` always means fold difficulty.** It is how hard the origami is to fold, on one scale — `beginner`, `intermediate`, `advanced` — shared by `products` and `tutorials` so the crane rates the same in both. It never describes an object's quality, size or price. If a row ever appears where "intermediate" would not answer *"how hard is this to fold?"*, that row is wrong, not the field.
 
-BSc CSIT semester project.
+An academic semester project (BSc CSIT) — a coursework build, not a production deployment.
 
 ---
 
@@ -38,7 +38,7 @@ C:\dev\foldify
 Avoid deeply nested paths such as:
 
 ```
-C:\Users\you\Desktop\College\Semester 6\Projects\foldify
+C:\Users\you\Desktop\College\Projects\foldify
 ```
 
 Windows imposes a 260-character path limit. A deep `node_modules` tree combined with an already-deep folder path can cause install failures with error messages that do not point to the actual cause.
@@ -61,27 +61,43 @@ Other available scripts:
 | `npm run dev:frontend` | Runs the Next.js app only |
 | `npm run dev:backend` | Runs the Express app only |
 | `npm run build` | Production build of the frontend |
+| `npm run start` | Serves both built apps together, via `concurrently` |
+| `npm run start:frontend` | Serves the built Next.js app only |
+| `npm run start:backend` | Serves the built Express app only |
+| `npm test --workspace foldify` | Runs the frontend vitest suite (there is no root-level `test` script) |
 | `npm run seed` | Seeds the database (safe to re-run) |
 | `npm run typecheck` | Type-checks both apps |
 | `npm run lint` | Runs ESLint on the frontend |
 
 ## 4. Environment variables
 
-Copy the example files and edit as needed:
+Copy the backend example file and edit as needed:
 
 ```
 copy backend\.env.example backend\.env
-copy frontend\.env.example frontend\.env.local
+```
+
+`frontend/.env.local` is optional. Create it manually only if you need to change the API origin or enable mock mode; the defaults already point at the local API.
+
+```
+frontend\.env.local:  NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 | Variable | Where | Default |
 |---|---|---|
 | `PORT` | backend | `4000` |
+| `NODE_ENV` | backend | `development` |
 | `FRONTEND_ORIGIN` | backend | `http://localhost:3000` |
 | `SESSION_COOKIE_NAME` | backend | `foldify_sid` |
 | `DB_PATH` | backend | `./data/foldify.db` |
+| `SEED_ADMIN_EMAIL` | backend | `admin@foldify.local` |
+| `SEED_ADMIN_PASSWORD` | backend | `foldify-admin` |
+| `KHALTI_SECRET_KEY` | backend | *(unset — simulated gateway)* |
+| `KHALTI_BASE_URL` | backend | `https://dev.khalti.com` |
 | `NEXT_PUBLIC_API_URL` | frontend | `http://localhost:4000` |
 | `NEXT_PUBLIC_USE_MOCK` | frontend | `false` |
+
+`KHALTI_SECRET_KEY` and `KHALTI_BASE_URL` are optional and only used for the live Khalti gateway. When `KHALTI_SECRET_KEY` is unset, an in-memory simulated gateway handles payments instead.
 
 `FRONTEND_ORIGIN` must match the frontend's origin exactly. CORS with credentials rejects a wildcard origin, and the resulting symptom — the session cookie never arriving — can be difficult to trace back to this setting.
 
@@ -135,8 +151,8 @@ The backend is Express. Routes should not be created under `frontend/app/api/` �
 │   ├── app/
 │   │   ├── layout.tsx       fonts, pre-paint theme script, providers, chrome
 │   │   ├── page.tsx         the marketing homepage (hero + featured strip)
-│   │   ├── providers.tsx    all four contexts
-│   │   ├── contexts/        Theme, Auth, Cart, Toast
+│   │   ├── providers.tsx    all five contexts
+│   │   ├── contexts/        Theme, FontSize, Auth, Cart, Toast
 │   │   ├── components/
 │   │   │   ├── ui/          the closed component library — not to be edited directly
 │   │   │   ├── layout/      Navbar, Footer, Container, PageHeader, AdminSidebar
@@ -170,12 +186,12 @@ The component library is closed for direct edits. See `CONTRIBUTING.md` before b
 
 ## 9. Known gaps in this commit
 
-- **Implemented endpoints:** `GET /api/status`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/products`, `GET /api/products/:slug` (includes `linkedTutorials` — the "fold it yourself" cross-links), `GET /api/products/:slug/reviews`, `POST /api/products/:slug/reviews`, `GET /api/tutorials`, `GET /api/tutorials/:slug` (includes `linkedProducts` — the "buy the finished fold" cross-links — and `craftFile`, the authored fold the player animates), `GET /api/orders`, `POST /api/orders`, `GET /api/orders/:id`, `POST /api/orders/:id/verify`, `POST /api/contact`.
-- **Admin endpoints (all behind `requireAuth` + `requireAdmin`):** `GET /api/admin/overview`, `GET /api/users`, `PATCH /api/users/:id/role`, `POST/PATCH/DELETE /api/products`, `GET /api/products/all`, `GET/POST /api/products/categories`, `GET /api/tutorials/all`, `POST/PATCH/DELETE /api/tutorials`, `POST /api/tutorials/:id/steps`, `GET /api/orders/all`, `PATCH /api/orders/:id/status`, `GET /api/contact`, `PATCH /api/contact/:id`, `GET/POST /api/craft-files`, `GET/PATCH/DELETE /api/craft-files/:id`.
+- **Implemented endpoints:** `GET /api/status`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `PATCH /api/auth/me` (profile update), `GET /api/products`, `GET /api/products/:slug` (includes `linkedTutorials` — the "fold it yourself" cross-links), `GET /api/products/:slug/reviews`, `POST /api/products/:slug/reviews`, `GET /api/tutorials`, `GET /api/tutorials/:slug` (includes `linkedProducts` — the "buy the finished fold" cross-links — and `craftFile`, the authored fold the player animates), `GET /api/orders`, `POST /api/orders`, `GET /api/orders/:id`, `POST /api/orders/:id/verify`, `POST /api/contact`.
+- **Admin endpoints (all behind `requireAuth` + `requireAdmin`):** `GET /api/admin/overview`, `GET /api/users`, `PATCH /api/users/:id/role`, `POST/PATCH/DELETE /api/products`, `GET /api/products/all`, `GET/POST /api/products/categories`, `GET /api/tutorials/all`, `POST/PATCH/DELETE /api/tutorials`, `POST /api/tutorials/:id/steps`, `GET /api/orders/all`, `PATCH /api/orders/:id/status`, `GET /api/contact`, `PATCH /api/contact/:id`, `GET/POST /api/craft-files`, `GET/PATCH/DELETE /api/craft-files/:id`, `GET /api/craft-files/:id/versions`, `POST /api/craft-files/:id/versions/:revision/restore`.
 - The admin pages under `/admin` are client-rendered and gated by a client-side role check; the real enforcement is `requireAdmin` on the server.
 - The contact form is live (`/contact` → `POST /api/contact`), and customers can post reviews on the product detail page. Both surfaces are wired to the API and cannot do mock-mode submits (they need the backend running).
 - Payments run through the Khalti sandbox gateway when `KHALTI_SECRET_KEY` is set in `backend/.env`, with a simulated in-memory fallback when it is not — `payment.service.ts` picks the gateway from `config.khaltiSecretKey`. Verification is always server-side via `POST /api/orders/:id/verify`. Going live only requires swapping in a real Khalti merchant account's credentials.
 - Texture image files have not been added yet; see `frontend/public/textures/README.md`. Surfaces render acceptably without them in the meantime.
-- **Craft Maker and the fold player are built** (`/admin/craft-maker`, `/learn/[slug]`), and `CraftFile` in `shared/types.ts` is now the real format. What they deliberately do NOT do: paper thickness, layers trapped inside a pocket, curved folds, and true reverse/squash/petal folds, which move part of a flap *through* the layer stack rather than over it. A step typed `reverse`, `squash` or `petal` still animates, as the straight fold its line describes. Layers are capped at 96. The model is a stack of convex polygons cut by a half-plane and reflected — see `architecture.md` §6 for the reasoning and `frontend/app/lib/craft/fold-model.ts` for the code.
+- **Craft Maker and the fold player are built** (`/admin/craft-maker`, `/learn/[slug]`), and `CraftFile` in `shared/types.ts` is now the real format. What they deliberately do NOT do: paper thickness, layers trapped inside a pocket, curved folds, and true reverse/squash/petal folds, which move part of a flap *through* the layer stack rather than over it. A step typed `reverse`, `squash` or `petal` still animates, as the straight fold its line describes. Layers are capped at 96. The model is a stack of convex polygons cut by a half-plane and reflected — see `ARCHITECTURE.md` §6 for the reasoning and `frontend/app/lib/craft/fold-model.ts` for the code.
 - Only the traditional crane has an authored fold in the seed. Every other tutorial renders as a written step list until somebody folds it in the Craft Maker.
 - `npm audit` reports advisories in `brace-expansion`, reached only through ESLint's dev-time dependency tree. Resolving this requires upgrading to ESLint 10, which is a breaking change with no runtime benefit, so it has been left as-is for now.

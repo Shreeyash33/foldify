@@ -7,7 +7,7 @@ import { cn } from '@/app/lib/utils';
  * Sunken paper — the shadow is inverted so the field sits below the page
  * rather than above it. Label association is handled here, not by the caller:
  * an input whose label is not wired to it is invisible to a screen reader,
- * and leaving that to a teammate means it will eventually be missed.
+ * so this component always wires the label itself.
  */
 
 export type InputSize = 'sm' | 'md' | 'lg';

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Request } from 'express';
-import type { ApiResponse, AdminOrder, CreateOrderRequest, CreateOrderResponse, Order, OrderStatus } from '@foldify/shared';
+import type { ApiResponse, AdminOrder, CreateOrderRequest, CreateOrderResponse, Order, OrderStatus, PaymentInitiation } from '@foldify/shared';
 import {
   getOrderById,
   insertOrder,
@@ -127,19 +127,40 @@ router.post(
 
     const totalMinor = items.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
 
-    const order = insertOrder({
-      userId: req.user!.id,
-      totalMinor,
-      shippingName: shipping.shippingName.trim(),
-      shippingPhone: shipping.shippingPhone.trim(),
-      shippingAddress: shipping.shippingAddress.trim(),
-      shippingCity: shipping.shippingCity.trim(),
-      items,
-    });
+    let order: Order;
+    try {
+      order = insertOrder({
+        userId: req.user!.id,
+        totalMinor,
+        shippingName: shipping.shippingName.trim(),
+        shippingPhone: shipping.shippingPhone.trim(),
+        shippingAddress: shipping.shippingAddress.trim(),
+        shippingCity: shipping.shippingCity.trim(),
+        items,
+      });
+    } catch (err) {
+      // A concurrent order drained the shelf between the pre-check and this
+      // write: surface the stock conflict as a 409 so the client can re-read
+      // the catalogue instead of receiving a generic 500.
+      if ((err as { code?: string }).code === 'STOCK_CONFLICT') {
+        throw AppError.conflict('One or more items went out of stock while placing the order.');
+      }
+      throw err;
+    }
 
     // The gateway call is awaited outside insertOrder: better-sqlite3
     // transactions are synchronous and cannot hold an open await.
-    const payment = await paymentService.initiate(order.totalMinor, order.id);
+    // insertOrder already wrote the order and decremented stock, so an
+    // initiation failure must release that stock and cancel the order before
+    // the request errors out.
+    let payment: PaymentInitiation;
+    try {
+      payment = await paymentService.initiate(order.totalMinor, order.id);
+    } catch {
+      restoreStockForOrder(order.id);
+      setOrderStatus(order.id, 'cancelled');
+      throw AppError.badGateway('The payment gateway could not start the payment. The order was cancelled.');
+    }
     setOrderStatus(order.id, order.status, payment.reference);
 
     const body: ApiResponse<CreateOrderResponse> = {
@@ -174,8 +195,9 @@ router.get('/:id', (req, res) => {
  *  2. `failed`  + order `pending`  → stock restored, order set to `cancelled`.
  *  3. `pending` (still confirming) → order left as-is.
  *
- * Repeated calls are idempotent: the status guard prevents double-restocking
- * or walking an already-processed order backwards.
+ * Repeated calls are idempotent: the stock restore runs under an atomic SQL
+ * status guard, so concurrent failing verifies cannot double-restock, and the
+ * pending-only checks stop an already-processed order from walking backwards.
  */
 router.post(
   '/:id/verify',
@@ -187,9 +209,20 @@ router.post(
 
     const verification = await paymentService.verify(order.paymentRef);
 
-    // Failed verification on a pending order: release stock and cancel.
+    // Khalti reports 'Pending' while the transaction is still being confirmed:
+    // return the order unchanged so the client can retry verification later.
+    if (verification.status === 'pending') {
+      const body: ApiResponse<Order> = { ok: true, data: order };
+      res.json(body);
+      return;
+    }
+
+    // Failed verification on a pending order: release stock and cancel. The
+    // restore only matches while the order row is still pending/failed (checked
+    // inside the SQL UPDATE), so two concurrent failing verifies cannot both
+    // release the same stock.
     if (verification.status === 'failed' && order.status === 'pending') {
-      restoreStockForOrder(order.id);
+      restoreStockForOrder(order.id, ['pending', 'failed']);
       setOrderStatus(order.id, 'cancelled');
     }
 
@@ -221,6 +254,13 @@ router.patch(
     const body = validateBody<{ status: OrderStatus }>(req.body, {
       status: [required, oneOf(ORDER_STATUSES)],
     });
+
+    // Moving to a terminal stock-releasing status: return the reserved stock
+    // first. The restore is guarded inside SQL, so repeating the same PATCH
+    // cannot release the same stock twice.
+    if (body.status === 'cancelled' || body.status === 'refunded') {
+      restoreStockForOrder(order.id);
+    }
 
     setOrderStatus(order.id, body.status);
 

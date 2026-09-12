@@ -60,7 +60,7 @@ export interface DbHealth {
   tables: number;
 }
 
-/** Read back the pragmas we care about, so /api/status reports reality rather than intent. */
+/** Read back the relevant pragmas, so /api/status reports reality rather than intent. */
 export function getDbHealth(): DbHealth {
   try {
     const fk = db.pragma('foreign_keys', { simple: true });

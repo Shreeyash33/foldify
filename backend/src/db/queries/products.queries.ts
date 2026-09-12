@@ -7,7 +7,7 @@ import { db } from '../index.ts';
  * Rules for every file in db/queries/:
  *   1. SQL only. No Express types, no `req`, no `res`, no business rules.
  *   2. Parameterised queries ONLY. Never build SQL by string interpolation —
- *      `WHERE name = '${input}'` is how the whole database walks out the door.
+ *      `WHERE name = '${input}'` allows an attacker to inject SQL.
  *   3. Return the shared types from @foldify/shared, mapped from snake_case
  *      columns to camelCase fields right here, so no caller ever sees a raw row.
  */

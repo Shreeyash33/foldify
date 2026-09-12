@@ -12,12 +12,12 @@ import { getDbHealth } from '../db/index.ts';
 const startedAt = Date.now();
 
 /**
- * Which parts of the API are real today.
+ * Which parts of the API are currently implemented.
  *
  * 'degraded' means some endpoints in the module work and some are still 501
- * stubs. Update the value as you land each piece — the API serves it live, so
- * it doubles as the project's progress board and nobody has to maintain a
- * separate status doc that goes stale.
+ * stubs. Each value is updated as its endpoints ship; because the API serves
+ * this map live, it doubles as the project's progress record and no separate
+ * status document has to be maintained.
  */
 const MODULES: Record<string, ModuleHealth> = {
   status: 'ok',

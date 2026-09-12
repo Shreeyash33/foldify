@@ -32,9 +32,9 @@ router.get('/', (_req, res) => {
 /**
  * PATCH /api/users/:id/role — admin only. Promote or demote an account.
  *
- * The one rule nobody writes a ticket for: an admin cannot demote themself.
- * Doing so would lock a real account out of the only page that can reverse
- * the decision. Everything else is delegated to the authz middleware above.
+ * An admin cannot demote themself — doing so would lock a real account out of
+ * the only page that can reverse the decision. Everything else is delegated to
+ * the authz middleware above.
  */
 router.patch('/:id/role', (req, res) => {
   const id = Number.parseInt(req.params.id ?? '', 10);

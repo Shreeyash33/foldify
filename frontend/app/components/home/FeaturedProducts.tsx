@@ -21,7 +21,7 @@ import { ProductCard } from '@/app/(shop)/products/ProductCard';
 
 /** One row, at most four columns, so the cards stay small on the homepage. */
 const FEATURED_COUNT = 4;
-/** Fetch a few extra so we can skip sold-out rows and still hit the target. */
+/** Fetch a few extra rows so sold-out ones can be skipped while still hitting the target. */
 const FETCH_PAGE_SIZE = 12;
 
 export function FeaturedProductsSkeleton() {

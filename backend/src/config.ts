@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 /**
  * All configuration is read here, from `.env`, at import time.
  *
- * Windows note: npm scripts must never set env vars inline
+ * On Windows, npm scripts must never set env vars inline
  * (`PORT=4000 tsx src/server.ts` fails in cmd.exe and PowerShell), so the app
  * reads its own config instead of relying on the shell.
  */

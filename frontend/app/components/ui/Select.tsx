@@ -8,7 +8,7 @@ import { cn } from '@/app/lib/utils';
  *
  * Native on purpose: a custom listbox means owning keyboard navigation, typeahead,
  * scroll containment and mobile behaviour, and the OS already does all four
- * better than we would. The arrow is an inline SVG background, not a filter.
+ * better than a hand-rolled alternative. The arrow is an inline SVG background, not a filter.
  */
 
 export interface SelectOption {
