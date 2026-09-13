@@ -16,6 +16,7 @@ import { isString, maxLength, oneOf, required, validateBody } from '../lib/valid
 import { asyncHandler } from '../middleware/errorHandler.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
+import { notifyOrderPlaced } from '../services/notification.service.ts';
 import * as paymentService from '../services/payment.service.ts';
 
 const ORDER_STATUSES = [
@@ -162,6 +163,10 @@ router.post(
       throw AppError.badGateway('The payment gateway could not start the payment. The order was cancelled.');
     }
     setOrderStatus(order.id, order.status, payment.reference);
+
+    // Order is now real: notify the shipping phone. Fire-and-forget — the
+    // checkout response should never wait on the SMS provider.
+    notifyOrderPlaced(order);
 
     const body: ApiResponse<CreateOrderResponse> = {
       ok: true,

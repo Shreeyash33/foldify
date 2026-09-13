@@ -37,6 +37,12 @@ export interface User {
 /** Never leaves the backend — includes the password hash. */
 export interface UserWithSecret extends User {
   passwordHash: string;
+  /** When set, the account is banned and its sessions stop resolving. */
+  bannedAt: IsoDate | null;
+  /** When set, the account is soft-deleted and its sessions stop resolving. */
+  deletedAt: IsoDate | null;
+  /** Updated on every successful session lookup, for the admin users page. */
+  lastActiveAt: IsoDate | null;
 }
 
 export interface Session {
@@ -229,6 +235,8 @@ export interface ContactMessage {
   subject: string;
   body: string;
   isHandled: boolean;
+  /** Archived messages sit in their own drawer on the inbox page. */
+  isArchived: boolean;
   createdAt: IsoDate;
 }
 
@@ -245,6 +253,27 @@ export interface ContactMessage {
 export interface AdminUser extends User {
   orderCount: number;
   totalSpentMinor: number;
+  /** When set, the account is banned and its sessions are dead. */
+  bannedAt: IsoDate | null;
+  /** When set, the account is soft-deleted and hidden from normal use. */
+  deletedAt: IsoDate | null;
+  /** Last successful session lookup — drives the "active/inactive for" readout. */
+  lastActiveAt: IsoDate | null;
+}
+
+/**
+ * What an admin reset-password produces: a freshly generated temporary
+ * password, returned once so the admin can pass it to the account owner. The
+ * stored hash is generated server-side; the plain text never touches the log.
+ */
+export interface ResetPasswordResult {
+  temporaryPassword: string;
+}
+
+/** Whether the admin is archiving (true) or restoring (false) a message. */
+export interface UpdateContactMessageRequest {
+  isHandled?: boolean;
+  isArchived?: boolean;
 }
 
 /** Aggregate numbers for the admin Overview page. Counts only, no charts. */

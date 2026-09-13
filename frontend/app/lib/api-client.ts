@@ -25,6 +25,7 @@ import type {
   ProductDetail,
   ProductFilters,
   RegisterRequest,
+  ResetPasswordResult,
   Review,
   Role,
   SaveCraftFileRequest,
@@ -347,6 +348,12 @@ export async function setContactHandled(id: number, isHandled: boolean): Promise
   return request<ContactMessage>(`/contact/${id}`, { method: 'PATCH', body: { isHandled } });
 }
 
+/** Archive (true) or restore (false) a contact message. */
+export async function setContactArchived(id: number, isArchived: boolean): Promise<ContactMessage> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'The inbox needs the API.' });
+  return request<ContactMessage>(`/contact/${id}`, { method: 'PATCH', body: { isArchived } });
+}
+
 /* ================================================================== admin */
 
 /**
@@ -373,13 +380,45 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 }
 
 export async function listAdminUsers(): Promise<AdminUser[]> {
-  if (USE_MOCK) return [{ ...mockUser, orderCount: 0, totalSpentMinor: 0 }];
+  if (USE_MOCK)
+    return [
+      {
+        ...mockUser,
+        orderCount: 0,
+        totalSpentMinor: 0,
+        bannedAt: null,
+        deletedAt: null,
+        lastActiveAt: '2026-07-25T10:00:00.000Z',
+      },
+    ];
   return request<AdminUser[]>('/users');
 }
 
 export async function updateUserRole(id: number, role: Role): Promise<User> {
   if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Role changes need the API.' });
   return request<User>(`/users/${id}/role`, { method: 'PATCH', body: { role } });
+}
+
+/** Ban (true) or unban (false) an account. */
+export async function setUserBanned(id: number, banned: boolean): Promise<AdminUser> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Banning needs the API.' });
+  return request<AdminUser>(`/users/${id}/ban`, { method: 'POST', body: { banned } });
+}
+
+/** Soft-delete (true) or restore (false) an account. */
+export async function setUserDeleted(id: number, deleted: boolean): Promise<AdminUser> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Deleting needs the API.' });
+  return request<AdminUser>(`/users/${id}/delete`, { method: 'POST', body: { deleted } });
+}
+
+/**
+ * Generates a temporary password server-side and returns it once, so the admin
+ * can pass it to the account owner. The stored hash is what the owner changes
+ * on next login.
+ */
+export async function resetUserPassword(id: number): Promise<ResetPasswordResult> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Password resets need the API.' });
+  return request<ResetPasswordResult>(`/users/${id}/reset-password`, { method: 'POST' });
 }
 
 export async function listAdminProducts(): Promise<Product[]> {

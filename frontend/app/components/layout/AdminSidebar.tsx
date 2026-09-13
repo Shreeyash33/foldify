@@ -13,6 +13,7 @@ import { PaperSurface } from '@/app/components/ui/PaperSurface';
 const LINKS = [
   { href: '/admin', label: 'Overview' },
   { href: '/admin/items', label: 'Items' },
+  { href: '/admin/tutorials', label: 'Tutorials' },
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/inbox', label: 'Inbox' },

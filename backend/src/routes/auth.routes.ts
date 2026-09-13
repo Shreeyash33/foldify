@@ -148,9 +148,16 @@ router.post(
     if (found === null) throw invalid;
     if (!(await bcrypt.compare(body.password, found.passwordHash))) throw invalid;
 
+    if (found.bannedAt !== null) {
+      throw new AppError(403, 'ACCOUNT_BANNED', 'This account has been banned.');
+    }
+    if (found.deletedAt !== null) {
+      throw new AppError(404, 'ACCOUNT_DELETED', 'This account no longer exists.');
+    }
+
     setSessionCookie(res, createSession(found.id));
 
-    const { passwordHash: _passwordHash, ...user } = found;
+    const { passwordHash: _passwordHash, bannedAt: _bannedAt, deletedAt: _deletedAt, lastActiveAt: _lastActiveAt, ...user } = found;
     const response: ApiResponse<AuthResponse> = { ok: true, data: { user } };
     res.json(response);
   }),

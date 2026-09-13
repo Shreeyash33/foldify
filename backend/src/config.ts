@@ -40,6 +40,11 @@ export const config = {
   seedAdminPassword: str('SEED_ADMIN_PASSWORD', 'foldify-admin'),
   khaltiSecretKey: str('KHALTI_SECRET_KEY', ''),
   khaltiBaseUrl: str('KHALTI_BASE_URL', 'https://dev.khalti.com'),
+  /**
+   * How long delivery takes after an order is placed, in hours. Drives the
+   * delivery estimate in the order-confirmation SMS and on the order page.
+   */
+  deliveryEstimateHours: int('DELIVERY_ESTIMATE_HOURS', 72),
   version: '0.1.0',
 } as const;
 

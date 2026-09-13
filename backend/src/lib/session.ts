@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import type { User } from '@foldify/shared';
 import { config, isProduction } from '../config.ts';
 import { db } from '../db/index.ts';
-import { getUserById } from '../db/queries/users.queries.ts';
+import { getUserByIdWithSecret, touchUserActivity } from '../db/queries/users.queries.ts';
 
 /**
  * Cookie sessions, not JWTs. The session id is an opaque random string; all
@@ -20,7 +20,14 @@ export function createSession(userId: number): string {
   return id;
 }
 
-/** Returns the session's user, or null if the session is missing or expired. */
+/**
+ * Returns the session's user, or null if the session is missing or expired.
+ *
+ * Also treats a banned or deleted account as signed-out — the session row is
+ * kept (so login can distinguish "no such account" later) but it stops
+ * resolving. Every successful lookup refreshes the account's last_active_at,
+ * which drives the admin users page's activity readout.
+ */
 export function getUserForSession(sessionId: string | undefined): User | null {
   if (sessionId === undefined || sessionId === '') return null;
 
@@ -35,7 +42,15 @@ export function getUserForSession(sessionId: string | undefined): User | null {
     return null;
   }
 
-  return getUserById(row.user_id);
+  const user = getUserByIdWithSecret(row.user_id);
+  if (user === null || user.bannedAt !== null || user.deletedAt !== null) {
+    return null;
+  }
+
+  touchUserActivity(user.id);
+
+  const { passwordHash: _passwordHash, bannedAt: _bannedAt, deletedAt: _deletedAt, lastActiveAt: _lastActiveAt, ...publicUser } = user;
+  return publicUser;
 }
 
 export function destroySession(sessionId: string): void {

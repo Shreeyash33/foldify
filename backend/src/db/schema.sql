@@ -11,13 +11,22 @@
 -- ---------------------------------------------------------------- users
 
 CREATE TABLE IF NOT EXISTS users (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  email         TEXT    NOT NULL UNIQUE,
-  name          TEXT    NOT NULL,
-  password_hash TEXT    NOT NULL,
-  role          TEXT    NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
-  avatar_url    TEXT,
-  created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  email          TEXT    NOT NULL UNIQUE,
+  name           TEXT    NOT NULL,
+  password_hash  TEXT    NOT NULL,
+  role           TEXT    NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
+  avatar_url     TEXT,
+  -- When set, the account is banned: new logins are rejected and existing
+  -- sessions stop resolving. NULL means the account is not banned.
+  banned_at      TEXT,
+  -- When set, the account is soft-deleted: hidden from admin lists, logins
+  -- rejected, while orders and reviews keep their foreign keys intact.
+  deleted_at     TEXT,
+  -- Updated on every successful session lookup, so the admin users page can
+  -- show "active X ago" instead of a guess.
+  last_active_at TEXT,
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
@@ -253,7 +262,13 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   subject    TEXT    NOT NULL,
   body       TEXT    NOT NULL,
   is_handled INTEGER NOT NULL DEFAULT 0 CHECK (is_handled IN (0, 1)),
+  -- Archived messages are moved into their own drawer on the inbox page; the
+  -- row is kept so the admin can un-archive (restore) a message later.
+  is_archived INTEGER NOT NULL DEFAULT 0 CHECK (is_archived IN (0, 1)),
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_contact_messages_is_handled ON contact_messages (is_handled);
+-- idx_contact_messages_is_archived is created in db/index.ts, AFTER the
+-- migration adds the column — schema.sql runs on databases that may still be
+-- missing it, and an index on a missing column would abort the whole boot.

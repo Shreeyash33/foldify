@@ -63,13 +63,14 @@ interface SeedStep {
   foldType: 'valley' | 'mountain' | 'reverse' | 'squash' | 'petal' | 'other';
 }
 
-const TUTORIALS: { slug: string; title: string; summary: string; difficulty: 'beginner' | 'intermediate' | 'advanced'; estimatedMinutes: number; steps: SeedStep[] }[] = [
+const TUTORIALS: { slug: string; title: string; summary: string; difficulty: 'beginner' | 'intermediate' | 'advanced'; estimatedMinutes: number; coverImageUrl: string; steps: SeedStep[] }[] = [
   {
     slug: 'traditional-crane',
     title: 'The Traditional Crane',
     summary: 'The model everyone learns first, and the one that teaches the bird base you will reuse forever.',
     difficulty: 'beginner',
     estimatedMinutes: 15,
+    coverImageUrl: '/products/crane-traditional-white.svg',
     steps: [
       { instruction: 'Start coloured side up. Fold in half along both diagonals and unfold.', foldType: 'valley' },
       { instruction: 'Turn the paper over. Fold in half horizontally and vertically, then unfold.', foldType: 'mountain' },
@@ -86,6 +87,7 @@ const TUTORIALS: { slug: string; title: string; summary: string; difficulty: 'be
     summary: 'Six identical units, no glue. The gentlest possible introduction to modular origami.',
     difficulty: 'intermediate',
     estimatedMinutes: 30,
+    coverImageUrl: '/products/sonobe-cube-six-unit.svg',
     steps: [
       { instruction: 'Fold a square in half and unfold to mark the centre.', foldType: 'valley' },
       { instruction: 'Fold both outer edges to the centre crease.', foldType: 'valley' },
@@ -227,13 +229,14 @@ function seed(): void {
 
     // Tutorials and their steps
     const upsertTutorial = db.prepare(
-      `INSERT INTO tutorials (slug, title, summary, difficulty, estimated_minutes)
-       VALUES (@slug, @title, @summary, @difficulty, @estimatedMinutes)
+      `INSERT INTO tutorials (slug, title, summary, difficulty, estimated_minutes, cover_image_url)
+       VALUES (@slug, @title, @summary, @difficulty, @estimatedMinutes, @coverImageUrl)
        ON CONFLICT (slug) DO UPDATE SET
          title = excluded.title,
          summary = excluded.summary,
          difficulty = excluded.difficulty,
-         estimated_minutes = excluded.estimated_minutes`,
+         estimated_minutes = excluded.estimated_minutes,
+         cover_image_url = excluded.cover_image_url`,
     );
     const upsertStep = db.prepare(
       `INSERT INTO tutorial_steps (tutorial_id, step_number, instruction, fold_type)
@@ -252,6 +255,7 @@ function seed(): void {
         summary: tutorial.summary,
         difficulty: tutorial.difficulty,
         estimatedMinutes: tutorial.estimatedMinutes,
+        coverImageUrl: tutorial.coverImageUrl,
       });
 
       const { id: tutorialId } = db

@@ -75,7 +75,7 @@ export const mockTutorials: Tutorial[] = [
     summary: 'The model everyone learns first, and the one that teaches the bird base you will reuse forever.',
     difficulty: 'beginner',
     estimatedMinutes: 15,
-    coverImageUrl: null,
+    coverImageUrl: '/products/crane-traditional-white.svg',
     isPublished: true,
     createdAt: '2026-07-02T12:00:00.000Z',
     steps: [
@@ -96,7 +96,7 @@ export const mockTutorials: Tutorial[] = [
     summary: 'Six identical units, no glue. The gentlest possible introduction to modular origami.',
     difficulty: 'intermediate',
     estimatedMinutes: 30,
-    coverImageUrl: null,
+    coverImageUrl: '/products/sonobe-cube-six-unit.svg',
     isPublished: true,
     createdAt: '2026-07-04T12:00:00.000Z',
     steps: [
