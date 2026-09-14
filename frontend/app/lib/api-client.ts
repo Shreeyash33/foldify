@@ -117,7 +117,14 @@ async function serverCookieHeader(): Promise<string | undefined> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const url = new URL(`/api${path}`, BASE_URL);
+  // In the browser, fetch the proxy at the page's own origin so the session
+  // cookie stays first-party (never a cross-site cookie that gets dropped).
+  // On the server — SSR, prerender — there is no page origin to reuse, so fall
+  // back to the absolute backend URL, which Next rewrites to the same place.
+  const url = new URL(
+    `/api${path}`,
+    typeof window === 'undefined' ? BASE_URL : window.location.origin,
+  );
 
   if (options.query !== undefined) {
     for (const [key, value] of Object.entries(options.query)) {
@@ -324,6 +331,12 @@ export async function createOrder(input: CreateOrderRequest): Promise<CreateOrde
 export async function listOrders(): Promise<Order[]> {
   if (USE_MOCK) return [];
   return request<Order[]>('/orders');
+}
+
+/** One order with its line items. Own orders, or any order for an admin. */
+export async function getOrder(id: number): Promise<Order> {
+  if (USE_MOCK) throw new ApiClientError(501, { code: 'MOCK', message: 'Order details need the API.' });
+  return request<Order>(`/orders/${id}`);
 }
 
 export async function verifyOrderPayment(id: number): Promise<Order> {

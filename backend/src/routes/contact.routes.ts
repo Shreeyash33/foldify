@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type { ApiResponse, ContactMessage, ContactRequest, UpdateContactMessageRequest } from '@foldify/shared';
 import { AppError } from '../lib/errors.ts';
-import { isEmail, maxLength, minLength, required, validateBody } from '../lib/validate.ts';
+import { isEmail, maxLength, minLength, optional, required, validateBody } from '../lib/validate.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
 import {
@@ -58,8 +58,8 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
   if (message === null) throw AppError.notFound('No such message.');
 
   const body = validateBody<UpdateContactMessageRequest>(req.body, {
-    isHandled: [isBooleanFlag],
-    isArchived: [isBooleanFlag],
+    isHandled: [optional(isBooleanFlag)],
+    isArchived: [optional(isBooleanFlag)],
   });
 
   if (body.isHandled === undefined && body.isArchived === undefined) {
@@ -69,14 +69,13 @@ router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
     });
   }
 
-  let updated: ContactMessage | null = null;
+  let updated = message;
   if (body.isArchived !== undefined) {
-    updated = setContactArchived(message.id, body.isArchived);
+    updated = setContactArchived(message.id, body.isArchived) ?? updated;
   }
-  if (body.isHandled !== undefined && updated !== null) {
-    updated = setContactHandled(message.id, body.isHandled);
+  if (body.isHandled !== undefined) {
+    updated = setContactHandled(message.id, body.isHandled) ?? updated;
   }
-  if (updated === null) throw AppError.notFound('No such message.');
 
   const response: ApiResponse<ContactMessage> = { ok: true, data: updated };
   res.json(response);

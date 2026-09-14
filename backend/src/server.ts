@@ -15,8 +15,29 @@ const app = express();
  * `credentials: true` is silently rejected by every browser, so the session
  * cookie never arrives. The frontend must correspondingly send
  * `credentials: 'include'` on every request — see lib/api-client.ts.
+ *
+ * FRONTEND_ORIGIN may be a comma-separated list (e.g. "http://localhost:3000,
+ * http://192.168.1.50:3000") so a second machine on the same LAN can hit
+ * the dev server without disabling CORS entirely.
  */
-app.use(cors({ origin: config.frontendOrigin, credentials: true }));
+const allowedOrigins = config.frontendOrigin
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (requestOrigin, callback) => {
+      // No Origin header (curl, server-to-server) or exact match → allow.
+      if (requestOrigin === undefined || allowedOrigins.includes(requestOrigin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked origin: ${requestOrigin}`));
+      }
+    },
+    credentials: true,
+  }),
+);
 
 /* ----------------------------------------------------------- middleware */
 

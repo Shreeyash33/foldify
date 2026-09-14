@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { BadgeTone } from '@/app/components/ui/Badge';
-import type { Order, OrderStatus, User } from '@foldify/shared';
+import type { Order, OrderItem, OrderStatus, User } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Card, CardBody, CardFooter, CardHeader, CardMeta, CardTitle } from '@/app/components/ui/Card';
 import { Input } from '@/app/components/ui/Input';
+import { Modal } from '@/app/components/ui/Modal';
 import { PaperSurface } from '@/app/components/ui/PaperSurface';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { ThemeToggle } from '@/app/components/ui/ThemeToggle';
@@ -18,7 +19,7 @@ import {
   useFontSize,
 } from '@/app/contexts/FontSizeContext';
 import { useToast } from '@/app/contexts/ToastContext';
-import { ApiClientError, listOrders, updateProfile, type UpdateProfileRequest } from '@/app/lib/api-client';
+import { ApiClientError, getOrder, listOrders, updateProfile, type UpdateProfileRequest } from '@/app/lib/api-client';
 import { cn, formatDate, formatPrice } from '@/app/lib/utils';
 
 const STATUS_TONE: Record<OrderStatus, BadgeTone> = {
@@ -41,7 +42,7 @@ const FONT_SIZE_LABEL: Record<FontSizeLevel, string> = {
   '2xl': 'Largest',
 };
 
-type Tab = 'profile' | 'settings';
+type Tab = 'profile' | 'orders' | 'settings';
 
 export function ProfileView() {
   const router = useRouter();
@@ -102,11 +103,9 @@ export function ProfileView() {
 
       <div className="min-w-0 flex-1">
         {activeTab === 'profile' ? (
-          <ProfileTab
-            user={user}
-            orders={orders}
-            ordersError={ordersError}
-          />
+          <ProfileTab user={user} />
+        ) : activeTab === 'orders' ? (
+          <OrdersTab orders={orders} ordersError={ordersError} />
         ) : (
           <SettingsTab />
         )}
@@ -128,6 +127,7 @@ function ProfileTabs({
 }) {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: 'Profile' },
+    { id: 'orders', label: 'Orders' },
     { id: 'settings', label: 'Settings' },
   ];
 
@@ -175,15 +175,7 @@ function ProfileTabs({
 
 /* --------------------------------------------------------------- PROFILE */
 
-function ProfileTab({
-  user,
-  orders,
-  ordersError,
-}: {
-  user: User;
-  orders: Order[] | null;
-  ordersError: string | null;
-}) {
+function ProfileTab({ user }: { user: User }) {
   const { name, email, role, createdAt } = user;
   const isAdmin = role === 'admin';
 
@@ -214,19 +206,66 @@ function ProfileTab({
       </Card>
 
       <AccountForm user={user} />
-
-      <OrderList orders={orders} error={ordersError} />
     </div>
   );
 }
 
-function OrderList({ orders, error }: { orders: Order[] | null; error: string | null }) {
-  if (error !== null) {
+/* ---------------------------------------------------------------- ORDERS */
+
+function OrdersTab({
+  orders,
+  ordersError,
+}: {
+  orders: Order[] | null;
+  ordersError: string | null;
+}) {
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [details, setDetails] = useState<Record<number, Order | undefined>>({});
+  const [detailsError, setDetailsError] = useState<Record<number, string>>({});
+  const fetchingRef = useRef<Set<number>>(new Set());
+
+  const toggleExpand = useCallback((orderId: number) => {
+    setExpanded((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
+  }, []);
+
+  useEffect(() => {
+    const pending = Object.entries(expanded).filter(
+      ([id, isExpanded]) =>
+        isExpanded &&
+        details[Number(id)] === undefined &&
+        detailsError[Number(id)] === undefined &&
+        !fetchingRef.current.has(Number(id)),
+    );
+
+    for (const [idStr] of pending) {
+      const id = Number(idStr);
+      fetchingRef.current.add(id);
+
+      getOrder(id)
+        .then((order) => {
+          setDetails((prev) => ({ ...prev, [id]: order }));
+        })
+        .catch((error: unknown) => {
+          setDetailsError((prev) => ({
+            ...prev,
+            [id]:
+              error instanceof ApiClientError
+                ? error.message
+                : 'Could not load order details.',
+          }));
+        })
+        .finally(() => {
+          fetchingRef.current.delete(id);
+        });
+    }
+  }, [expanded, details, detailsError]);
+
+  if (ordersError !== null) {
     return (
       <Card>
         <CardBody className="flex flex-col items-start gap-3">
           <Badge tone="danger">Problem</Badge>
-          <p>{error}</p>
+          <p>{ordersError}</p>
         </CardBody>
       </Card>
     );
@@ -258,70 +297,103 @@ function OrderList({ orders, error }: { orders: Order[] | null; error: string | 
 
   return (
     <div className="flex flex-col gap-4">
-      {orders.map((order) => (
-        <Card key={order.id}>
-          <CardBody className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-col gap-1">
-              <CardTitle>Order #{order.id}</CardTitle>
-              <CardMeta>{formatDate(order.createdAt)}</CardMeta>
-            </div>
+      {orders.map((order) => {
+        const isExpanded = expanded[order.id] ?? false;
+        const detail = details[order.id];
+        const error = detailsError[order.id];
+        const isLoadingDetails = isExpanded && detail === undefined && error === undefined;
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={STATUS_TONE[order.status]}>{order.status}</Badge>
-              <Badge tone="neutral">{formatPrice(order.totalMinor, order.currency)}</Badge>
-            </div>
-          </CardBody>
-        </Card>
-      ))}
+        return (
+          <Card key={order.id}>
+            <CardBody className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <CardTitle>Order #{order.id}</CardTitle>
+                  <CardMeta>{formatDate(order.createdAt)}</CardMeta>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone={STATUS_TONE[order.status]}>{order.status}</Badge>
+                  <Badge tone="neutral">{formatPrice(order.totalMinor, order.currency)}</Badge>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => toggleExpand(order.id)}
+                  >
+                    {isExpanded ? '▾ Hide details' : '▸ Details'}
+                  </Button>
+                </div>
+              </div>
+
+              {isExpanded ? (
+                <div className="flex flex-col gap-3 border-t border-crease pt-3">
+                  {isLoadingDetails ? (
+                    <>
+                      <Skeleton shape="title" />
+                      <Skeleton shape="text" lines={2} />
+                    </>
+                  ) : error !== undefined ? (
+                    <Badge tone="danger" className="self-start">
+                      {error}
+                    </Badge>
+                  ) : detail !== undefined && detail.items !== undefined ? (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        {detail.items.map((item: OrderItem) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between gap-3 font-body text-sm text-ink"
+                          >
+                            <span>
+                              {item.productName} × {item.quantity}
+                            </span>
+                            <span>
+                              {formatPrice(item.unitPriceMinor * item.quantity, detail.currency)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between border-t border-crease pt-2 font-body text-sm font-semibold text-ink">
+                        <span>Total</span>
+                        <span>{formatPrice(detail.totalMinor, detail.currency)}</span>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+            </CardBody>
+          </Card>
+        );
+      })}
     </div>
   );
 }
 
 /* ------------------------------------------------------------ EDIT DETAILS */
 
-/**
- * Update name, email, and password for the signed-in user. The password fields
- * are optional — leaving both blank keeps the current password. Saving syncs
- * AuthContext.user so the navbar and this page's identity card update together.
- */
 function AccountForm({ user }: { user: User }) {
   const { setUser } = useAuth();
   const toast = useToast();
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFieldErrors({});
     setFormError(null);
 
-    const changingPassword = currentPassword !== '' || newPassword !== '';
-    if (changingPassword && (currentPassword === '' || newPassword === '')) {
-      setFieldErrors({
-        currentPassword: 'Both fields are required to change your password.',
-        newPassword: 'Both fields are required to change your password.',
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       const payload: UpdateProfileRequest = { name, email };
-      if (changingPassword) {
-        payload.currentPassword = currentPassword;
-        payload.newPassword = newPassword;
-      }
-
       setUser(await updateProfile(payload));
-      setCurrentPassword('');
-      setNewPassword('');
       toast.success('Your details have been saved.');
     } catch (error) {
       if (error instanceof ApiClientError) {
@@ -336,80 +408,191 @@ function AccountForm({ user }: { user: User }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Edit details</CardTitle>
-        <CardMeta>Change your name, email address, or password.</CardMeta>
-      </CardHeader>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit details</CardTitle>
+          <CardMeta>Change your name or email address.</CardMeta>
+        </CardHeader>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <CardBody className="flex flex-col gap-4">
-          {formError !== null ? (
-            <div className="flex flex-col gap-2" role="alert">
-              <Badge tone="danger" className="self-start">
-                Problem
-              </Badge>
-              <p>{formError}</p>
+        <form onSubmit={handleSubmit} noValidate>
+          <CardBody className="flex flex-col gap-4">
+            {formError !== null ? (
+              <div className="flex flex-col gap-2" role="alert">
+                <Badge tone="danger" className="self-start">
+                  Problem
+                </Badge>
+                <p>{formError}</p>
+              </div>
+            ) : null}
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
+              <Input
+                label="Name"
+                name="name"
+                autoComplete="name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                error={fieldErrors.name}
+                required
+              />
+              <Input
+                label="Email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                error={fieldErrors.email}
+                required
+              />
             </div>
-          ) : null}
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
-            <Input
-              label="Name"
-              name="name"
-              autoComplete="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              error={fieldErrors.name}
-              required
-            />
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              error={fieldErrors.email}
-              required
-            />
-          </div>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                isLoading={isSubmitting}
+                className="min-h-10"
+              >
+                Save changes
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="min-h-10"
+                onClick={() => setIsPasswordModalOpen(true)}
+              >
+                Change password
+              </Button>
+            </div>
+          </CardBody>
+        </form>
+      </Card>
 
-          <span className="pt-2 font-mono text-xs tracking-wider text-ink-muted uppercase">
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
+    </>
+  );
+}
+
+/* ---------------------------------------------------------- PASSWORD MODAL */
+
+function PasswordModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const { setUser } = useAuth();
+  const toast = useToast();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function handleClose() {
+    setCurrentPassword('');
+    setNewPassword('');
+    setFieldErrors({});
+    setFormError(null);
+    onClose();
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFieldErrors({});
+    setFormError(null);
+
+    if (currentPassword === '' || newPassword === '') {
+      setFieldErrors({
+        currentPassword: 'Both fields are required when changing your password.',
+        newPassword: 'Both fields are required when changing your password.',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      setUser(await updateProfile({ currentPassword, newPassword }));
+      toast.success('Your password has been changed.');
+      handleClose();
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        if (error.fields !== undefined) setFieldErrors(error.fields);
+        else setFormError(error.message);
+      } else {
+        setFormError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Change password"
+      size="sm"
+      footer={
+        <>
+          <Button type="button" variant="ghost" size="sm" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            isLoading={isSubmitting}
+            form="password-form"
+          >
             Change password
-          </span>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
-            <Input
-              label="Current password"
-              name="currentPassword"
-              type="password"
-              autoComplete="current-password"
-              hint="Leave blank to keep your current password."
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              error={fieldErrors.currentPassword}
-            />
-            <Input
-              label="New password"
-              name="newPassword"
-              type="password"
-              autoComplete="new-password"
-              hint="At least 8 characters."
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              error={fieldErrors.newPassword}
-            />
+          </Button>
+        </>
+      }
+    >
+      <form id="password-form" onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        {formError !== null ? (
+          <div className="flex flex-col gap-2" role="alert">
+            <Badge tone="danger" className="self-start">
+              Problem
+            </Badge>
+            <p>{formError}</p>
           </div>
+        ) : null}
 
-          <div>
-            <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting} className="min-h-10">
-              Save changes
-            </Button>
-          </div>
-        </CardBody>
+        <Input
+          label="Current password"
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          error={fieldErrors.currentPassword}
+          required
+        />
+        <Input
+          label="New password"
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          hint="At least 8 characters."
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
+          error={fieldErrors.newPassword}
+          required
+        />
       </form>
-    </Card>
+    </Modal>
   );
 }
 

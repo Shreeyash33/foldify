@@ -138,6 +138,9 @@ export function InboxView() {
   const handleHandledToggle = async (message: ContactMessage) => {
     await runOp(message.id, async () => {
       await setContactHandled(message.id, !message.isHandled);
+      if (!message.isHandled) {
+        await setContactArchived(message.id, true);
+      }
       toast.success(message.isHandled ? 'Marked as open.' : 'Marked as handled.');
     });
   };

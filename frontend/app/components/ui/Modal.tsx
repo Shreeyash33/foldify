@@ -95,16 +95,26 @@ export function Modal({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    document.addEventListener('keydown', handleKeyDown);
-
     // Move focus into the dialog so the keyboard is immediately inside it.
     const firstFocusable = panelRef.current?.querySelector<HTMLElement>(FOCUSABLE);
     (firstFocusable ?? panelRef.current)?.focus();
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow;
       previouslyFocused.current?.focus();
+    };
+    // Runs only on open/close. A later re-render (e.g. a keystroke updating a
+    // field) must not re-enter focus management, or the caret is yanked out of
+    // the input every time typed state changes.
+  }, [isOpen]);
+
+  // The keydown listener is rebound whenever a callback identity changes, but
+  // that deliberately must NOT touch focus — hence a separate effect.
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, handleKeyDown]);
 
