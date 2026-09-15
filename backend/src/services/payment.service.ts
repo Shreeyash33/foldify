@@ -53,11 +53,11 @@ async function simulateVerify(reference: string): Promise<PaymentVerification> {
 /* -------------------------------------------------------------------------- */
 
 async function khaltiInitiate(amountMinor: number, orderId: number): Promise<PaymentInitiation> {
-  const { khaltiSecretKey, khaltiBaseUrl, frontendOrigin } = config;
+  const { khaltiSecretKey, khaltiBaseUrl, frontendUrl } = config;
 
   const body = {
-    return_url: `${frontendOrigin}/checkout/return`,
-    website_url: frontendOrigin,
+    return_url: `${frontendUrl}/checkout/return`,
+    website_url: frontendUrl,
     amount: amountMinor,
     purchase_order_id: String(orderId),
     purchase_order_name: `Foldify order #${orderId}`,

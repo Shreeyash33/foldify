@@ -12,7 +12,7 @@ import {
 } from '../db/queries/orders.queries.ts';
 import { getProductById } from '../db/queries/products.queries.ts';
 import { AppError } from '../lib/errors.ts';
-import { isString, maxLength, oneOf, required, validateBody } from '../lib/validate.ts';
+import { isPhone, isString, maxLength, oneOf, required, validateBody } from '../lib/validate.ts';
 import { asyncHandler } from '../middleware/errorHandler.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
@@ -107,7 +107,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const shipping = validateBody<Omit<CreateOrderRequest, 'items'>>(req.body, {
       shippingName: [required, isString, maxLength(120)],
-      shippingPhone: [required, isString, maxLength(40)],
+      shippingPhone: [required, isString, isPhone, maxLength(40)],
       shippingAddress: [required, isString, maxLength(400)],
       shippingCity: [required, isString, maxLength(80)],
     });

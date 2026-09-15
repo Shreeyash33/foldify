@@ -56,6 +56,9 @@ const PRODUCTS: SeedProduct[] = [
   { slug: 'star-cluster-icosahedron', name: 'Icosahedral Star Cluster', description: 'Thirty units, twenty points, one shape that holds itself together by tension alone. Drop it and it survives; pull one unit and it does not.', priceMinor: 295000, categorySlug: 'modular', stock: 9, difficulty: 'advanced', imageUrl: '/products/star-cluster-icosahedron.svg' },
   { slug: 'masu-box-nested-set', name: 'Nested Masu Boxes — Set of Three', description: 'Three lidded masu boxes that sit inside one another. Folded from patterned chiyogami, squared to the millimetre.', priceMinor: 74000, categorySlug: 'vessels', stock: 48, difficulty: 'beginner', imageUrl: '/products/masu-box-nested-set.svg' },
   { slug: 'star-bowl-eight-point', name: 'Eight-Point Star Bowl', description: 'A shallow bowl that folds up into eight points, in deep green tant. Holds keys by the door, or nothing at all.', priceMinor: 112000, compareAtPriceMinor: 130000, categorySlug: 'vessels', stock: 26, difficulty: 'intermediate', imageUrl: '/products/star-bowl-eight-point.svg' },
+  { slug: 'pigeon-city-white', name: 'City Pigeon', description: 'The little bird of every rooftop, folded from silver-grey kami with a white breast. Simple enough that the tutorial is over in a coffee break, charming enough that nobody minds.', priceMinor: 38000, categorySlug: 'animals', stock: 50, difficulty: 'beginner', imageUrl: '/products/pigeon-city-white.svg' },
+  { slug: 'lily-white-washi', name: 'White Lily', description: 'A stemless lily in brilliant white washi, opened by curling each petal around a pencil. One sheet, six petals, no glue.', priceMinor: 82000, compareAtPriceMinor: 95000, categorySlug: 'flowers', stock: 34, difficulty: 'intermediate', imageUrl: '/products/lily-white-washi.svg' },
+  { slug: 'twist-bowl-teal', name: 'Twist Bowl', description: 'A low bowl that starts flat and rises when the centre is twisted — a single sheet in teal tant, water-resist folded for the kitchen.', priceMinor: 96000, compareAtPriceMinor: 110000, categorySlug: 'vessels', stock: 28, difficulty: 'intermediate', imageUrl: '/products/twist-bowl-teal.svg' },
 ];
 
 interface SeedStep {
@@ -95,6 +98,141 @@ const TUTORIALS: { slug: string; title: string; summary: string; difficulty: 'be
       { instruction: 'Tuck the opposite corners into the resulting pockets to lock the unit.', foldType: 'other' },
       { instruction: 'Repeat five more times — six units in total.', foldType: 'other' },
       { instruction: 'Slot each unit tab into a neighbouring pocket until the cube closes.', foldType: 'other' },
+    ],
+  },
+  {
+    slug: 'city-pigeon',
+    title: 'The City Pigeon',
+    summary: 'The unkillable little bird of every square, and the fastest route to a first origami that stands on its own two feet.',
+    difficulty: 'beginner',
+    estimatedMinutes: 10,
+    coverImageUrl: '/products/pigeon-city-white.svg',
+    steps: [
+      { instruction: 'Start coloured side up. Fold both diagonals and unfold to mark the centre.', foldType: 'valley' },
+      { instruction: 'Bring the top corner down to the centre, then fold that same point back up to the top edge.', foldType: 'valley' },
+      { instruction: 'Fold the model in half along the vertical crease.', foldType: 'mountain' },
+      { instruction: 'Inside-reverse-fold the front point down to form the head.', foldType: 'reverse' },
+      { instruction: 'Fold the front wing down on an angle, then repeat behind.', foldType: 'valley' },
+      { instruction: 'Open the base slightly so the pigeon stands, and round the breast.', foldType: 'other' },
+    ],
+  },
+  {
+    slug: 'white-lily',
+    title: 'The White Lily',
+    summary: 'Six petals, one sheet, and a twist that opens them. The lily teaches the petal fold the crane starts but never finishes.',
+    difficulty: 'intermediate',
+    estimatedMinutes: 25,
+    coverImageUrl: '/products/lily-white-washi.svg',
+    steps: [
+      { instruction: 'Start white side up. Fold and unfold both diagonals and both mid-lines.', foldType: 'valley' },
+      { instruction: 'Collapse the creases into a square base with all four corners meeting at the bottom.', foldType: 'squash' },
+      { instruction: 'Fold the lower edges of one flap to the centre crease, unfold, then petal-fold the flap upward.', foldType: 'petal' },
+      { instruction: 'Repeat the petal fold on the remaining three flaps so the model becomes four pointed diamonds.', foldType: 'petal' },
+      { instruction: 'Fold both outer edges of each diamond to the centre line so the petals narrow.', foldType: 'valley' },
+      { instruction: 'Open each petal outward and curl it around a pencil.', foldType: 'other' },
+      { instruction: 'Twist the centre gently so the six petals settle into a circle.', foldType: 'other' },
+    ],
+  },
+  {
+    slug: 'twist-bowl',
+    title: 'The Twist Bowl',
+    summary: 'A flat sheet that becomes a bowl when the centre is twisted — a small lesson in collapse folds that looks like magic.',
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    coverImageUrl: '/products/twist-bowl-teal.svg',
+    steps: [
+      { instruction: 'Start coloured side up. Fold both diagonals and unfold to mark the centre.', foldType: 'valley' },
+      { instruction: 'Fold all four corners to the centre point, then unfold two of them again.', foldType: 'valley' },
+      { instruction: 'Pull the corner creases outward until the sheet collapses into a flat pinwheel.', foldType: 'reverse' },
+      { instruction: 'Fold every point of the pinwheel to the centre and unfold to precrease the walls.', foldType: 'valley' },
+      { instruction: 'Lift the centre and twist it a quarter turn so the walls rise around it.', foldType: 'other' },
+      { instruction: 'Press each wall outward so the rim points lock the shape.', foldType: 'squash' },
+      { instruction: 'Turn the bowl over and press the base flat on the table.', foldType: 'mountain' },
+    ],
+  },
+  {
+    slug: 'masu-box',
+    title: 'The Masu Box',
+    summary: 'The traditional Japanese gift box — perfectly square, glue-free, and the fold behind the nested set in the shop.',
+    difficulty: 'beginner',
+    estimatedMinutes: 15,
+    coverImageUrl: '/products/masu-box-nested-set.svg',
+    steps: [
+      { instruction: 'Start coloured side down. Fold in half both ways and unfold to mark the centre.', foldType: 'valley' },
+      { instruction: 'Fold all four corners to the centre point.', foldType: 'valley' },
+      { instruction: 'Fold the top and bottom edges to meet the centre line, then unfold.', foldType: 'valley' },
+      { instruction: 'Unfold the two long flaps again, leaving the end triangles folded.', foldType: 'valley' },
+      { instruction: 'Lift the short edges upward and pinch the corners so the first walls stand.', foldType: 'reverse' },
+      { instruction: 'Tuck the remaining corners inside and press the rim square.', foldType: 'other' },
+    ],
+  },
+  {
+    slug: 'blown-tulip',
+    title: 'The Blown Tulip',
+    summary: 'A garden tulip folded in under ten minutes and inflated the traditional way — the simplest thing in the catalogue that still surprises people.',
+    difficulty: 'beginner',
+    estimatedMinutes: 12,
+    coverImageUrl: '/products/tulip-trio-stems.svg',
+    steps: [
+      { instruction: 'Start coloured side up. Blintz-fold all four corners to the centre.', foldType: 'valley' },
+      { instruction: 'Turn the paper over and fold the four corners to the centre again.', foldType: 'valley' },
+      { instruction: 'Tuck the corner points under the folded layers so the packet holds.', foldType: 'other' },
+      { instruction: 'Fold the side points inward to form the stem hole, then turn the packet over.', foldType: 'valley' },
+      { instruction: 'Blow into the opening at the base so the tulip inflates.', foldType: 'other' },
+      { instruction: 'Peel the four petal points outward so the bloom opens.', foldType: 'mountain' },
+    ],
+  },
+  {
+    slug: 'folded-koi',
+    title: 'The Folded Koi',
+    summary: 'The koi that swims across a desk, neck curved not cut — a neat run of reverse folds you will reuse on a dozen other models.',
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    coverImageUrl: '/products/koi-pair-red-white.svg',
+    steps: [
+      { instruction: 'Start coloured side up. Fold both diagonals and unfold, then turn the paper over.', foldType: 'valley' },
+      { instruction: 'Squash-fold the top corner down so the sheet becomes a diamond base.', foldType: 'squash' },
+      { instruction: 'Fold both upper edges to the centre line to shape the back.', foldType: 'valley' },
+      { instruction: 'Inside-reverse-fold the lower point back up to start the head.', foldType: 'reverse' },
+      { instruction: 'Reverse-fold the point at the other end into the curved tail.', foldType: 'reverse' },
+      { instruction: 'Fold the two side fins out, then open the body slightly so the koi stands.', foldType: 'other' },
+      { instruction: 'Round the spine with a soft mountain crease down the centre.', foldType: 'mountain' },
+    ],
+  },
+  {
+    slug: 'kawasaki-rose',
+    title: 'The Kawasaki Rose',
+    summary: 'One continuous spiral at its centre — and the reason this is where folders learn to precrease before they fold.',
+    difficulty: 'advanced',
+    estimatedMinutes: 40,
+    coverImageUrl: '/products/rose-kawasaki-crimson.svg',
+    steps: [
+      { instruction: 'Start coloured side up. Precrease the sheet: fold each corner to the centre and unfold.', foldType: 'valley' },
+      { instruction: 'Fold each edge to the centre line and unfold, then rotate 45 degrees and repeat.', foldType: 'valley' },
+      { instruction: 'Bring the corners together along the creases and collapse the sheet into a pinwheel.', foldType: 'reverse' },
+      { instruction: 'Flatten each pinwheel arm into a diamond by pressing on the existing crease lines.', foldType: 'squash' },
+      { instruction: 'Fold the arms inward to narrow the petals, then open the pinwheel partway.', foldType: 'valley' },
+      { instruction: 'Twist the centre clockwise so the petals spiral upward.', foldType: 'other' },
+      { instruction: 'Curl each petal layer outward around a pencil to open the bloom.', foldType: 'mountain' },
+      { instruction: 'Tuck the loose layer on the underside into the base and settle the central spiral.', foldType: 'other' },
+    ],
+  },
+  {
+    slug: 'western-dragon',
+    title: 'The Western Dragon',
+    summary: 'Four hundred steps in the showroom version, forty-five patient minutes in this one. The waterbomb base hides the whole skeleton.',
+    difficulty: 'advanced',
+    estimatedMinutes: 45,
+    coverImageUrl: '/products/dragon-western-black.svg',
+    steps: [
+      { instruction: 'Start coloured side up. Fold both diagonals and collapse the creases into a waterbomb base.', foldType: 'squash' },
+      { instruction: 'Fold both upper edges of the front flap to the centre, unfold, and petal-fold the flap upward.', foldType: 'petal' },
+      { instruction: 'Inside-reverse-fold both lower points outward to form the shoulders and hips.', foldType: 'reverse' },
+      { instruction: 'Reverse-fold the top point down and forward to start the neck.', foldType: 'reverse' },
+      { instruction: 'Reverse-fold the neck at its midpoint to raise the head, then at the tip to shape the snout.', foldType: 'reverse' },
+      { instruction: 'Fold the shoulder flaps forward and reverse-fold their tips into the front claws.', foldType: 'reverse' },
+      { instruction: 'Fold the tail along the spine, then reverse-fold it twice into an S curve.', foldType: 'reverse' },
+      { instruction: 'Sink the wing layer on each side and spread the membranes outward.', foldType: 'other' },
     ],
   },
 ];
@@ -324,6 +462,14 @@ function seed(): void {
     const PRODUCT_TUTORIAL_PAIRS: ReadonlyArray<readonly [productSlug: string, tutorialSlug: string]> = [
       ['crane-traditional-white', 'traditional-crane'],
       ['sonobe-cube-six-unit', 'modular-sonobe-cube'],
+      ['pigeon-city-white', 'city-pigeon'],
+      ['lily-white-washi', 'white-lily'],
+      ['twist-bowl-teal', 'twist-bowl'],
+      ['masu-box-nested-set', 'masu-box'],
+      ['tulip-trio-stems', 'blown-tulip'],
+      ['koi-pair-red-white', 'folded-koi'],
+      ['rose-kawasaki-crimson', 'kawasaki-rose'],
+      ['dragon-western-black', 'western-dragon'],
     ];
 
     db.prepare('DELETE FROM tutorial_product_links').run();
@@ -510,6 +656,211 @@ function seed(): void {
       });
     }
 
+    // ─── Demo customer: Anil Sharma ─────────────────────────────────
+    // A second demo account with the same shared demo password, so the admin
+    // has more than one customer to look at. Orders guard on user_id +
+    // payment_ref and reviews on CONFLICT, exactly like Sita's above.
+    const anilUser = upsertUserByEmail({
+      email: 'anil.sharma@foldify.local',
+      name: 'Anil Sharma',
+      passwordHash: demoPasswordHash,
+      role: 'customer',
+    });
+    const anilUserId = anilUser.id;
+
+    const anilExistingOrders = db
+      .prepare('SELECT id, payment_ref FROM orders WHERE user_id = ?')
+      .all(anilUserId) as { id: number; payment_ref: string | null }[];
+    const anilExistingOrderRefs = new Set(
+      anilExistingOrders.filter((o) => o.payment_ref !== null).map((o) => o.payment_ref),
+    );
+
+    const ANIL_ORDERS: OrderSeed[] = [
+      {
+        status: 'delivered',
+        totalMinor: 38000,
+        paymentRef: 'SIM-demo-004',
+        shippingName: 'Anil Sharma',
+        shippingPhone: '9841000002',
+        shippingAddress: '45 Thamel Marg',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-08-22 11:00:00',
+        items: [
+          { productSlug: 'pigeon-city-white', productName: 'City Pigeon', unitPriceMinor: 38000, quantity: 1 },
+        ],
+      },
+      {
+        status: 'pending',
+        totalMinor: 82000,
+        paymentRef: 'SIM-demo-005',
+        shippingName: 'Anil Sharma',
+        shippingPhone: '9841000002',
+        shippingAddress: '45 Thamel Marg',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-09-06 16:45:00',
+        items: [
+          { productSlug: 'lily-white-washi', productName: 'White Lily', unitPriceMinor: 82000, quantity: 1 },
+        ],
+      },
+    ];
+
+    for (const order of ANIL_ORDERS) {
+      if (anilExistingOrderRefs.has(order.paymentRef)) continue;
+
+      const result = insertDemoOrder.run({
+        userId: anilUserId,
+        status: order.status,
+        totalMinor: order.totalMinor,
+        paymentRef: order.paymentRef,
+        shippingName: order.shippingName,
+        shippingPhone: order.shippingPhone,
+        shippingAddress: order.shippingAddress,
+        shippingCity: order.shippingCity,
+        createdAt: order.createdAt,
+      });
+      const orderId = Number(result.lastInsertRowid);
+
+      for (const item of order.items) {
+        const productId = productIdBySlug.get(item.productSlug);
+        if (productId === undefined) throw new Error(`Unknown product slug for demo order: ${item.productSlug}`);
+        insertDemoOrderItem.run({
+          orderId,
+          productId,
+          productName: item.productName,
+          unitPriceMinor: item.unitPriceMinor,
+          quantity: item.quantity,
+        });
+      }
+    }
+
+    const ANIL_REVIEWS: ReviewSeed[] = [
+      {
+        productSlug: 'pigeon-city-white',
+        rating: 5,
+        body: 'A tiny grey pigeon with a lot of personality. I followed the tutorial the same evening and made my own.',
+        createdAt: '2026-08-27 09:30:00',
+      },
+      {
+        productSlug: 'lily-white-washi',
+        rating: 4,
+        body: 'Gorgeous petals and the twist opened cleanly. The washi is very fine, so handle the rim gently.',
+        createdAt: '2026-09-08 18:10:00',
+      },
+    ];
+
+    for (const review of ANIL_REVIEWS) {
+      const productId = productIdBySlug.get(review.productSlug);
+      if (productId === undefined) throw new Error(`Unknown product slug for demo review: ${review.productSlug}`);
+      insertReview.run({
+        productId,
+        userId: anilUserId,
+        rating: review.rating,
+        body: review.body,
+        createdAt: review.createdAt,
+      });
+    }
+
+    // ─── Demo customer: Pooja Karki ─────────────────────────────────
+    const poojaUser = upsertUserByEmail({
+      email: 'pooja.karki@foldify.local',
+      name: 'Pooja Karki',
+      passwordHash: demoPasswordHash,
+      role: 'customer',
+    });
+    const poojaUserId = poojaUser.id;
+
+    const poojaExistingOrders = db
+      .prepare('SELECT id, payment_ref FROM orders WHERE user_id = ?')
+      .all(poojaUserId) as { id: number; payment_ref: string | null }[];
+    const poojaExistingOrderRefs = new Set(
+      poojaExistingOrders.filter((o) => o.payment_ref !== null).map((o) => o.payment_ref),
+    );
+
+    const POOJA_ORDERS: OrderSeed[] = [
+      {
+        status: 'delivered',
+        totalMinor: 340000,
+        paymentRef: 'SIM-demo-006',
+        shippingName: 'Pooja Karki',
+        shippingPhone: '9841000003',
+        shippingAddress: '8 Durbar Marg',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-08-18 13:20:00',
+        items: [
+          { productSlug: 'dragon-western-black', productName: 'Western Dragon', unitPriceMinor: 340000, quantity: 1 },
+        ],
+      },
+      {
+        status: 'processing',
+        totalMinor: 96000,
+        paymentRef: 'SIM-demo-007',
+        shippingName: 'Pooja Karki',
+        shippingPhone: '9841000003',
+        shippingAddress: '8 Durbar Marg',
+        shippingCity: 'Kathmandu',
+        createdAt: '2026-09-10 10:05:00',
+        items: [
+          { productSlug: 'twist-bowl-teal', productName: 'Twist Bowl', unitPriceMinor: 96000, quantity: 1 },
+        ],
+      },
+    ];
+
+    for (const order of POOJA_ORDERS) {
+      if (poojaExistingOrderRefs.has(order.paymentRef)) continue;
+
+      const result = insertDemoOrder.run({
+        userId: poojaUserId,
+        status: order.status,
+        totalMinor: order.totalMinor,
+        paymentRef: order.paymentRef,
+        shippingName: order.shippingName,
+        shippingPhone: order.shippingPhone,
+        shippingAddress: order.shippingAddress,
+        shippingCity: order.shippingCity,
+        createdAt: order.createdAt,
+      });
+      const orderId = Number(result.lastInsertRowid);
+
+      for (const item of order.items) {
+        const productId = productIdBySlug.get(item.productSlug);
+        if (productId === undefined) throw new Error(`Unknown product slug for demo order: ${item.productSlug}`);
+        insertDemoOrderItem.run({
+          orderId,
+          productId,
+          productName: item.productName,
+          unitPriceMinor: item.unitPriceMinor,
+          quantity: item.quantity,
+        });
+      }
+    }
+
+    const POOJA_REVIEWS: ReviewSeed[] = [
+      {
+        productSlug: 'dragon-western-black',
+        rating: 5,
+        body: 'Every spine and claw is in place and it sits beautifully on the shelf. The most dramatic thing I own that is made of paper.',
+        createdAt: '2026-08-25 12:00:00',
+      },
+      {
+        productSlug: 'twist-bowl-teal',
+        rating: 4,
+        body: 'The twist is tidy and the teal is richer in person. Give the base a press if the walls sit a touch tall.',
+        createdAt: '2026-09-12 19:40:00',
+      },
+    ];
+
+    for (const review of POOJA_REVIEWS) {
+      const productId = productIdBySlug.get(review.productSlug);
+      if (productId === undefined) throw new Error(`Unknown product slug for demo review: ${review.productSlug}`);
+      insertReview.run({
+        productId,
+        userId: poojaUserId,
+        rating: review.rating,
+        body: review.body,
+        createdAt: review.createdAt,
+      });
+    }
+
     // ─── Demo contact messages ───────────────────────────────────────
     // No natural unique key — guard with a SELECT on (email, subject) to
     // stay idempotent without adding a unique index.
@@ -538,6 +889,22 @@ function seed(): void {
         body: 'Hi there, I saw the Western Dragon on your site and was wondering if you take custom orders. I would like one in deep blue paper instead of black for a birthday gift next month. Is that possible and what would the lead time be?',
         isHandled: 0,
         createdAt: '2026-09-09 19:30:00',
+      },
+      {
+        name: 'Anil Sharma',
+        email: 'anil.sharma@foldify.local',
+        subject: 'Gift wrap for the lily order',
+        body: 'I have a White Lily on the way and would love it gift-wrapped for my mother\'s birthday. Is that possible on the pending order, and do you include a handwritten note?',
+        isHandled: 0,
+        createdAt: '2026-09-07 17:20:00',
+      },
+      {
+        name: 'Pooja Karki',
+        email: 'pooja.karki@foldify.local',
+        subject: 'Restock question — star bowl',
+        body: 'The Eight-Point Star Bowl in deep green is lovely but appears out of stock. Will it be restocked, and has my Twist Bowl order shipped yet? Thank you!',
+        isHandled: 0,
+        createdAt: '2026-09-11 08:50:00',
       },
     ];
 
@@ -590,7 +957,9 @@ function seed(): void {
   console.log(`     reviews         ${counts.reviews}`);
   console.log(`     contact_messages ${counts.contactMessages}`);
   console.log(`     admin login     ${config.seedAdminEmail}`);
-  console.log(`     demo login      ${DEMO_EMAIL} / foldify-demo`);
+  console.log(`     demo logins     ${DEMO_EMAIL} / foldify-demo`);
+  console.log(`                     anil.sharma@foldify.local / foldify-demo`);
+  console.log(`                     pooja.karki@foldify.local / foldify-demo`);
   console.log('');
   console.log('  Re-running this is safe — every insert is an upsert.');
   console.log('');

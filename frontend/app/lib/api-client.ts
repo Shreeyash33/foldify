@@ -36,7 +36,7 @@ import type {
   UpdateTutorialRequest,
   User,
 } from '@foldify/shared';
-import { mockProducts, mockStatus, mockTutorials, mockUser } from './mock-data';
+import { mockProducts, mockStatus, mockTutorials, mockUser, mockUsers } from './mock-data';
 
 /**
  * THE ONLY PLACE `fetch` IS CALLED.
@@ -378,7 +378,7 @@ export async function setContactArchived(id: number, isArchived: boolean): Promi
 export async function getAdminOverview(): Promise<AdminOverview> {
   if (USE_MOCK)
     return {
-      users: 2,
+      users: mockUsers.length,
       products: mockProducts.length,
       publishedProducts: mockProducts.length,
       tutorials: mockTutorials.length,
@@ -394,16 +394,14 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 
 export async function listAdminUsers(): Promise<AdminUser[]> {
   if (USE_MOCK)
-    return [
-      {
-        ...mockUser,
-        orderCount: 0,
-        totalSpentMinor: 0,
-        bannedAt: null,
-        deletedAt: null,
-        lastActiveAt: '2026-07-25T10:00:00.000Z',
-      },
-    ];
+    return mockUsers.map((user) => ({
+      ...user,
+      orderCount: 0,
+      totalSpentMinor: 0,
+      bannedAt: null,
+      deletedAt: null,
+      lastActiveAt: '2026-07-25T10:00:00.000Z',
+    }));
   return request<AdminUser[]>('/users');
 }
 

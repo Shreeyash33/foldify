@@ -40,6 +40,14 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
 
   images: {
+    /**
+     * Without this, Next's image optimizer answers every /_next/image request
+     * for an SVG with a 400, so the product and tutorial covers (all local
+     * SVGs under /public/products) render blank on a freshly cloned repo.
+     * The optimizeable source is only ever the app's own /products/*.svg —
+     * nothing user-supplied reaches the optimizer — so the flag is safe here.
+     */
+    dangerouslyAllowSVG: true,
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' },

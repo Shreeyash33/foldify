@@ -19,6 +19,9 @@ export type SqliteBool = 0 | 1;
 /** ISO-8601 timestamp string, e.g. `2026-07-25T11:04:00.000Z`. */
 export type IsoDate = string;
 
+/** Phone number: optional leading +, then one or more digits (0-9), hyphens or spaces. */
+export const PHONE_RE = /^\+?\d[\d- ]*$/;
+
 /* ------------------------------------------------------------------ */
 /* Users, roles, sessions                                              */
 /* ------------------------------------------------------------------ */
