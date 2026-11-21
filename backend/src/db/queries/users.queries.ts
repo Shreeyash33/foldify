@@ -10,6 +10,9 @@ interface UserRow {
   password_hash: string;
   role: Role;
   avatar_url: string | null;
+  banned_at: string | null;
+  deleted_at: string | null;
+  last_active_at: string | null;
   created_at: string;
 }
 
@@ -25,7 +28,13 @@ function mapUser(row: UserRow): User {
 }
 
 function mapUserWithSecret(row: UserRow): UserWithSecret {
-  return { ...mapUser(row), passwordHash: row.password_hash };
+  return {
+    ...mapUser(row),
+    passwordHash: row.password_hash,
+    bannedAt: row.banned_at,
+    deletedAt: row.deleted_at,
+    lastActiveAt: row.last_active_at,
+  };
 }
 
 export function getUserById(id: number): User | null {
@@ -115,12 +124,14 @@ export function countUsers(): number {
 
 /**
  * Every user for the admin users page, with a live total of their orders and
- * spend. `password_hash` is deliberately never selected.
+ * spend. `password_hash` is deliberately never selected. Deleted accounts are
+ * included so an admin can see who was removed and reverse the mistake.
  */
 export function listUsersWithStats(): AdminUser[] {
   const rows = db
     .prepare(
       `SELECT u.id, u.email, u.name, u.role, u.avatar_url, u.created_at,
+              u.banned_at, u.deleted_at, u.last_active_at,
               COUNT(o.id) AS order_count,
               COALESCE(SUM(o.total_minor), 0) AS total_spent_minor
        FROM users u
@@ -134,6 +145,9 @@ export function listUsersWithStats(): AdminUser[] {
     ...mapUser(row),
     orderCount: row.order_count,
     totalSpentMinor: row.total_spent_minor,
+    bannedAt: row.banned_at,
+    deletedAt: row.deleted_at,
+    lastActiveAt: row.last_active_at,
   }));
 }
 
@@ -141,6 +155,70 @@ export function listUsersWithStats(): AdminUser[] {
 export function updateUserRole(id: number, role: Role): User | null {
   db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id);
   return getUserById(id);
+}
+
+/**
+ * Bans or unbans an account. Banned users cannot log in and their existing
+ * sessions immediately stop resolving (requireAuth checks the flag on lookup).
+ */
+export function setUserBanned(id: number, banned: boolean): AdminUser | null {
+  db.prepare('UPDATE users SET banned_at = ? WHERE id = ?').run(banned ? new Date().toISOString() : null, id);
+  return getUserAdminById(id);
+}
+
+/**
+ * Soft-deletes or restores an account. A soft delete keeps the row so every
+ * order and review keeps its foreign key; the account is hidden from the admin
+ * list's live set and denied login like a banned one.
+ */
+export function setUserDeleted(id: number, deleted: boolean): AdminUser | null {
+  db.prepare('UPDATE users SET deleted_at = ? WHERE id = ?').run(deleted ? new Date().toISOString() : null, id);
+  return getUserAdminById(id);
+}
+
+/** The admin-shaped row for a single user, or null when missing. */
+function getUserAdminById(id: number): AdminUser | null {
+  const row = db
+    .prepare(
+      `SELECT u.id, u.email, u.name, u.role, u.avatar_url, u.created_at,
+              u.banned_at, u.deleted_at, u.last_active_at
+       FROM users u WHERE u.id = ?`,
+    )
+    .get(id) as
+    | Pick<UserRow, 'id' | 'email' | 'name' | 'role' | 'avatar_url' | 'banned_at' | 'deleted_at' | 'last_active_at' | 'created_at'>
+    | undefined;
+
+  if (row === undefined) return null;
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    avatarUrl: row.avatar_url,
+    createdAt: row.created_at,
+    orderCount: 0,
+    totalSpentMinor: 0,
+    bannedAt: row.banned_at,
+    deletedAt: row.deleted_at,
+    lastActiveAt: row.last_active_at,
+  };
+}
+
+/**
+ * Replaces the stored password hash — the shared path for account owners
+ * changing their own password and admins resetting someone else's.
+ * Never returns anything to a client.
+ */
+export function setUserPassword(id: number, passwordHash: string): void {
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, id);
+}
+
+/** Marks the account as active right now. Session lookups call this. */
+export function touchUserActivity(id: number): void {
+  db.prepare('UPDATE users SET last_active_at = ? WHERE id = ?').run(
+    new Date().toISOString(),
+    id,
+  );
 }
 
 export interface UpdateUserFields {
@@ -171,9 +249,4 @@ export function updateUser(id: number, fields: UpdateUserFields): User | null {
   }
 
   return getUserById(id);
-}
-
-/** Replaces the stored password hash. Profile password change only — never sent to a client. */
-export function setUserPassword(id: number, passwordHash: string): void {
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, id);
 }

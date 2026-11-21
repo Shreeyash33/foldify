@@ -7,7 +7,26 @@ const nextConfig: NextConfig = {
    * fails with a confusing parse error from inside node_modules.
    */
   transpilePackages: ["@foldify/shared"],
-
+  // Network dev origins: set NEXT_PUBLIC_ALLOWED_DEV_ORIGINS in .env.local
+  // when a second machine needs HMR. The hostname form, e.g. ["192.168.1.50"].
+  ...(process.env.NEXT_PUBLIC_ALLOWED_DEV_ORIGINS
+    ? {
+        allowedDevOrigins: process.env.NEXT_PUBLIC_ALLOWED_DEV_ORIGINS.split(',').map((entry) =>
+          entry.trim().replace(/^https?:\/\//, '').replace(/:\d+$/, ''),
+        ),
+      }
+    : {}),
+  /**
+   * Proxy /api to the backend on the SAME origin as the page. The browser then
+   * never makes a cross-origin fetch, so the session cookie is always
+   * first-party: it is stored even when a second machine on the LAN opens the
+   * site via the host's IP. Works for `/api` only — nothing else is rewritten.
+   */
+  async rewrites() {
+    return [
+      { source: '/api/:path*', destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'}/api/:path*` },
+    ];
+  },
   /**
    * Partial prerendering. Each route ships a static shell and streams only the
    * parts that genuinely vary per request, so the catalogue is not re-rendered
@@ -21,6 +40,14 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
 
   images: {
+    /**
+     * Without this, Next's image optimizer answers every /_next/image request
+     * for an SVG with a 400, so the product and tutorial covers (all local
+     * SVGs under /public/products) render blank on a freshly cloned repo.
+     * The optimizeable source is only ever the app's own /products/*.svg —
+     * nothing user-supplied reaches the optimizer — so the flag is safe here.
+     */
+    dangerouslyAllowSVG: true,
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' },

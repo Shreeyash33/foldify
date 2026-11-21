@@ -12,6 +12,7 @@ interface ContactMessageRow {
   subject: string;
   body: string;
   is_handled: number;
+  is_archived: number;
   created_at: string;
 }
 
@@ -23,6 +24,7 @@ function mapContactMessage(row: ContactMessageRow): ContactMessage {
     subject: row.subject,
     body: row.body,
     isHandled: row.is_handled === 1,
+    isArchived: row.is_archived === 1,
     createdAt: row.created_at,
   };
 }
@@ -59,9 +61,9 @@ export function insertContactMessage(input: NewContactMessage): ContactMessage {
 export function listContactMessages(): ContactMessage[] {
   const rows = db
     .prepare(
-      `SELECT id, name, email, subject, body, is_handled, created_at
+      `SELECT id, name, email, subject, body, is_handled, is_archived, created_at
        FROM contact_messages
-       ORDER BY is_handled ASC, created_at DESC, id DESC`,
+       ORDER BY is_archived ASC, is_handled ASC, created_at DESC, id DESC`,
     )
     .all() as ContactMessageRow[];
 
@@ -78,6 +80,12 @@ export function getContactMessage(id: number): ContactMessage | null {
 /** Mark a message handled or reopened. Returns null if the id does not exist. */
 export function setContactHandled(id: number, handled: boolean): ContactMessage | null {
   db.prepare('UPDATE contact_messages SET is_handled = ? WHERE id = ?').run(handled ? 1 : 0, id);
+  return getContactMessage(id);
+}
+
+/** Archive a message (moves it to the archived drawer) or restore it. */
+export function setContactArchived(id: number, archived: boolean): ContactMessage | null {
+  db.prepare('UPDATE contact_messages SET is_archived = ? WHERE id = ?').run(archived ? 1 : 0, id);
   return getContactMessage(id);
 }
 

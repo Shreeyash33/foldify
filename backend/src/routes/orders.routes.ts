@@ -12,10 +12,11 @@ import {
 } from '../db/queries/orders.queries.ts';
 import { getProductById } from '../db/queries/products.queries.ts';
 import { AppError } from '../lib/errors.ts';
-import { isString, maxLength, oneOf, required, validateBody } from '../lib/validate.ts';
+import { isPhone, isString, maxLength, oneOf, required, validateBody } from '../lib/validate.ts';
 import { asyncHandler } from '../middleware/errorHandler.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
+import { notifyOrderPlaced } from '../services/notification.service.ts';
 import * as paymentService from '../services/payment.service.ts';
 
 const ORDER_STATUSES = [
@@ -106,7 +107,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const shipping = validateBody<Omit<CreateOrderRequest, 'items'>>(req.body, {
       shippingName: [required, isString, maxLength(120)],
-      shippingPhone: [required, isString, maxLength(40)],
+      shippingPhone: [required, isString, isPhone, maxLength(40)],
       shippingAddress: [required, isString, maxLength(400)],
       shippingCity: [required, isString, maxLength(80)],
     });
@@ -162,6 +163,10 @@ router.post(
       throw AppError.badGateway('The payment gateway could not start the payment. The order was cancelled.');
     }
     setOrderStatus(order.id, order.status, payment.reference);
+
+    // Order is now real: notify the shipping phone. Fire-and-forget — the
+    // checkout response should never wait on the SMS provider.
+    notifyOrderPlaced(order);
 
     const body: ApiResponse<CreateOrderResponse> = {
       ok: true,

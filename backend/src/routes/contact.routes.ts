@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import type { ApiResponse, ContactMessage, ContactRequest } from '@foldify/shared';
+import type { ApiResponse, ContactMessage, ContactRequest, UpdateContactMessageRequest } from '@foldify/shared';
 import { AppError } from '../lib/errors.ts';
-import { isEmail, maxLength, minLength, required, validateBody } from '../lib/validate.ts';
+import { isEmail, maxLength, minLength, optional, required, validateBody } from '../lib/validate.ts';
 import { requireAuth } from '../middleware/requireAuth.ts';
 import { requireAdmin } from '../middleware/requireAdmin.ts';
 import {
   getContactMessage,
   insertContactMessage,
   listContactMessages,
+  setContactArchived,
   setContactHandled,
 } from '../db/queries/contact.queries.ts';
 
@@ -46,26 +47,42 @@ router.get('/', requireAuth, requireAdmin, (_req, res) => {
 });
 
 /**
- * PATCH /api/contact/:id — admin only. Mark a message handled or reopen it.
+ * PATCH /api/contact/:id — admin only.
+ * Set `isHandled` to mark a message done (reopened when false), set
+ * `isArchived` to move it into the archived drawer (restored when false).
+ * Either field may be sent; any subset is valid. At least one must be present.
  */
 router.patch('/:id', requireAuth, requireAdmin, (req, res) => {
   const id = Number.parseInt(req.params.id ?? '', 10);
   const message = Number.isNaN(id) ? null : getContactMessage(id);
   if (message === null) throw AppError.notFound('No such message.');
 
-  const body = validateBody<{ isHandled: boolean }>(req.body, {
-    isHandled: [isHandledFlag],
+  const body = validateBody<UpdateContactMessageRequest>(req.body, {
+    isHandled: [optional(isBooleanFlag)],
+    isArchived: [optional(isBooleanFlag)],
   });
 
-  const updated = setContactHandled(message.id, body.isHandled);
-  if (updated === null) throw AppError.notFound('No such message.');
+  if (body.isHandled === undefined && body.isArchived === undefined) {
+    throw new AppError(400, 'BAD_REQUEST', 'Send isHandled and/or isArchived.', {
+      isHandled: 'At least one of isHandled / isArchived is required.',
+      isArchived: 'At least one of isHandled / isArchived is required.',
+    });
+  }
+
+  let updated = message;
+  if (body.isArchived !== undefined) {
+    updated = setContactArchived(message.id, body.isArchived) ?? updated;
+  }
+  if (body.isHandled !== undefined) {
+    updated = setContactHandled(message.id, body.isHandled) ?? updated;
+  }
 
   const response: ApiResponse<ContactMessage> = { ok: true, data: updated };
   res.json(response);
 });
 
-/** The inbox toggle is a boolean; a 0/1 integer from a form is accepted too. */
-function isHandledFlag(value: unknown, field: string): string | null {
+/** The inbox toggles are booleans; a 0/1 integer from a form is accepted too. */
+function isBooleanFlag(value: unknown, field: string): string | null {
   return value === true || value === false || value === 0 || value === 1
     ? null
     : `${field} must be true or false.`;

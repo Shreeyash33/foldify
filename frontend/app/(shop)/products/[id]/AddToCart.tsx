@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Product } from '@foldify/shared';
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
@@ -20,12 +20,24 @@ export function AddToCart({ product }: { product: Product }) {
   const cart = useCart();
   const toast = useToast();
   const [quantity, setQuantity] = useState('1');
+  const timestamps = useRef<number[]>([]);
 
   if (product.stock === 0) {
     return <Badge tone="danger">Sold out</Badge>;
   }
 
   function handleAdd() {
+    const now = Date.now();
+    timestamps.current = timestamps.current.filter((stamp) => now - stamp < 10000);
+    const oldest = timestamps.current[0];
+    if (timestamps.current.length >= 5) {
+      const waitSeconds = Math.max(1, Math.ceil(((oldest ?? now) + 10000 - now) / 1000));
+      const message =
+        waitSeconds === 1 ? 'in about a second' : `in about ${waitSeconds} seconds`;
+      toast.error(`Too many requests. Try again ${message}.`);
+      return;
+    }
+    timestamps.current.push(now);
     cart.add(product, Number.parseInt(quantity, 10));
     toast.success(`${product.name} added to your cart.`);
   }

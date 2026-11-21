@@ -66,3 +66,33 @@ export function formatDuration(minutes: number): string {
   const rest = minutes % 60;
   return rest === 0 ? `${hours} hr` : `${hours} hr ${rest} min`;
 }
+
+/**
+ * Time since `iso` as a short phrase: "just now", "5 min ago", "3 days ago".
+ * `null` renders as "never". Fixed units so a course demo reads the same in
+ * any browser. Past dates only — a future timestamp renders as "just now".
+ */
+export function formatTimeAgo(iso: string | null): string {
+  if (iso === null) return 'never';
+
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '—';
+
+  const seconds = Math.floor((Date.now() - then) / 1000);
+  if (seconds < 60) return 'just now';
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`;
+
+  const years = Math.floor(days / 365);
+  return `${years} year${years === 1 ? '' : 's'} ago`;
+}

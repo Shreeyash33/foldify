@@ -12,6 +12,19 @@ import { useCart } from '@/app/contexts/CartContext';
 import { useToast } from '@/app/contexts/ToastContext';
 import { ApiClientError, createOrder } from '@/app/lib/api-client';
 import { formatPrice } from '@/app/lib/utils';
+import { PHONE_RE } from '@foldify/shared';
+
+/**
+ * Strips anything that is not a digit, hyphen, space or a single leading plus,
+ * so letters and stray punctuation never reach the order.
+ */
+function sanitizePhone(raw: string): string {
+  const cleaned = raw.replace(/[^\d+\- ]/g, '');
+  if (cleaned.startsWith('+')) {
+    return `+${cleaned.replace(/\+/g, '')}`;
+  }
+  return cleaned.replace(/\+/g, '');
+}
 
 export function CheckoutView() {
   const router = useRouter();
@@ -43,6 +56,16 @@ export function CheckoutView() {
     event.preventDefault();
     setFieldErrors({});
     setFormError(null);
+
+    if (shippingPhone.trim() === '') {
+      setFieldErrors({ shippingPhone: 'Phone is required.' });
+      return;
+    }
+    if (!PHONE_RE.test(shippingPhone.trim())) {
+      setFieldErrors({ shippingPhone: 'Phone must be a valid phone number.' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -135,7 +158,7 @@ export function CheckoutView() {
               type="tel"
               autoComplete="tel"
               value={shippingPhone}
-              onChange={(event) => setShippingPhone(event.target.value)}
+              onChange={(event) => setShippingPhone(sanitizePhone(event.target.value))}
               error={fieldErrors.shippingPhone}
               required
             />

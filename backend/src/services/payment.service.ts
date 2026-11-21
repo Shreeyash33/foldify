@@ -53,11 +53,11 @@ async function simulateVerify(reference: string): Promise<PaymentVerification> {
 /* -------------------------------------------------------------------------- */
 
 async function khaltiInitiate(amountMinor: number, orderId: number): Promise<PaymentInitiation> {
-  const { khaltiSecretKey, khaltiBaseUrl, frontendOrigin } = config;
+  const { khaltiSecretKey, khaltiBaseUrl, frontendUrl } = config;
 
   const body = {
-    return_url: `${frontendOrigin}/checkout/return`,
-    website_url: frontendOrigin,
+    return_url: `${frontendUrl}/checkout/return`,
+    website_url: frontendUrl,
     amount: amountMinor,
     purchase_order_id: String(orderId),
     purchase_order_name: `Foldify order #${orderId}`,
@@ -70,6 +70,9 @@ async function khaltiInitiate(amountMinor: number, orderId: number): Promise<Pay
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
+    // A hung gateway must not leave the checkout button spinning forever:
+    // abort after 10s and fall into the catch below, which reads as a 502.
+    signal: AbortSignal.timeout(10_000),
   });
 
   const json = (await res.json()) as Record<string, unknown>;
@@ -102,6 +105,9 @@ async function khaltiVerify(reference: string): Promise<PaymentVerification> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ pidx: reference }),
+    // Same 10s cap as initiate: a slow provider must fail quickly and clearly
+    // instead of leaving verification spinning.
+    signal: AbortSignal.timeout(10_000),
   });
 
   const json = (await res.json()) as Record<string, unknown>;

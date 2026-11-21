@@ -50,6 +50,31 @@ export function applySchema(): void {
   if (!craftColumns.some((column) => column.name === 'status')) {
     db.exec(`ALTER TABLE craft_files ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`);
   }
+
+  // Databases created before admin moderation (ban / soft-delete / activity
+  // tracking) existed: add the three nullable columns. Nullable means no new
+  // CHECK or DEFAULT, so ALTER TABLE is safe on an existing populated table.
+  const userColumns = db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[];
+  if (!userColumns.some((column) => column.name === 'banned_at')) {
+    db.exec(`ALTER TABLE users ADD COLUMN banned_at TEXT`);
+  }
+  if (!userColumns.some((column) => column.name === 'deleted_at')) {
+    db.exec(`ALTER TABLE users ADD COLUMN deleted_at TEXT`);
+  }
+  if (!userColumns.some((column) => column.name === 'last_active_at')) {
+    db.exec(`ALTER TABLE users ADD COLUMN last_active_at TEXT`);
+  }
+
+  // Databases created before the inbox could archive messages: same story,
+  // a DEFAULT 0 column so existing rows read as not archived. The supporting
+  // index cannot live in schema.sql — that runs before migrations, and a fresh
+  // build would never get here to create it — so it is created here instead,
+  // only once the column is guaranteed to exist on every database.
+  const contactColumns = db.prepare(`PRAGMA table_info(contact_messages)`).all() as { name: string }[];
+  if (!contactColumns.some((column) => column.name === 'is_archived')) {
+    db.exec(`ALTER TABLE contact_messages ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0`);
+  }
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_contact_messages_is_archived ON contact_messages (is_archived)`);
 }
 
 export interface DbHealth {

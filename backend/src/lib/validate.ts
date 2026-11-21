@@ -1,3 +1,4 @@
+import { PHONE_RE } from '@foldify/shared';
 import { AppError } from './errors.ts';
 
 /**
@@ -46,6 +47,12 @@ export const isPositiveInteger: Rule = (value, field) =>
   typeof value === 'number' && Number.isInteger(value) && value >= 1
     ? null
     : `${field} must be a whole number of 1 or more.`;
+
+/** Phone number: optional leading +, then one or more digits, hyphens or spaces. */
+export const isPhone: Rule = (value, field) => {
+  if (typeof value !== 'string') return `${field} must be text.`;
+  return PHONE_RE.test(value.trim()) ? null : `${field} must be a valid phone number.`;
+};
 
 /** Exactly the slug shape: lowercase letters, digits and single hyphens between. */
 export const isSlug: Rule = (value, field) => {

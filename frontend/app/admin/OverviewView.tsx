@@ -39,6 +39,9 @@ export function OverviewView() {
             <Button href="/admin/items" variant="secondary" size="sm">
               Items
             </Button>
+            <Button href="/admin/tutorials" variant="secondary" size="sm">
+              Tutorials
+            </Button>
             <Button href="/admin/orders" variant="secondary" size="sm">
               Orders
             </Button>
@@ -87,6 +90,9 @@ export function OverviewView() {
             <CardBody className="flex flex-col gap-4 sm:flex-row">
               <Button href="/admin/items" variant="secondary" size="sm">
                 Edit the catalogue
+              </Button>
+              <Button href="/admin/tutorials" variant="secondary" size="sm">
+                Write a tutorial
               </Button>
               <Button href="/admin/orders" variant="secondary" size="sm">
                 Work the order queue
